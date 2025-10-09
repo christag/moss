@@ -244,15 +244,6 @@ npm run format
 
 ---
 
-## Documentation
-
-- **Full PRD**: See `prd.md` (internal planning document, not in repo)
-- **Database Schema**: [dbsetup.sql](dbsetup.sql)
-- **Design Guidelines**: [designguides.md](designguides.md)
-- **Developer Guide**: [CLAUDE.md](CLAUDE.md)
-
----
-
 ## License
 
 **GNU Affero General Public License v3.0 (AGPL-3.0)**
