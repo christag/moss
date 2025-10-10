@@ -42,7 +42,7 @@ export default function GroupsPage() {
 
   useEffect(() => {
     fetchGroups()
-  }, [fetchGroups])
+  }, [search, groupTypeFilter, fetchGroups])
 
   const formatGroupType = (type: string) => {
     const typeMap: Record<string, string> = {

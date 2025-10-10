@@ -43,7 +43,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Build update query dynamically based on provided fields
     const updates: string[] = []
-    const values: (string | number | null | undefined)[] = []
+    const values: Array<string | number | null> = []
     let paramCount = 0
 
     // Add each field if provided

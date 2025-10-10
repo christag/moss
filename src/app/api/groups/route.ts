@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // Build WHERE clauses
     const conditions: string[] = []
-    const values: (string | number | null | undefined)[] = []
+    const values: Array<string | number> = []
     let paramCount = 0
 
     if (search) {
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // Build INSERT query
     const fields: string[] = []
     const placeholders: string[] = []
-    const values: (string | number | null | undefined)[] = []
+    const values: Array<string | number | null> = []
     let paramCount = 0
 
     // Required fields

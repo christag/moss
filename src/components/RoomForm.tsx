@@ -38,7 +38,9 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch('/api/locations?limit=200&sort_by=name&sort_order=asc')
+        const response = await fetch(
+          '/api/locations?limit=100&sort_by=location_name&sort_order=asc'
+        )
         if (response.ok) {
           const result = await response.json()
           setLocations(result.data?.locations || [])
@@ -53,7 +55,7 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
   // Field configuration for room form
   const fields: FieldConfig[] = [
     {
-      name: 'name',
+      name: 'room_name',
       label: 'Room Name',
       type: 'text',
       placeholder: 'Enter room name',

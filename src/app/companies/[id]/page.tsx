@@ -55,8 +55,15 @@ export default function CompanyDetailPage() {
         method: 'DELETE',
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error('Failed to delete company')
+        // Extract detailed error message from API response
+        // API structure: { success: false, error: "main error", details: { message: "detailed message", dependencies: {...} } }
+        const errorMessage =
+          result.details?.message || result.error || result.message || 'Failed to delete company'
+        alert(errorMessage)
+        return
       }
 
       router.push('/companies')

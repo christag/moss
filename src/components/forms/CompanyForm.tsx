@@ -172,7 +172,10 @@ export function CompanyForm({ company, onSuccess, onCancel }: CompanyFormProps) 
         tax_id: company.tax_id || '',
         notes: company.notes || '',
       }
-    : {}
+    : {
+        // Set default company type for create mode
+        company_type: 'vendor',
+      }
 
   return (
     <GenericForm

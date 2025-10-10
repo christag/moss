@@ -223,22 +223,43 @@ export async function DELETE(
     }
 
     // Check for dependencies (locations, people, etc.)
-    const dependenciesResult = await query<{ count: string }>(
+    const dependenciesResult = await query<{
+      locations_count: string
+      people_count: string
+      software_count: string
+      contracts_count: string
+    }>(
       `SELECT
-        (SELECT COUNT(*) FROM locations WHERE company_id = $1) +
-        (SELECT COUNT(*) FROM people WHERE company_id = $1) +
-        (SELECT COUNT(*) FROM software WHERE publisher_id = $1) +
-        (SELECT COUNT(*) FROM contracts WHERE vendor_id = $1) as count`,
+        (SELECT COUNT(*) FROM locations WHERE company_id = $1) as locations_count,
+        (SELECT COUNT(*) FROM people WHERE company_id = $1) as people_count,
+        (SELECT COUNT(*) FROM software WHERE company_id = $1) as software_count,
+        (SELECT COUNT(*) FROM contracts WHERE company_id = $1) as contracts_count`,
       [validation.data]
     )
 
-    const dependencyCount = parseInt(dependenciesResult.rows[0].count, 10)
+    const locationCount = parseInt(dependenciesResult.rows[0].locations_count, 10)
+    const peopleCount = parseInt(dependenciesResult.rows[0].people_count, 10)
+    const softwareCount = parseInt(dependenciesResult.rows[0].software_count, 10)
+    const contractCount = parseInt(dependenciesResult.rows[0].contracts_count, 10)
+    const totalDependencies = locationCount + peopleCount + softwareCount + contractCount
 
-    if (dependencyCount > 0) {
+    if (totalDependencies > 0) {
+      const dependencies: string[] = []
+      if (locationCount > 0) dependencies.push(`${locationCount} location(s)`)
+      if (peopleCount > 0) dependencies.push(`${peopleCount} people`)
+      if (softwareCount > 0) dependencies.push(`${softwareCount} software product(s)`)
+      if (contractCount > 0) dependencies.push(`${contractCount} contract(s)`)
+
       return errorResponse(
         'Cannot delete company with existing dependencies',
         {
-          message: `This company has ${dependencyCount} associated records (locations, people, software, or contracts). Please remove or reassign these records first.`,
+          message: `This company has ${dependencies.join(', ')} linked to it. Please remove or reassign these records first.`,
+          dependencies: {
+            locations: locationCount,
+            people: peopleCount,
+            software: softwareCount,
+            contracts: contractCount,
+          },
         },
         409
       )

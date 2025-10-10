@@ -75,7 +75,7 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
     const fetchLocations = async () => {
       try {
         const response = await fetch(
-          '/api/locations?limit=200&sort_by=location_name&sort_order=asc'
+          '/api/locations?limit=100&sort_by=location_name&sort_order=asc'
         )
         if (response.ok) {
           const result = await response.json()
@@ -125,7 +125,7 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
     const fetchParentDevices = async () => {
       try {
         const response = await fetch(
-          '/api/devices?device_type=chassis&limit=200&sort_by=hostname&sort_order=asc'
+          '/api/devices?device_type=chassis&limit=100&sort_by=hostname&sort_order=asc'
         )
         if (response.ok) {
           const result = await response.json()
