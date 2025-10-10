@@ -19,10 +19,12 @@ interface LocationFormProps {
   onCancel?: () => void
 }
 
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
-  { value: 'closed', label: 'Closed' },
+const LOCATION_TYPE_OPTIONS = [
+  { value: 'office', label: 'Office' },
+  { value: 'datacenter', label: 'Data Center' },
+  { value: 'warehouse', label: 'Warehouse' },
+  { value: 'remote', label: 'Remote' },
+  { value: 'other', label: 'Other' },
 ]
 
 export function LocationForm({ location, onSuccess, onCancel }: LocationFormProps) {
@@ -33,7 +35,7 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch('/api/companies?limit=200&sort_by=name&sort_order=asc')
+        const response = await fetch('/api/companies?limit=200&sort_by=company_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
           setCompanies(result.data?.companies || [])
@@ -48,7 +50,7 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
   // Field configuration for location form
   const fields: FieldConfig[] = [
     {
-      name: 'name',
+      name: 'location_name',
       label: 'Location Name',
       type: 'text',
       placeholder: 'Enter location name',
@@ -69,18 +71,19 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
       helpText: 'The company that owns or manages this location',
     },
     {
-      name: 'address_line1',
-      label: 'Address Line 1',
+      name: 'location_type',
+      label: 'Location Type',
+      type: 'select',
+      required: true,
+      options: LOCATION_TYPE_OPTIONS,
+      helpText: 'The type of location',
+    },
+    {
+      name: 'address',
+      label: 'Address',
       type: 'text',
       placeholder: 'Street address',
       helpText: 'Street address',
-    },
-    {
-      name: 'address_line2',
-      label: 'Address Line 2',
-      type: 'text',
-      placeholder: 'Apartment, suite, unit, etc.',
-      helpText: 'Additional address information',
     },
     {
       name: 'city',
@@ -89,14 +92,14 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
       placeholder: 'City',
     },
     {
-      name: 'state_province',
+      name: 'state',
       label: 'State/Province',
       type: 'text',
       placeholder: 'State or Province',
     },
     {
-      name: 'postal_code',
-      label: 'Postal Code',
+      name: 'zip',
+      label: 'ZIP/Postal Code',
       type: 'text',
       placeholder: 'ZIP or postal code',
     },
@@ -107,26 +110,34 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
       placeholder: 'Country',
     },
     {
-      name: 'latitude',
-      label: 'Latitude',
-      type: 'number',
-      placeholder: '37.7749',
-      helpText: 'Geographic latitude (-90 to 90)',
+      name: 'timezone',
+      label: 'Timezone',
+      type: 'text',
+      placeholder: 'America/New_York',
+      helpText: 'IANA timezone identifier (e.g., America/New_York, Europe/London)',
     },
     {
-      name: 'longitude',
-      label: 'Longitude',
-      type: 'number',
-      placeholder: '-122.4194',
-      helpText: 'Geographic longitude (-180 to 180)',
+      name: 'contact_phone',
+      label: 'Contact Phone',
+      type: 'tel',
+      placeholder: '+1 (555) 123-4567',
+      helpText: 'Main phone number for this location',
     },
     {
-      name: 'status',
-      label: 'Status',
-      type: 'select',
-      required: true,
-      options: STATUS_OPTIONS,
-      defaultValue: 'active',
+      name: 'access_instructions',
+      label: 'Access Instructions',
+      type: 'textarea',
+      placeholder: 'Building access codes, parking instructions, etc.',
+      rows: 3,
+      helpText: 'Instructions for accessing this location',
+    },
+    {
+      name: 'notes',
+      label: 'Notes',
+      type: 'textarea',
+      placeholder: 'Additional notes about this location...',
+      rows: 4,
+      helpText: 'Any additional information or notes',
     },
   ]
 

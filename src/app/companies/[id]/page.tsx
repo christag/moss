@@ -100,7 +100,10 @@ export default function CompanyDetailPage() {
               own_organization: 'Own Organization',
               vendor: 'Vendor',
               manufacturer: 'Manufacturer',
+              service_provider: 'Service Provider',
               partner: 'Partner',
+              customer: 'Customer',
+              other: 'Other',
             }[company.company_type] || company.company_type,
         },
         {

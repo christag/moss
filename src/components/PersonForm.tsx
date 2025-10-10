@@ -46,8 +46,8 @@ export function PersonForm({ person, onSuccess, onCancel }: PersonFormProps) {
     const fetchData = async () => {
       try {
         const [companiesRes, locationsRes, managersRes] = await Promise.all([
-          fetch('/api/companies?limit=200&sort_by=name&sort_order=asc'),
-          fetch('/api/locations?limit=200&sort_by=name&sort_order=asc'),
+          fetch('/api/companies?limit=200&sort_by=company_name&sort_order=asc'),
+          fetch('/api/locations?limit=200&sort_by=location_name&sort_order=asc'),
           fetch('/api/people?limit=200&sort_by=full_name&sort_order=asc'),
         ])
 

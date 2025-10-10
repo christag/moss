@@ -23,12 +23,10 @@ const COMPANY_TYPE_OPTIONS = [
   { value: 'own_organization', label: 'Own Organization' },
   { value: 'vendor', label: 'Vendor' },
   { value: 'manufacturer', label: 'Manufacturer' },
+  { value: 'service_provider', label: 'Service Provider' },
   { value: 'partner', label: 'Partner' },
-]
-
-const STATUS_OPTIONS = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
+  { value: 'customer', label: 'Customer' },
+  { value: 'other', label: 'Other' },
 ]
 
 export function CompanyForm({ company, onSuccess, onCancel }: CompanyFormProps) {
@@ -37,7 +35,7 @@ export function CompanyForm({ company, onSuccess, onCancel }: CompanyFormProps) 
   // Field configuration for company form
   const fields: FieldConfig[] = [
     {
-      name: 'name',
+      name: 'company_name',
       label: 'Company Name',
       type: 'text',
       placeholder: 'Enter company name',
@@ -57,15 +55,87 @@ export function CompanyForm({ company, onSuccess, onCancel }: CompanyFormProps) 
       label: 'Website',
       type: 'url',
       placeholder: 'https://example.com',
-      helpText: 'Company website URL (optional)',
+      helpText: 'Company website URL',
     },
     {
-      name: 'status',
-      label: 'Status',
-      type: 'select',
-      required: true,
-      options: STATUS_OPTIONS,
-      defaultValue: 'active',
+      name: 'phone',
+      label: 'Phone',
+      type: 'tel',
+      placeholder: '+1 (555) 123-4567',
+      helpText: 'Main company phone number',
+    },
+    {
+      name: 'email',
+      label: 'Email',
+      type: 'email',
+      placeholder: 'contact@company.com',
+      helpText: 'General company email address',
+    },
+    {
+      name: 'address',
+      label: 'Address',
+      type: 'text',
+      placeholder: '123 Main Street',
+      helpText: 'Street address',
+    },
+    {
+      name: 'city',
+      label: 'City',
+      type: 'text',
+      placeholder: 'City',
+    },
+    {
+      name: 'state',
+      label: 'State/Province',
+      type: 'text',
+      placeholder: 'State or Province',
+    },
+    {
+      name: 'zip',
+      label: 'ZIP/Postal Code',
+      type: 'text',
+      placeholder: 'ZIP or Postal Code',
+    },
+    {
+      name: 'country',
+      label: 'Country',
+      type: 'text',
+      placeholder: 'Country',
+    },
+    {
+      name: 'account_number',
+      label: 'Account Number',
+      type: 'text',
+      placeholder: 'Customer/vendor account number',
+      helpText: 'Account number for this relationship',
+    },
+    {
+      name: 'support_url',
+      label: 'Support URL',
+      type: 'url',
+      placeholder: 'https://support.example.com',
+      helpText: 'Support portal or knowledge base URL',
+    },
+    {
+      name: 'support_phone',
+      label: 'Support Phone',
+      type: 'tel',
+      placeholder: '+1 (555) 123-4567',
+      helpText: 'Technical support phone number',
+    },
+    {
+      name: 'support_email',
+      label: 'Support Email',
+      type: 'email',
+      placeholder: 'support@company.com',
+      helpText: 'Technical support email address',
+    },
+    {
+      name: 'tax_id',
+      label: 'Tax ID',
+      type: 'text',
+      placeholder: 'Tax ID or EIN',
+      helpText: 'Tax identification number',
     },
     {
       name: 'notes',
@@ -88,6 +158,18 @@ export function CompanyForm({ company, onSuccess, onCancel }: CompanyFormProps) 
         company_name: company.company_name,
         company_type: company.company_type,
         website: company.website || '',
+        phone: company.phone || '',
+        email: company.email || '',
+        address: company.address || '',
+        city: company.city || '',
+        state: company.state || '',
+        zip: company.zip || '',
+        country: company.country || '',
+        account_number: company.account_number || '',
+        support_url: company.support_url || '',
+        support_phone: company.support_phone || '',
+        support_email: company.support_email || '',
+        tax_id: company.tax_id || '',
         notes: company.notes || '',
       }
     : {}

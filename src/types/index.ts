@@ -8,7 +8,16 @@ export type UUID = string
 
 export type Status = 'active' | 'inactive' | 'retired' | 'repair' | 'storage'
 
-export type CompanyType = 'own_organization' | 'vendor' | 'manufacturer' | 'partner'
+export type DeviceStatus = 'active' | 'retired' | 'repair' | 'storage'
+
+export type CompanyType =
+  | 'own_organization'
+  | 'vendor'
+  | 'manufacturer'
+  | 'service_provider'
+  | 'partner'
+  | 'customer'
+  | 'other'
 
 export type PersonType =
   | 'employee'
@@ -36,6 +45,16 @@ export type DeviceType =
   | 'chassis'
   | 'module'
   | 'blade'
+
+export type GroupType =
+  | 'active_directory'
+  | 'okta'
+  | 'google_workspace'
+  | 'jamf_smart_group'
+  | 'intune'
+  | 'custom'
+  | 'distribution_list'
+  | 'security'
 
 // Database model types (to be expanded)
 export interface Company {
@@ -259,16 +278,102 @@ export interface UpdatePersonInput {
 
 export interface Device {
   id: UUID
+  parent_device_id?: UUID | null
+  assigned_to_id?: UUID | null
+  last_used_by_id?: UUID | null
+  location_id?: UUID | null
+  room_id?: UUID | null
+  company_id?: UUID | null
+  hostname?: string | null
+  device_type: DeviceType
+  serial_number?: string | null
+  model?: string | null
+  manufacturer?: string | null
+  purchase_date?: Date | null
+  warranty_expiration?: Date | null
+  install_date?: Date | null
+  status: DeviceStatus
+  asset_tag?: string | null
+  operating_system?: string | null
+  os_version?: string | null
+  last_audit_date?: Date | null
+  notes?: string | null
+  created_at: Date
+  updated_at: Date
+}
+
+export interface CreateDeviceInput {
   parent_device_id?: UUID
   assigned_to_id?: UUID
+  last_used_by_id?: UUID
   location_id?: UUID
   room_id?: UUID
+  company_id?: UUID
   hostname?: string
   device_type: DeviceType
   serial_number?: string
   model?: string
   manufacturer?: string
-  status: Status
+  purchase_date?: string
+  warranty_expiration?: string
+  install_date?: string
+  status?: DeviceStatus
+  asset_tag?: string
+  operating_system?: string
+  os_version?: string
+  last_audit_date?: string
+  notes?: string
+}
+
+export interface UpdateDeviceInput {
+  parent_device_id?: UUID | null
+  assigned_to_id?: UUID | null
+  last_used_by_id?: UUID | null
+  location_id?: UUID | null
+  room_id?: UUID | null
+  company_id?: UUID | null
+  hostname?: string | null
+  device_type?: DeviceType
+  serial_number?: string | null
+  model?: string | null
+  manufacturer?: string | null
+  purchase_date?: string | null
+  warranty_expiration?: string | null
+  install_date?: string | null
+  status?: DeviceStatus
+  asset_tag?: string | null
+  operating_system?: string | null
+  os_version?: string | null
+  last_audit_date?: string | null
+  notes?: string | null
+}
+
+export interface Group {
+  id: UUID
+  group_name: string
+  group_type: GroupType
+  description?: string | null
+  group_id_external?: string | null
+  created_date?: Date | null
+  notes?: string | null
   created_at: Date
   updated_at: Date
+}
+
+export interface CreateGroupInput {
+  group_name: string
+  group_type: GroupType
+  description?: string
+  group_id_external?: string
+  created_date?: string
+  notes?: string
+}
+
+export interface UpdateGroupInput {
+  group_name?: string
+  group_type?: GroupType
+  description?: string | null
+  group_id_external?: string | null
+  created_date?: string | null
+  notes?: string | null
 }

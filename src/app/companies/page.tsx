@@ -26,7 +26,10 @@ const COLUMNS: Column<Company>[] = [
         own_organization: 'Own Organization',
         vendor: 'Vendor',
         manufacturer: 'Manufacturer',
+        service_provider: 'Service Provider',
         partner: 'Partner',
+        customer: 'Customer',
+        other: 'Other',
       }
       return typeLabels[company.company_type] || company.company_type
     },
@@ -68,7 +71,10 @@ const FILTERS: Filter[] = [
       { value: 'own_organization', label: 'Own Organization' },
       { value: 'vendor', label: 'Vendor' },
       { value: 'manufacturer', label: 'Manufacturer' },
+      { value: 'service_provider', label: 'Service Provider' },
       { value: 'partner', label: 'Partner' },
+      { value: 'customer', label: 'Customer' },
+      { value: 'other', label: 'Other' },
     ],
   },
 ]

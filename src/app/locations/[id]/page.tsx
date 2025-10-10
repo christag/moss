@@ -104,7 +104,18 @@ export default function LocationDetailPage() {
       title: 'Basic Information',
       fields: [
         { label: 'Location Name', value: location.location_name },
-        { label: 'Location Type', value: location.location_type || '—' },
+        {
+          label: 'Location Type',
+          value: location.location_type
+            ? {
+                office: 'Office',
+                datacenter: 'Data Center',
+                warehouse: 'Warehouse',
+                remote: 'Remote',
+                other: 'Other',
+              }[location.location_type] || location.location_type
+            : '—',
+        },
         { label: 'Full Address', value: fullAddress, width: 'full' },
       ],
     },
