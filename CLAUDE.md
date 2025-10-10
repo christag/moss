@@ -8,6 +8,55 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 
 **Target Users**: IT departments at mid-size companies with complex infrastructure including traditional IT equipment, broadcast/AV equipment, and cloud services.
 
+## Development Workflow
+
+**CRITICAL**: Follow this workflow for EVERY development task:
+
+### Task Tracking
+- **BEFORE starting ANY task**: Read [CLAUDE-TODO.md](CLAUDE-TODO.md) to understand current state and pending tasks
+- **AFTER completing EACH step**: Update [CLAUDE-TODO.md](CLAUDE-TODO.md) with:
+  - Mark completed items as done (strikethrough or move to completed section)
+  - Add any new tasks discovered during implementation
+  - Note any blockers or issues encountered
+  - Update priority if needed
+  - Keep the file current and accurate
+
+### Testing Workflow
+- **AFTER implementing ANY feature or change**: Use Playwright MCP tools to test
+- **Testing Requirements**:
+  - Navigate to the affected page(s) using `mcp__playwright__browser_navigate`
+  - Take screenshots using `mcp__playwright__browser_take_screenshot` to verify visual correctness
+  - Use `mcp__playwright__browser_snapshot` for accessibility verification
+  - Interact with new features using click, type, fill_form tools
+  - Verify forms submit correctly and validation works
+  - Check responsive behavior if applicable
+  - Test error states and edge cases
+- **Document Test Results**: Update CLAUDE-TODO.md with test outcomes
+
+### Why This Matters
+- CLAUDE-TODO.md prevents duplicating work and losing track of progress
+- Playwright testing catches issues before the user discovers them
+- Systematic testing ensures consistent quality across features
+- Documentation of test results helps track what's been verified
+
+### Container Management (MANDATORY)
+
+**CRITICAL**: On macOS, ALWAYS use Apple's container system instead of Docker:
+
+- ✅ **Correct**: `container run postgres`
+- ❌ **Wrong**: `docker run postgres` or `docker container run postgres`
+
+**Container Commands**:
+- Use `container` command for all container operations
+- This applies to running containers, managing images, and all Docker-equivalent operations
+- Examples:
+  - `container run` instead of `docker run`
+  - `container ps` instead of `docker ps`
+  - `container stop` instead of `docker stop`
+  - `container compose up` instead of `docker compose up`
+
+**Why**: Apple's native container system is optimized for macOS and should be used instead of Docker Desktop.
+
 ## Database Architecture
 
 The system uses PostgreSQL with UUID primary keys throughout. The database schema is defined in [dbsetup.sql](dbsetup.sql).
@@ -85,6 +134,9 @@ The system uses PostgreSQL with UUID primary keys throughout. The database schem
 - Frontend: React/Next.js preferred
 - Hosting: Cloudflare Pages/Workers (free tier priority)
 - Storage: Cloudflare R2 for file uploads
+- Authentication: SAML 2.0 with SCIM (Okta, Azure AD, etc.)
+- API: OpenAPI-compatible with ChatGPT support
+- LLM Integration: MCP SSE/HTTP server with OAuth2 for Claude and other assistants
 
 **Constraints**:
 - Single developer (IT Director with systems architecture background)
@@ -351,18 +403,3 @@ Every object detail view includes a "Relationships Panel" (right sidebar) showin
 - ❌ Never rely solely on color to communicate
 - ❌ No complicated navigation
 - ❌ No tiny font sizes
-
-## Future Features (Not Yet Implemented)
-
-**Phase 1 (MVP)**: Basic CRUD for all objects, simple search, basic authentication
-**Phase 2**: Network visualization, advanced search/reporting, enhanced RBAC, bulk operations
-**Phase 3**: Sync modules (AD, MDM, cloud providers), automation, webhooks
-
-When implementing features, consult [prd.md](prd.md) for:
-- Detailed UI page specifications (40+ pages documented)
-- Complete design system specifications
-- Color palette and usage rules
-- Typography system and grid layout
-- User flows and use cases
-- Mobile considerations
-- UX patterns and standards

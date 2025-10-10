@@ -1,1 +1,82 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+package-lock.json
+
+# Testing
+coverage/
+*.log
+.playwright-mcp/
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Misc
+.DS_Store
+*.pem
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Husky
+.husky/_
+
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS-specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Debug
+.pnpm-debug.log
+
+# Local development scripts (optional - uncomment if needed)
+# check-*.js
+# rebuild-database.js
+# rebuild-database.sh
+
+# Planning (optional - uncomment if you want to exclude planning docs)
 planning/
+CLAUDE-TODO.md
+DEVELOPMENT.md
+STATUS.md
+SCHEMA-ALIGNMENT-PLAN.md

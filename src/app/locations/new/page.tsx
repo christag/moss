@@ -1,0 +1,41 @@
+/**
+ * Create Location Page
+ */
+'use client'
+
+import React from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { LocationForm } from '@/components/LocationForm'
+import type { Location } from '@/types'
+
+export default function NewLocationPage() {
+  const router = useRouter()
+
+  const handleSuccess = (location: Location) => {
+    router.push(`/locations/${location.id}`)
+  }
+
+  const handleCancel = () => {
+    router.push('/locations')
+  }
+
+  return (
+    <div className="container">
+      <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/locations" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            Locations
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>New Location</span>
+        </nav>
+
+        <LocationForm onSuccess={handleSuccess} onCancel={handleCancel} />
+      </div>
+    </div>
+  )
+}

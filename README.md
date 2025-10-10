@@ -133,10 +133,14 @@ Devices can have parent-child relationships to represent:
 ### Technology Stack
 
 - **Database**: PostgreSQL with UUID primary keys
-- **Backend**: REST API (framework TBD)
-- **Frontend**: React/Next.js (preferred)
-- **Hosting**: Cloudflare Pages/Workers (free tier priority)
-- **Storage**: Cloudflare R2 for file uploads
+- **Backend**: Next.js API Routes with REST conventions
+- **Frontend**: React 19 + Next.js 15 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Styling**: Custom design system CSS
+- **Validation**: Zod schemas
+- **Testing**: Jest + React Testing Library
+- **Hosting**: Cloudflare Pages/Workers (planned)
+- **Storage**: Cloudflare R2 for file uploads (planned)
 
 ### Design System
 
@@ -152,11 +156,22 @@ See [styles/design-system.css](styles/design-system.css) for complete implementa
 
 ## Roadmap
 
-### Phase 1: Core Features (MVP)
-*Target: 3-6 months*
+### Phase 0: Foundation (Completed ✓)
 
 - [x] Database schema design
 - [x] Design system implementation
+- [x] Next.js 15 + TypeScript setup
+- [x] ESLint + Prettier configuration
+- [x] Git hooks with Husky
+- [x] Jest testing framework
+- [x] Core UI component library
+- [x] Database connection utilities
+- [x] API response utilities
+- [x] Request validation with Zod
+
+### Phase 1: Core Features (MVP)
+*Target: 3-6 months*
+
 - [ ] Basic CRUD operations for all core objects
 - [ ] Relationship management
 - [ ] Basic search functionality
@@ -175,10 +190,24 @@ See [styles/design-system.css](styles/design-system.css) for complete implementa
 
 ### Phase 3: Automation & Integration
 
+**Authentication & Authorization**
+- [ ] SAML 2.0 authentication with SCIM integration (Okta, Azure AD, etc.)
+- [ ] User and admin provisioning via SCIM
+- [ ] Role synchronization from identity provider
+- [ ] Group membership sync
+- [ ] Automated user lifecycle management
+
+**API & LLM Integration**
+- [ ] OpenAPI-compatible REST endpoints for ChatGPT integration
+- [ ] MCP (Model Context Protocol) SSE/HTTP server with OAuth2
+- [ ] Support for Claude and other LLM clients
+- [ ] Structured data access for AI assistants
+- [ ] Context-aware API documentation
+
+**External Integrations**
 - [ ] Active Directory sync
 - [ ] MDM integration (Jamf, Intune)
 - [ ] Cloud provider APIs (AWS, Azure, GCP)
-- [ ] SSO provider integration (Okta, Azure AD)
 - [ ] SNMP/SSH polling for network devices
 - [ ] Automated warranty/license expiration alerts
 - [ ] Webhook support for external systems
@@ -278,6 +307,43 @@ See [LICENSE](LICENSE) for full legal terms
 
 ## Status
 
-**Current Version**: Pre-alpha (Phase 1 in development)
+**Current Version**: Pre-alpha (Phase 0 Complete, Phase 1 in progress)
+
+### Recent Updates (2025-10-10)
+
+✅ **Database Schema Alignment Complete**
+- Rebuilt database from dbsetup.sql as single source of truth
+- Updated all backend code (Types, Schemas, API routes) to match database
+- Companies API: 16 fields including company_name, phone, email, address, support contacts, tax_id
+- Locations API: 12 fields including location_name, location_type, timezone, contact_phone
+- Rooms API: Updated to room_name, room_number, notes
+- People API: Updated to full_name, username, mobile
+- All API endpoints tested and working ✓
+
+⚠️ **In Progress**
+- UI components need updating to match new backend schema
+- Frontend pages currently showing 400 errors due to old field names
+
+✅ **Foundation Complete**
+- Next.js 15 + React 19 with App Router
+- PostgreSQL database with full schema
+- Design system implementation with custom CSS
+- Core UI component library
+- API infrastructure with validation
+- Database rebuild script for quick resets
 
 ⚠️ **Not production-ready** - Active development in progress
+
+**Completed Backend APIs:**
+- Companies (CRUD with 16 fields)
+- Locations (CRUD with 12 fields)
+- Rooms (CRUD with room_name, room_number, notes)
+- People (CRUD with full_name, username, mobile)
+
+**Next Steps:**
+1. Update UI components for Companies, Locations, Rooms, People
+2. Continue with Devices, Networks, Software, and other core objects
+3. Build Dashboard and Global Search
+4. Implement authentication
+
+See [CLAUDE-TODO.md](CLAUDE-TODO.md) for detailed task tracking and [DEVELOPMENT.md](DEVELOPMENT.md) for development guide.
