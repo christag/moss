@@ -1,7 +1,15 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Button, Card, CardHeader, CardContent, Badge } from '@/components/ui'
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardContent,
+  Badge,
+  Breadcrumb,
+  BreadcrumbItem,
+} from '@/components/ui'
 
 /**
  * Field definition for detail view
@@ -43,13 +51,7 @@ export interface DetailAction {
   disabled?: boolean
 }
 
-/**
- * Breadcrumb definition
- */
-export interface Breadcrumb {
-  label: string
-  href?: string
-}
+// Note: Breadcrumb and BreadcrumbItem types are imported from @/components/ui
 
 /**
  * Props for GenericDetailView component
@@ -58,7 +60,7 @@ export interface GenericDetailViewProps {
   title: string
   subtitle?: string
   status?: string
-  breadcrumbs?: Breadcrumb[]
+  breadcrumbs?: BreadcrumbItem[]
   fieldGroups: FieldGroup[]
   tabs?: TabConfig[]
   onEdit?: () => void
@@ -88,46 +90,83 @@ export function GenericDetailView({
   if (loading) {
     return (
       <div className="container">
-        <div className="p-lg text-center">Loading...</div>
+        <div className="p-lg text-center" role="status" aria-live="polite" aria-busy="true">
+          Loading...
+        </div>
       </div>
     )
   }
 
   const currentTab = tabs?.find((tab) => tab.id === activeTab)
 
+  // Keyboard navigation for tabs
+  const handleTabKeyDown = (e: React.KeyboardEvent, tabId: string, index: number) => {
+    if (!tabs) return
+
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault()
+        const nextIndex = (index + 1) % tabs.length
+        setActiveTab(tabs[nextIndex].id)
+        // Focus the next tab
+        setTimeout(() => {
+          const nextTab = document.querySelector(
+            `[data-tab-id="${tabs[nextIndex].id}"]`
+          ) as HTMLButtonElement
+          nextTab?.focus()
+        }, 0)
+        break
+      case 'ArrowLeft':
+        e.preventDefault()
+        const prevIndex = (index - 1 + tabs.length) % tabs.length
+        setActiveTab(tabs[prevIndex].id)
+        // Focus the previous tab
+        setTimeout(() => {
+          const prevTab = document.querySelector(
+            `[data-tab-id="${tabs[prevIndex].id}"]`
+          ) as HTMLButtonElement
+          prevTab?.focus()
+        }, 0)
+        break
+      case 'Home':
+        e.preventDefault()
+        setActiveTab(tabs[0].id)
+        setTimeout(() => {
+          const firstTab = document.querySelector(
+            `[data-tab-id="${tabs[0].id}"]`
+          ) as HTMLButtonElement
+          firstTab?.focus()
+        }, 0)
+        break
+      case 'End':
+        e.preventDefault()
+        setActiveTab(tabs[tabs.length - 1].id)
+        setTimeout(() => {
+          const lastTab = document.querySelector(
+            `[data-tab-id="${tabs[tabs.length - 1].id}"]`
+          ) as HTMLButtonElement
+          lastTab?.focus()
+        }, 0)
+        break
+    }
+  }
+
   return (
     <div className="container">
       <div className="p-lg">
         {/* Breadcrumbs */}
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav
-            className="mb-md"
-            style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
-          >
-            {breadcrumbs.map((crumb, index) => (
-              <span key={index}>
-                {crumb.href ? (
-                  <a
-                    href={crumb.href}
-                    style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                  >
-                    {crumb.label}
-                  </a>
-                ) : (
-                  <span>{crumb.label}</span>
-                )}
-                {index < breadcrumbs.length - 1 && (
-                  <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
-                )}
-              </span>
-            ))}
-          </nav>
-        )}
+        {breadcrumbs && breadcrumbs.length > 0 && <Breadcrumb items={breadcrumbs} />}
 
         {/* Header */}
         <div className="mb-lg">
           {onBack && (
-            <Button variant="outline" size="sm" onClick={onBack} className="mb-md">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+              className="mb-md"
+              aria-label="Go back to previous page"
+            >
               ← Back
             </Button>
           )}
@@ -145,12 +184,12 @@ export function GenericDetailView({
 
             <div className="flex gap-sm">
               {onEdit && (
-                <Button variant="primary" onClick={onEdit}>
+                <Button variant="primary" onClick={onEdit} aria-label={`Edit ${title}`}>
                   Edit
                 </Button>
               )}
               {onDelete && (
-                <Button variant="destructive" onClick={onDelete}>
+                <Button variant="destructive" onClick={onDelete} aria-label={`Delete ${title}`}>
                   Delete
                 </Button>
               )}
@@ -163,13 +202,22 @@ export function GenericDetailView({
           <div className="mb-lg">
             <div
               className="flex gap-md"
+              role="tablist"
+              aria-label={`${title} tabs`}
               style={{ borderBottom: '2px solid rgba(var(--color-black-rgb), 0.1)' }}
             >
-              {tabs.map((tab) => (
+              {tabs.map((tab, index) => (
                 <button
                   key={tab.id}
+                  data-tab-id={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  onKeyDown={(e) => handleTabKeyDown(e, tab.id, index)}
                   className="tab-button"
+                  role="tab"
+                  aria-selected={activeTab === tab.id}
+                  aria-controls={`tabpanel-${tab.id}`}
+                  id={`tab-${tab.id}`}
+                  tabIndex={activeTab === tab.id ? 0 : -1}
                   style={{
                     padding: 'var(--spacing-md) var(--spacing-lg)',
                     background: 'none',
@@ -184,6 +232,14 @@ export function GenericDetailView({
                     fontSize: 'var(--font-size-md)',
                     marginBottom: '-2px',
                     transition: 'all 0.2s ease',
+                    outline: 'none',
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.outline = '2px solid var(--color-morning-blue)'
+                    e.currentTarget.style.outlineOffset = '-2px'
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.outline = 'none'
                   }}
                 >
                   {tab.label}
@@ -205,7 +261,12 @@ export function GenericDetailView({
 
         {/* Tab Content */}
         {activeTab === 'overview' ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
+          <div
+            role="tabpanel"
+            id="tabpanel-overview"
+            aria-labelledby="tab-overview"
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}
+          >
             {fieldGroups.map((group, groupIndex) => (
               <Card key={groupIndex}>
                 <CardHeader>{group.title}</CardHeader>
@@ -241,7 +302,9 @@ export function GenericDetailView({
             ))}
           </div>
         ) : (
-          currentTab?.content
+          <div role="tabpanel" id={`tabpanel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
+            {currentTab?.content}
+          </div>
         )}
       </div>
     </div>

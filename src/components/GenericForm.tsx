@@ -13,6 +13,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { Button, Input, Select, Textarea, Checkbox } from '@/components/ui'
 
 export type FieldType =
@@ -217,12 +218,18 @@ export function GenericForm<T extends z.ZodType>({
       const result = await response.json()
       setHasChanges(false)
 
+      // Show success toast
+      toast.success(method === 'POST' ? 'Created successfully!' : 'Updated successfully!')
+
       if (onSuccess) {
         onSuccess(result.data)
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred'
       setSubmitError(errorMessage)
+
+      // Show error toast
+      toast.error(errorMessage)
 
       if (onError) {
         onError(error instanceof Error ? error : new Error(errorMessage))
@@ -310,6 +317,7 @@ export function GenericForm<T extends z.ZodType>({
             label={field.label}
             required={field.required}
             placeholder={field.placeholder}
+            showValidState={true}
           />
         )
 
@@ -320,11 +328,13 @@ export function GenericForm<T extends z.ZodType>({
 
   return (
     <div className="generic-form">
-      <h2 className="form-title">{title}</h2>
+      <h2 className="form-title" id="form-title">
+        {title}
+      </h2>
 
-      <form onSubmit={handleSubmit} className="form-content">
+      <form onSubmit={handleSubmit} className="form-content" aria-labelledby="form-title">
         {submitError && (
-          <div className="form-error" role="alert">
+          <div className="form-error" role="alert" aria-live="assertive">
             <strong>Error:</strong> {submitError}
           </div>
         )}
@@ -338,12 +348,24 @@ export function GenericForm<T extends z.ZodType>({
         </div>
 
         <div className="form-actions">
-          <Button type="submit" variant="primary" disabled={isSubmitting || !hasChanges}>
-            {isSubmitting ? 'Saving...' : submitText}
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting || !hasChanges}
+            isLoading={isSubmitting}
+            aria-label={isSubmitting ? `${submitText}...` : submitText}
+          >
+            {submitText}
           </Button>
 
           {showCancel && (
-            <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+              aria-label="Cancel and return without saving"
+            >
               Cancel
             </Button>
           )}
