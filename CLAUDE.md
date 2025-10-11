@@ -316,11 +316,53 @@ Mobile-specific features:
 
 ### Relationship Navigation
 
-Every object detail view includes a "Relationships Panel" (right sidebar) showing:
-- Direct relationships (parent/child devices, assigned person, location)
-- Clickable badges with counts (e.g., "3 child devices", "5 IOs")
-- Visual hierarchy indicators (org chart for people, device tree for chassis/modules)
-- Quick action buttons (assign, connect, link)
+Every object detail view includes relationship tabs using the **RelatedItemsList** component pattern.
+
+**RelatedItemsList Component** (`src/components/RelatedItemsList.tsx`):
+- Generic component: `RelatedItemsList<T extends { id: string }>`
+- API-driven data fetching with loading/error states
+- Configurable columns with custom render functions
+- Click-through navigation via `linkPattern` (e.g., `/devices/:id`)
+- "Add New" button support with pre-populated parent IDs
+- Item count badges and pagination messaging
+
+**Usage Pattern**:
+```typescript
+<RelatedItemsList<Room>
+  apiEndpoint={`/api/rooms?location_id=${id}`}
+  columns={[
+    { key: 'room_name', label: 'Room Name' },
+    { key: 'room_number', label: 'Room #', width: '100px' },
+    {
+      key: 'room_type',
+      label: 'Type',
+      render: (room) => <Badge variant="blue">{room.room_type}</Badge>,
+      width: '150px'
+    }
+  ]}
+  linkPattern="/rooms/:id"
+  addButtonLabel="Add Room"
+  onAdd={() => router.push(`/rooms/new?location_id=${id}`)}
+  emptyMessage="No rooms at this location"
+  limit={20}
+/>
+```
+
+**Standard Relationship Tabs by Object Type**:
+
+- **Locations**: Rooms, Devices, People
+- **Devices**: Interfaces/Ports, Child Devices, Installed Applications
+- **People**: Assigned Devices, Direct Reports, Groups
+- **Networks**: Interfaces, IP Addresses, Devices
+- **Rooms**: Devices, Patch Panels (when implemented)
+- **Software**: Installed Applications, Licenses, SaaS Services (when implemented)
+
+**Navigation Flows Enabled**:
+- Location → Rooms → Devices → IOs
+- Person → Assigned Devices → IOs
+- Person → Direct Reports (recursive org chart navigation)
+- Network → Interfaces → Devices
+- Device → Parent Device (modular equipment hierarchy)
 
 ### Search & Filter UX
 
