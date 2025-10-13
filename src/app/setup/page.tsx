@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Input } from '@/components/ui'
 
 // ============================================================================
@@ -297,7 +298,15 @@ export default function SetupWizardPage() {
           {step > 0 && step < 5 && (
             <div className="setup-footer">
               <p>
-                Need help? <a href="/docs">View documentation</a>
+                Need help?{' '}
+                <a
+                  href="https://github.com/christag/moss"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </a>{' '}
+                | <Link href="/api-docs">API Documentation</Link>
               </p>
             </div>
           )}

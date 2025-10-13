@@ -71,6 +71,81 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 
 **Why**: Apple's native container system is optimized for macOS and should be used instead of Docker Desktop.
 
+## Coding Standards (CRITICAL)
+
+**MANDATORY**: Follow these coding standards to prevent lint errors and maintain code quality. The project uses ESLint with strict rules and Husky pre-commit hooks that will block commits with lint errors.
+
+### Next.js Best Practices
+
+1. **Internal Navigation - ALWAYS use `<Link>`**:
+   - ✅ **Correct**: `import Link from 'next/link'` then `<Link href="/page">Text</Link>`
+   - ❌ **Wrong**: `<a href="/page">Text</a>` (will cause ESLint error: `@next/next/no-html-link-for-pages`)
+   - **External links**: Use `<a>` with `target="_blank" rel="noopener noreferrer"`
+   - **Why**: Next.js Link provides client-side navigation and prefetching
+
+2. **Image Optimization**:
+   - ✅ **Correct**: `import Image from 'next/image'` then `<Image src="..." alt="..." width={} height={} />`
+   - ❌ **Wrong**: `<img src="..." />` (will cause ESLint warning)
+   - **Why**: Next.js Image component provides automatic optimization
+
+3. **Client Components**:
+   - Always add `'use client'` directive at the top of files using React hooks (useState, useEffect, etc.)
+   - Server components are the default in Next.js 13+ App Router
+
+### TypeScript Standards
+
+1. **Type Safety**:
+   - Avoid `any` types - use proper TypeScript types or `unknown`
+   - Define interfaces for all API responses and component props
+   - Use Zod schemas from `src/lib/schemas/` for validation
+
+2. **Imports**:
+   - Use `@/` path alias for imports (configured in tsconfig.json)
+   - Example: `import { Component } from '@/components/Component'`
+
+### React Best Practices
+
+1. **Accessibility**:
+   - Always include `alt` attributes on images
+   - Use semantic HTML elements
+   - Ensure keyboard navigation works
+   - Follow WCAG 2.1 AA standards (see [planning/ui-specifications.md](planning/ui-specifications.md))
+
+2. **Hooks**:
+   - Follow Rules of Hooks (only at top level, only in function components)
+   - Use `useCallback` and `useMemo` for expensive operations
+   - Clean up effects with return functions when needed
+
+### Common ESLint Rules
+
+The project enforces these rules (max-warnings=20):
+
+- **No unused variables**: Remove or prefix with underscore `_`
+- **No console.log**: Use proper logging in production code
+- **Prefer const**: Use `const` over `let` when variables don't change
+- **No explicit any**: Define proper types instead of `any`
+- **React hooks dependencies**: Include all dependencies in useEffect/useCallback/useMemo arrays
+
+### Before Committing
+
+1. **ESLint will auto-fix** many issues via lint-staged on commit
+2. **If commit fails**: Read the error message, fix the issue, and commit again
+3. **Common fixes**:
+   - Change `<a href="/internal">` to `<Link href="/internal">`
+   - Add missing dependencies to hook dependency arrays
+   - Remove unused imports/variables
+   - Add proper TypeScript types
+
+### Style Guide
+
+- **Formatting**: Prettier handles this automatically on commit
+- **Naming**:
+  - Components: PascalCase (e.g., `MyComponent.tsx`)
+  - Files: kebab-case for utilities (e.g., `my-utility.ts`)
+  - Variables/functions: camelCase
+  - Constants: UPPER_SNAKE_CASE
+  - Database: snake_case (all tables and columns)
+
 ## Database Architecture
 
 The system uses PostgreSQL with UUID primary keys throughout. The database schema is defined in [dbsetup.sql](dbsetup.sql).

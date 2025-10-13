@@ -79,8 +79,8 @@ services:
   # M.O.S.S. Application (Pre-built from GHCR)
   # ==========================================================================
   app:
-    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/moss}:${IMAGE_TAG:-latest}
-    container_name: moss_app
+    image: ghcr.io/christag:${IMAGE_TAG:-latest}
+    container_name: moss
     restart: unless-stopped
     depends_on:
       postgres:
