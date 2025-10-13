@@ -2,7 +2,7 @@
 node_modules/
 .pnp
 .pnp.js
-package-lock.json
+# package-lock.json is now committed for Docker builds and npm ci consistency
 
 # Testing
 coverage/
