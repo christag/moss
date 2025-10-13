@@ -15,7 +15,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "db:migrate": "ts-node --compiler-options '{\"module\":\"commonjs\"}' src/lib/migrate.ts",
-    "prepare": "husky"
+    "prepare": "node -e \"if (process.env.HUSKY === '0' || !require('fs').existsSync('.git')) process.exit(0); require('child_process').execSync('husky', {stdio: 'inherit'})\""
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.908.0",
