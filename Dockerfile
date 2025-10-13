@@ -14,8 +14,8 @@ RUN apk add --no-cache \
     postgresql-dev
 WORKDIR /app
 
-# Copy package files
-COPY package.json package-lock.json* ./
+# Copy package files (package-lock.json is required for npm ci)
+COPY package.json package-lock.json ./
 
 # Install ALL dependencies (including devDependencies needed for build)
 # Set HUSKY=0 to skip git hooks installation in Docker
