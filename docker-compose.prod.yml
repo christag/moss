@@ -79,7 +79,7 @@ services:
   # M.O.S.S. Application (Pre-built from GHCR)
   # ==========================================================================
   app:
-    image: ghcr.io/christag:${IMAGE_TAG:-latest}
+    image: ghcr.io/christag/moss:${IMAGE_TAG:-latest}
     container_name: moss
     restart: unless-stopped
     depends_on:
