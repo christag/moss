@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import DocumentForm from '@/components/DocumentForm'
 import type { Document } from '@/types'
 
@@ -23,10 +24,30 @@ export default async function EditDocumentPage({ params }: { params: Promise<{ i
   }
 
   return (
-    <div className="p-8">
-      <h1 className="mb-6 text-3xl font-bold">Edit Document</h1>
-      <div className="rounded-md border border-gray-200 bg-white p-6">
-        <DocumentForm initialData={document} isEdit />
+    <div className="container">
+      <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/documents" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            Documents
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/documents/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {document.title}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
+        <h1 className="mb-6 text-3xl font-bold">Edit Document</h1>
+        <div className="rounded-md border border-gray-200 bg-white p-6">
+          <DocumentForm initialData={document} isEdit />
+        </div>
       </div>
     </div>
   )

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { SoftwareLicenseForm } from '@/components/SoftwareLicenseForm'
 import type { SoftwareLicense } from '@/types'
 
@@ -48,6 +49,27 @@ export default function EditSoftwareLicensePage({ params }: { params: Promise<{ 
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link
+            href="/software-licenses"
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            Software Licenses
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/software-licenses/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {license.license_key || 'License'}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <h1 className="text-h1 mb-6">Edit Software License</h1>
         <div className="card">
           <SoftwareLicenseForm

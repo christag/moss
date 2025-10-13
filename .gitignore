@@ -25,6 +25,11 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+
+# Docker and deployment
+backups/
+uploads/
 
 # Vercel
 .vercel
@@ -69,16 +74,29 @@ pnpm-debug.log*
 # Debug
 .pnpm-debug.log
 
-# Local development scripts (optional - uncomment if needed)
-# check-*.js
-# rebuild-database.js
-# rebuild-database.sh
+# ============================================================================
+# DEVELOPMENT & TESTING FILES (DO NOT COMMIT)
+# ============================================================================
 
-# Planning (optional - uncomment if you want to exclude planning docs)
-planning/
+# Development utility scripts
+check-*.js
+test-*.js
+test-*.csv
+test-*.json
+cleanup-*.js
+run-migration-*.js
+rebuild-database.js
+rebuild-database.sh
+
+# Internal documentation and task tracking
 CLAUDE-TODO.md
-DEVELOPMENT.md
-STATUS.md
+CLAUDE-UPDATES.md
 SCHEMA-ALIGNMENT-PLAN.md
+*-SESSION-*.md
+*-REMEDIATION-*.md
+UAT-*.md
+ENHANCED-*.md
+RELATIONSHIP-UI-IMPLEMENTATION-SUMMARY.md
 
+# Testing directory with UAT results
 testing/

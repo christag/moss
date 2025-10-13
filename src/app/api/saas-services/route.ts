@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { CreateSaaSServiceSchema, SaaSServiceQuerySchema } from '@/lib/schemas/saas-service'
 import type { SaaSService } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 // GET /api/saas-services - List SaaS services with filters
 export async function GET(request: NextRequest) {
@@ -145,7 +146,15 @@ export async function GET(request: NextRequest) {
 // POST /api/saas-services - Create new SaaS service
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validatedData = CreateSaaSServiceSchema.parse(body)
 
     const {

@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { CreateSoftwareSchema, SoftwareQuerySchema } from '@/lib/schemas/software'
 import type { Software } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 // GET /api/software - List software with filters
 export async function GET(request: NextRequest) {
@@ -74,7 +75,15 @@ export async function GET(request: NextRequest) {
 // POST /api/software - Create new software
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validatedData = CreateSoftwareSchema.parse(body)
 
     const { company_id, product_name, description, website, software_category, notes } =

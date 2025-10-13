@@ -23,12 +23,12 @@ export const RoomTypeSchema = z.enum([
 export const CreateRoomSchema = z.object({
   location_id: UUIDSchema,
   room_name: z.string().min(1, 'Room name is required').max(255, 'Room name too long'),
-  room_number: z.string().max(50, 'Room number too long').optional(),
-  room_type: RoomTypeSchema.optional(),
-  floor: z.string().max(50, 'Floor too long').optional(),
-  capacity: z.number().int().min(0, 'Capacity must be non-negative').optional(),
-  access_requirements: z.string().optional(),
-  notes: z.string().optional(),
+  room_number: z.string().max(50, 'Room number too long').nullable().optional(),
+  room_type: RoomTypeSchema.nullable().optional(),
+  floor: z.string().max(50, 'Floor too long').nullable().optional(),
+  capacity: z.number().int().min(0, 'Capacity must be non-negative').nullable().optional(),
+  access_requirements: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 // Update Room schema (all fields optional)
@@ -56,6 +56,28 @@ export const ListRoomsQuerySchema = z.object({
     .optional(),
   sort_order: z.enum(['asc', 'desc']).optional().default('asc'),
 })
+
+/**
+ * Schema for bulk creating multiple rooms (1-100 records)
+ */
+export const CreateManyRoomsSchema = z
+  .array(CreateRoomSchema)
+  .min(1, 'At least one room is required')
+  .max(100, 'Maximum 100 rooms per batch')
+
+/**
+ * Column names for rooms table (for bulk insert operations)
+ */
+export const ROOM_COLUMNS = [
+  'location_id',
+  'room_name',
+  'room_number',
+  'room_type',
+  'floor',
+  'capacity',
+  'access_requirements',
+  'notes',
+] as const
 
 // Types inferred from schemas
 export type CreateRoomInput = z.infer<typeof CreateRoomSchema>

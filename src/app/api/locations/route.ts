@@ -5,7 +5,7 @@
  */
 import { NextRequest } from 'next/server'
 import { query } from '@/lib/db'
-import { successResponse, errorResponse } from '@/lib/api'
+import { successResponse, errorResponse, parseRequestBody } from '@/lib/api'
 import { safeValidate } from '@/lib/validation'
 import { CreateLocationSchema, LocationQuerySchema } from '@/lib/schemas/location'
 import type { Location } from '@/types'
@@ -133,7 +133,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validation = safeValidate(CreateLocationSchema, body)

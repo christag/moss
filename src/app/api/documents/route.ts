@@ -3,6 +3,7 @@
  */
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
+import { parseRequestBody } from '@/lib/api'
 import { CreateDocumentSchema, DocumentQuerySchema } from '@/lib/schemas/document'
 import type { Document } from '@/types'
 
@@ -82,8 +83,13 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
-    const validation = CreateDocumentSchema.safeParse(body)
+    // Parse request body with JSON error handling
+    const parseResult = await parseRequestBody(request)
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const validation = CreateDocumentSchema.safeParse(parseResult.data)
 
     if (!validation.success) {
       return NextResponse.json(

@@ -42,6 +42,11 @@
   --color-error: var(--color-orange);
   --color-info: var(--color-light-blue);
 
+  /* Legacy color aliases for backward compatibility */
+  --color-morning-blue: var(--color-blue);
+  --color-brew-black: var(--color-black);
+  --color-brew-black-60: rgba(var(--color-black-rgb), 0.6);
+
   /* Border color - subtle border using low-opacity black */
   --color-border: rgba(var(--color-black-rgb), 0.1);
 }
@@ -101,8 +106,9 @@
 
   /* Grid system */
   --grid-gutter: var(--spacing-md); /* 16px default gutter */
-  --grid-margin: calc(var(--grid-gutter) * 2); /* 32px default margin */
-  --grid-max-width: 1440px;
+  --grid-margin: var(--spacing-sm); /* 8px default margin (further reduced for tighter spacing) */
+  --grid-max-width: 100%; /* Full width by default - responsive to viewport */
+  --grid-max-width-reading: 1200px; /* Max width for optimal reading (paragraphs only) */
 }
 
 /* ==========================================
@@ -114,6 +120,23 @@
   max-width: var(--grid-max-width);
   margin-left: auto;
   margin-right: auto;
+  padding-left: var(--grid-margin);
+  padding-right: var(--grid-margin);
+}
+
+/* Container for reading content (paragraphs, articles) */
+.container-reading {
+  width: 100%;
+  max-width: var(--grid-max-width-reading);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--grid-margin);
+  padding-right: var(--grid-margin);
+}
+
+/* Full-width container for tables and data views */
+.container-fluid {
+  width: 100%;
   padding-left: var(--grid-margin);
   padding-right: var(--grid-margin);
 }
@@ -559,14 +582,14 @@ p {
 .card {
   background-color: var(--color-off-white);
   border-radius: 8px;
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md); /* Reduced from lg (24px) to md (16px) */
   box-shadow: 0 2px 4px rgba(var(--color-black-rgb), 0.08);
 }
 
 .card-header {
   font-size: var(--font-size-xl);
   font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-md);
+  margin-bottom: var(--spacing-sm); /* Reduced from md to sm */
   color: var(--color-black);
 }
 
@@ -771,7 +794,8 @@ p {
 
 @media (max-width: 768px) {
   :root {
-    --grid-margin: var(--spacing-md);
+    --grid-margin: var(--spacing-sm); /* 8px on mobile */
+    --font-size-base: 16px; /* Slightly smaller base for mobile */
   }
 
   h1 {
@@ -783,4 +807,94 @@ p {
   h3 {
     font-size: var(--font-size-xl);
   }
+
+  /* Ensure tables are scrollable on mobile */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Mobile Navigation */
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .mobile-menu-button {
+    display: block !important;
+  }
+
+  .mobile-menu-panel {
+    display: block !important;
+  }
+}
+
+/* Desktop Navigation (show desktop, hide mobile) */
+@media (min-width: 769px) {
+  .desktop-nav {
+    display: flex !important;
+  }
+
+  .mobile-menu-button {
+    display: none !important;
+  }
+
+  .mobile-menu-panel {
+    display: none !important;
+  }
+}
+
+/* ==========================================
+   COLLAPSE/EXPAND ANIMATIONS
+   ========================================== */
+
+.collapsible-section {
+  overflow: hidden;
+  transition:
+    max-height 0.3s ease-out,
+    opacity 0.3s ease-out;
+}
+
+.collapsible-section.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.collapsible-section.expanded {
+  max-height: 2000px; /* Large enough for most content */
+  opacity: 1;
+}
+
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: opacity 0.2s ease;
+}
+
+.collapsible-header:hover {
+  opacity: 0.7;
+}
+
+.collapsible-icon {
+  transition: transform 0.2s ease;
+}
+
+.collapsible-icon.rotated {
+  transform: rotate(180deg);
+}
+
+/* ==========================================
+   HIDE SCROLLBAR UTILITY
+   ========================================== */
+
+/* Hide scrollbar for tab navigation and other elements */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }

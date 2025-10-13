@@ -1,35 +1,18 @@
 /**
  * Device Detail Page
+ *
+ * Shows detailed information about a specific device with relationship tabs
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
-import type { Device, DeviceType, Company, Location, Room, Person } from '@/types'
-
-// Helper function to format device type
-function formatDeviceType(type: DeviceType): string {
-  return type
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
-// Helper function to format date
-function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return '—'
-  try {
-    const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  } catch {
-    return '—'
-  }
-}
+import { toast } from 'sonner'
+import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
+import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
+import { Badge } from '@/components/ui/Badge'
+import { AttachmentsTab } from '@/components/AttachmentsTab'
+import type { Device, Company, Location, Room, Person, IO, InstalledApplication } from '@/types'
 
 export default function DeviceDetailPage() {
   const router = useRouter()
@@ -42,11 +25,10 @@ export default function DeviceDetailPage() {
   const [room, setRoom] = useState<Room | null>(null)
   const [assignedTo, setAssignedTo] = useState<Person | null>(null)
   const [parentDevice, setParentDevice] = useState<Device | null>(null)
-  const [childDevices, setChildDevices] = useState<Device[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState('overview')
 
+  // Fetch device data
   useEffect(() => {
     if (!id) return
 
@@ -58,54 +40,6 @@ export default function DeviceDetailPage() {
         }
         const result = await response.json()
         setDevice(result.data)
-
-        // Fetch related data
-        if (result.data.company_id) {
-          const companyResponse = await fetch(`/api/companies/${result.data.company_id}`)
-          if (companyResponse.ok) {
-            const companyResult = await companyResponse.json()
-            setCompany(companyResult.data)
-          }
-        }
-
-        if (result.data.location_id) {
-          const locationResponse = await fetch(`/api/locations/${result.data.location_id}`)
-          if (locationResponse.ok) {
-            const locationResult = await locationResponse.json()
-            setLocation(locationResult.data)
-          }
-        }
-
-        if (result.data.room_id) {
-          const roomResponse = await fetch(`/api/rooms/${result.data.room_id}`)
-          if (roomResponse.ok) {
-            const roomResult = await roomResponse.json()
-            setRoom(roomResult.data)
-          }
-        }
-
-        if (result.data.assigned_to_id) {
-          const personResponse = await fetch(`/api/people/${result.data.assigned_to_id}`)
-          if (personResponse.ok) {
-            const personResult = await personResponse.json()
-            setAssignedTo(personResult.data)
-          }
-        }
-
-        if (result.data.parent_device_id) {
-          const parentResponse = await fetch(`/api/devices/${result.data.parent_device_id}`)
-          if (parentResponse.ok) {
-            const parentResult = await parentResponse.json()
-            setParentDevice(parentResult.data)
-          }
-        }
-
-        // Fetch child devices
-        const childrenResponse = await fetch(`/api/devices?parent_device_id=${id}`)
-        if (childrenResponse.ok) {
-          const childrenResult = await childrenResponse.json()
-          setChildDevices(childrenResult.data?.devices || [])
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
@@ -116,516 +50,484 @@ export default function DeviceDetailPage() {
     fetchDevice()
   }, [id])
 
+  // Fetch related entities
+  useEffect(() => {
+    if (!device) return
+
+    const fetchRelated = async () => {
+      try {
+        // Fetch company
+        if (device.company_id) {
+          const companyResponse = await fetch(`/api/companies/${device.company_id}`)
+          if (companyResponse.ok) {
+            const result = await companyResponse.json()
+            setCompany(result.data)
+          }
+        }
+
+        // Fetch location
+        if (device.location_id) {
+          const locationResponse = await fetch(`/api/locations/${device.location_id}`)
+          if (locationResponse.ok) {
+            const result = await locationResponse.json()
+            setLocation(result.data)
+          }
+        }
+
+        // Fetch room
+        if (device.room_id) {
+          const roomResponse = await fetch(`/api/rooms/${device.room_id}`)
+          if (roomResponse.ok) {
+            const result = await roomResponse.json()
+            setRoom(result.data)
+          }
+        }
+
+        // Fetch assigned person
+        if (device.assigned_to_id) {
+          const personResponse = await fetch(`/api/people/${device.assigned_to_id}`)
+          if (personResponse.ok) {
+            const result = await personResponse.json()
+            setAssignedTo(result.data)
+          }
+        }
+
+        // Fetch parent device
+        if (device.parent_device_id) {
+          const parentResponse = await fetch(`/api/devices/${device.parent_device_id}`)
+          if (parentResponse.ok) {
+            const result = await parentResponse.json()
+            setParentDevice(result.data)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching related data:', err)
+      }
+    }
+
+    fetchRelated()
+  }, [device])
+
+  const handleEdit = () => {
+    router.push(`/devices/${id}/edit`)
+  }
+
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this device?')) return
+    if (!confirm('Are you sure you want to delete this device? This action cannot be undone.')) {
+      return
+    }
 
     try {
       const response = await fetch(`/api/devices/${id}`, {
         method: 'DELETE',
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        alert(result.message || 'Failed to delete device')
-        return
+        const result = await response.json()
+        throw new Error(result.message || 'Failed to delete device')
       }
 
+      toast.success('Device deleted successfully')
       router.push('/devices')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'An error occurred')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete device')
     }
   }
 
   if (loading) {
     return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner">Loading...</div>
       </div>
     )
   }
 
   if (error || !device) {
     return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error || 'Device not found'}</div>
-          <button onClick={() => router.push('/devices')}>Back to Devices</button>
-        </div>
+      <div className="error-container">
+        <h1>Error</h1>
+        <p>{error || 'Device not found'}</p>
+        <button onClick={handleBack}>Back to Devices</button>
       </div>
     )
   }
 
+  // Helper to format device type
+  const formatDeviceType = (type: string): string => {
+    return type
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  // Helper to format date
+  const formatDate = (date: Date | string | null | undefined): string => {
+    if (!date) return '—'
+    try {
+      const d = typeof date === 'string' ? new Date(date) : date
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      return '—'
+    }
+  }
+
+  // Define field groups for overview tab
+  const fieldGroups: FieldGroup[] = [
+    {
+      title: 'Basic Information',
+      fields: [
+        { label: 'Hostname', value: device.hostname || '—' },
+        { label: 'Device Type', value: formatDeviceType(device.device_type) },
+        { label: 'Asset Tag', value: device.asset_tag || '—' },
+        { label: 'Operating System', value: device.operating_system || '—' },
+        { label: 'OS Version', value: device.os_version || '—' },
+      ],
+    },
+    {
+      title: 'Hardware Details',
+      fields: [
+        { label: 'Manufacturer', value: device.manufacturer || '—' },
+        { label: 'Model', value: device.model || '—' },
+        { label: 'Serial Number', value: device.serial_number || '—' },
+        { label: 'CPU', value: device.cpu || '—' },
+        { label: 'RAM', value: device.ram ? `${device.ram} GB` : '—' },
+        { label: 'Storage', value: device.storage || '—' },
+      ],
+    },
+    {
+      title: 'Assignment & Location',
+      fields: [
+        {
+          label: 'Assigned To',
+          value: assignedTo ? (
+            <a
+              href={`/people/${assignedTo.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {assignedTo.full_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        {
+          label: 'Company',
+          value: company ? (
+            <a
+              href={`/companies/${company.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {company.company_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        {
+          label: 'Location',
+          value: location ? (
+            <a
+              href={`/locations/${location.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {location.location_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        {
+          label: 'Room',
+          value: room ? (
+            <a
+              href={`/rooms/${room.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {room.room_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        {
+          label: 'Parent Device',
+          value: parentDevice ? (
+            <a
+              href={`/devices/${parentDevice.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {parentDevice.hostname || parentDevice.serial_number || 'Parent Device'}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        { label: 'Rack Position', value: device.rack_position || '—' },
+      ],
+    },
+    {
+      title: 'Dates & Warranty',
+      fields: [
+        { label: 'Purchase Date', value: formatDate(device.purchase_date) },
+        { label: 'Install Date', value: formatDate(device.install_date) },
+        { label: 'Warranty Expiration', value: formatDate(device.warranty_expiration) },
+        { label: 'Last Audit Date', value: formatDate(device.last_audit_date) },
+      ],
+    },
+    {
+      title: 'Notes',
+      fields: [{ label: 'Notes', value: device.notes || '—', width: 'full' }],
+    },
+    {
+      title: 'System Information',
+      fields: [
+        { label: 'Device ID', value: device.id },
+        { label: 'Created', value: new Date(device.created_at).toLocaleString() },
+        { label: 'Last Updated', value: new Date(device.updated_at).toLocaleString() },
+      ],
+    },
+  ]
+
+  // Define columns for related items
+  const ioColumns: RelatedColumn<IO>[] = [
+    { key: 'interface_name', label: 'Interface Name' },
+    { key: 'port_number', label: 'Port #', width: '100px' },
+    {
+      key: 'interface_type',
+      label: 'Type',
+      render: (io) => {
+        const typeMap: Record<string, { label: string; color: string }> = {
+          ethernet: { label: 'Ethernet', color: 'blue' },
+          fiber: { label: 'Fiber', color: 'purple' },
+          wifi: { label: 'WiFi', color: 'green' },
+          sdi: { label: 'SDI', color: 'orange' },
+          hdmi: { label: 'HDMI', color: 'red' },
+          power_input: { label: 'Power In', color: 'yellow' },
+          power_output: { label: 'Power Out', color: 'yellow' },
+        }
+        const type = io.interface_type ? typeMap[io.interface_type] : null
+        return type ? (
+          <Badge variant={type.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
+            {type.label}
+          </Badge>
+        ) : (
+          '—'
+        )
+      },
+      width: '120px',
+    },
+    { key: 'speed', label: 'Speed' },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (io) => {
+        const statusMap: Record<string, { label: string; color: string }> = {
+          active: { label: 'Active', color: 'success' },
+          inactive: { label: 'Inactive', color: 'secondary' },
+          down: { label: 'Down', color: 'warning' },
+          disabled: { label: 'Disabled', color: 'default' },
+        }
+        const status = io.status ? statusMap[io.status] : null
+        return status ? (
+          <Badge variant={status.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
+            {status.label}
+          </Badge>
+        ) : (
+          '—'
+        )
+      },
+      width: '100px',
+    },
+  ]
+
+  const childDeviceColumns: RelatedColumn<Device>[] = [
+    { key: 'hostname', label: 'Hostname' },
+    { key: 'device_type', label: 'Type', render: (d) => formatDeviceType(d.device_type) },
+    { key: 'model', label: 'Model' },
+    { key: 'serial_number', label: 'Serial Number' },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (d) => (
+        <Badge
+          variant={
+            d.status === 'active'
+              ? 'success'
+              : d.status === 'repair'
+                ? 'warning'
+                : d.status === 'inactive'
+                  ? 'secondary'
+                  : 'default'
+          }
+        >
+          {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+        </Badge>
+      ),
+      width: '100px',
+    },
+  ]
+
+  const installedAppColumns: RelatedColumn<InstalledApplication>[] = [
+    { key: 'application_name', label: 'Application' },
+    { key: 'version', label: 'Version', width: '120px' },
+    { key: 'install_method', label: 'Install Method', width: '150px' },
+    {
+      key: 'deployment_status',
+      label: 'Status',
+      render: (app) => {
+        const statusMap: Record<string, { label: string; color: string }> = {
+          pilot: { label: 'Pilot', color: 'warning' },
+          production: { label: 'Production', color: 'success' },
+          deprecated: { label: 'Deprecated', color: 'secondary' },
+          retired: { label: 'Retired', color: 'default' },
+        }
+        const status = app.deployment_status ? statusMap[app.deployment_status] : null
+        return status ? (
+          <Badge variant={status.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
+            {status.label}
+          </Badge>
+        ) : (
+          '—'
+        )
+      },
+      width: '120px',
+    },
+  ]
+
+  // Define tabs
+  const tabs: TabConfig[] = [
+    {
+      id: 'overview',
+      label: 'Overview',
+      content: <div>Overview content is rendered by GenericDetailView</div>,
+    },
+    {
+      id: 'ios',
+      label: 'Interfaces/Ports',
+      content: (
+        <RelatedItemsList<IO>
+          apiEndpoint={`/api/ios?device_id=${id}`}
+          columns={ioColumns}
+          linkPattern="/ios/:id"
+          addButtonLabel="Add Interface"
+          onAdd={() => router.push(`/ios/new?device_id=${id}`)}
+          emptyMessage="No interfaces/ports configured for this device"
+          limit={50}
+        />
+      ),
+    },
+    {
+      id: 'child-devices',
+      label: 'Child Devices',
+      content: (
+        <RelatedItemsList<Device>
+          apiEndpoint={`/api/devices?parent_device_id=${id}`}
+          columns={childDeviceColumns}
+          linkPattern="/devices/:id"
+          addButtonLabel="Add Child Device"
+          onAdd={() => router.push(`/devices/new?parent_device_id=${id}`)}
+          emptyMessage="No child devices (modules/blades) for this device"
+          limit={20}
+        />
+      ),
+    },
+    {
+      id: 'installed-apps',
+      label: 'Installed Applications',
+      content: (
+        <RelatedItemsList<InstalledApplication>
+          apiEndpoint={`/api/installed-applications?device_id=${id}`}
+          columns={installedAppColumns}
+          linkPattern="/installed-applications/:id"
+          emptyMessage="No applications installed on this device"
+          limit={50}
+        />
+      ),
+    },
+    {
+      id: 'attachments',
+      label: 'Attachments',
+      content: <AttachmentsTab objectType="device" objectId={id} canEdit={true} />,
+    },
+    {
+      id: 'history',
+      label: 'History',
+      content: (
+        <div className="tab-content">
+          <p className="text-muted">Change history for this device will appear here.</p>
+          <p className="text-muted">
+            <em>Audit log functionality coming soon...</em>
+          </p>
+        </div>
+      ),
+    },
+  ]
+
   return (
-    <div className="container">
-      <div className="p-lg">
-        {/* Breadcrumbs */}
-        <nav
-          className="mb-md"
-          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
-        >
-          <Link href="/devices" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
-            Devices
-          </Link>
-          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
-          <span>{device.hostname || device.serial_number || 'Device'}</span>
-        </nav>
+    <>
+      <GenericDetailView
+        title={device.hostname || device.serial_number || 'Unnamed Device'}
+        subtitle={formatDeviceType(device.device_type)}
+        status={device.status}
+        breadcrumbs={[
+          { label: 'Devices', href: '/devices' },
+          { label: device.hostname || device.serial_number || 'Device' },
+        ]}
+        tabs={tabs}
+        fieldGroups={fieldGroups}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: 'var(--spacing-lg)',
-          }}
-        >
-          <div>
-            <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>
-              {device.hostname || device.serial_number || 'Unnamed Device'}
-            </h1>
-            <div
-              style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-black)', opacity: 0.7 }}
-            >
-              {formatDeviceType(device.device_type)}
-              {device.manufacturer && ` - ${device.manufacturer}`}
-              {device.model && ` ${device.model}`}
-            </div>
-          </div>
+      <style jsx global>{`
+        .loading-container,
+        .error-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 400px;
+          padding: 2rem;
+        }
 
-          <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-            <button
-              onClick={() => router.push(`/devices/${id}/edit`)}
-              style={{
-                padding: 'var(--spacing-sm) var(--spacing-md)',
-                backgroundColor: 'var(--color-blue)',
-                color: 'var(--color-off-white)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              style={{
-                padding: 'var(--spacing-sm) var(--spacing-md)',
-                backgroundColor: 'var(--color-orange)',
-                color: 'var(--color-off-white)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
+        .loading-spinner {
+          font-size: 1.2rem;
+          color: var(--color-brew-black-60);
+        }
 
-        {/* Tabs */}
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--spacing-md)',
-              borderBottom: '2px solid var(--color-border)',
-            }}
-          >
-            {['overview', 'hardware', 'assignment', 'dates'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: 'var(--spacing-sm) var(--spacing-md)',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderBottom: `2px solid ${activeTab === tab ? 'var(--color-blue)' : 'transparent'}`,
-                  cursor: 'pointer',
-                  fontWeight: activeTab === tab ? '600' : '400',
-                  color: activeTab === tab ? 'var(--color-blue)' : 'var(--color-black)',
-                  marginBottom: '-2px',
-                }}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
+        .error-container h1 {
+          color: var(--color-orange);
+          margin-bottom: 1rem;
+        }
 
-        {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 'var(--spacing-lg)',
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Basic Information</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Hostname:</dt>
-                <dd>{device.hostname || '—'}</dd>
+        .error-container p {
+          margin-bottom: 1.5rem;
+          color: var(--color-brew-black-60);
+        }
 
-                <dt style={{ fontWeight: '600' }}>Device Type:</dt>
-                <dd>{formatDeviceType(device.device_type)}</dd>
+        .error-container button {
+          padding: 0.75rem 1.5rem;
+          background: var(--color-morning-blue);
+          color: var(--color-off-white);
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 1rem;
+        }
 
-                <dt style={{ fontWeight: '600' }}>Status:</dt>
-                <dd>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      backgroundColor:
-                        device.status === 'active'
-                          ? '#28C077'
-                          : device.status === 'retired'
-                            ? 'rgba(35, 31, 32, 0.4)'
-                            : device.status === 'repair'
-                              ? '#FD6A3D'
-                              : '#ACD7FF',
-                      color: device.status === 'storage' ? '#231F20' : '#FAF9F5',
-                    }}
-                  >
-                    {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
-                  </span>
-                </dd>
+        .error-container button:hover {
+          opacity: 0.9;
+        }
 
-                <dt style={{ fontWeight: '600' }}>Asset Tag:</dt>
-                <dd>{device.asset_tag || '—'}</dd>
+        .tab-content {
+          padding: 2rem;
+        }
 
-                <dt style={{ fontWeight: '600' }}>Operating System:</dt>
-                <dd>{device.operating_system || '—'}</dd>
-
-                <dt style={{ fontWeight: '600' }}>OS Version:</dt>
-                <dd>{device.os_version || '—'}</dd>
-              </dl>
-            </div>
-
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Assignment</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Assigned To:</dt>
-                <dd>
-                  {assignedTo ? (
-                    <Link
-                      href={`/people/${assignedTo.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {assignedTo.full_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Company:</dt>
-                <dd>
-                  {company ? (
-                    <Link
-                      href={`/companies/${company.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {company.company_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Location:</dt>
-                <dd>
-                  {location ? (
-                    <Link
-                      href={`/locations/${location.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {location.location_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Room:</dt>
-                <dd>
-                  {room ? (
-                    <Link
-                      href={`/rooms/${room.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {room.room_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Parent Device:</dt>
-                <dd>
-                  {parentDevice ? (
-                    <Link
-                      href={`/devices/${parentDevice.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {parentDevice.hostname || parentDevice.serial_number || 'Parent Device'}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Child Devices:</dt>
-                <dd>{childDevices.length}</dd>
-              </dl>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'hardware' && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 'var(--spacing-lg)',
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Hardware Details</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Manufacturer:</dt>
-                <dd>{device.manufacturer || '—'}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Model:</dt>
-                <dd>{device.model || '—'}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Serial Number:</dt>
-                <dd>{device.serial_number || '—'}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Asset Tag:</dt>
-                <dd>{device.asset_tag || '—'}</dd>
-              </dl>
-            </div>
-
-            {device.notes && (
-              <div>
-                <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Notes</h3>
-                <p style={{ whiteSpace: 'pre-wrap' }}>{device.notes}</p>
-              </div>
-            )}
-
-            {childDevices.length > 0 && (
-              <div>
-                <h3 style={{ marginBottom: 'var(--spacing-md)' }}>
-                  Child Devices ({childDevices.length})
-                </h3>
-                <ul style={{ listStyle: 'none', padding: 0 }}>
-                  {childDevices.map((child) => (
-                    <li
-                      key={child.id}
-                      style={{
-                        padding: 'var(--spacing-sm)',
-                        marginBottom: 'var(--spacing-sm)',
-                        border: '1px solid var(--color-border)',
-                        borderRadius: '4px',
-                      }}
-                    >
-                      <Link
-                        href={`/devices/${child.id}`}
-                        style={{
-                          color: 'var(--color-blue)',
-                          textDecoration: 'none',
-                          fontWeight: '600',
-                        }}
-                      >
-                        {child.hostname || child.serial_number || 'Unnamed Device'}
-                      </Link>
-                      <div
-                        style={{
-                          fontSize: 'var(--font-size-sm)',
-                          color: 'var(--color-black)',
-                          opacity: 0.7,
-                        }}
-                      >
-                        {formatDeviceType(child.device_type)}
-                        {child.model && ` - ${child.model}`}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'assignment' && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 'var(--spacing-lg)',
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Assignment Information</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Assigned To:</dt>
-                <dd>
-                  {assignedTo ? (
-                    <Link
-                      href={`/people/${assignedTo.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {assignedTo.full_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Company:</dt>
-                <dd>
-                  {company ? (
-                    <Link
-                      href={`/companies/${company.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {company.company_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Location:</dt>
-                <dd>
-                  {location ? (
-                    <Link
-                      href={`/locations/${location.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {location.location_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Room:</dt>
-                <dd>
-                  {room ? (
-                    <Link
-                      href={`/rooms/${room.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {room.room_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-              </dl>
-            </div>
-
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Device Hierarchy</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Parent Device:</dt>
-                <dd>
-                  {parentDevice ? (
-                    <Link
-                      href={`/devices/${parentDevice.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {parentDevice.hostname || parentDevice.serial_number || 'Parent Device'}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Child Devices:</dt>
-                <dd>{childDevices.length}</dd>
-              </dl>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'dates' && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 'var(--spacing-lg)',
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Important Dates</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Purchase Date:</dt>
-                <dd>{formatDate(device.purchase_date)}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Warranty Expires:</dt>
-                <dd>{formatDate(device.warranty_expiration)}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Install Date:</dt>
-                <dd>{formatDate(device.install_date)}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Last Audit:</dt>
-                <dd>{formatDate(device.last_audit_date)}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Created:</dt>
-                <dd>{formatDate(device.created_at)}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Last Updated:</dt>
-                <dd>{formatDate(device.updated_at)}</dd>
-              </dl>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+        .text-muted {
+          color: var(--color-brew-black-60);
+          line-height: 1.6;
+        }
+      `}</style>
+    </>
   )
 }

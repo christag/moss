@@ -1,35 +1,18 @@
 /**
  * Person Detail Page
+ *
+ * Shows detailed information about a specific person with relationship tabs
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
-import type { Person, Company, Location, PersonType } from '@/types'
-
-// Helper function to format person type
-function formatPersonType(type: PersonType): string {
-  return type
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-}
-
-// Helper function to format date
-function formatDate(date: Date | string | null | undefined): string {
-  if (!date) return '—'
-  try {
-    const d = typeof date === 'string' ? new Date(date) : date
-    return d.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  } catch {
-    return '—'
-  }
-}
+import { toast } from 'sonner'
+import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
+import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
+import { Badge } from '@/components/ui/Badge'
+import { AttachmentsTab } from '@/components/AttachmentsTab'
+import type { Person, Company, Location, Device, Group } from '@/types'
 
 export default function PersonDetailPage() {
   const router = useRouter()
@@ -40,11 +23,10 @@ export default function PersonDetailPage() {
   const [company, setCompany] = useState<Company | null>(null)
   const [location, setLocation] = useState<Location | null>(null)
   const [manager, setManager] = useState<Person | null>(null)
-  const [directReports, setDirectReports] = useState<Person[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState('overview')
 
+  // Fetch person data
   useEffect(() => {
     if (!id) return
 
@@ -56,38 +38,6 @@ export default function PersonDetailPage() {
         }
         const result = await response.json()
         setPerson(result.data)
-
-        // Fetch related data
-        if (result.data.company_id) {
-          const companyResponse = await fetch(`/api/companies/${result.data.company_id}`)
-          if (companyResponse.ok) {
-            const companyResult = await companyResponse.json()
-            setCompany(companyResult.data)
-          }
-        }
-
-        if (result.data.location_id) {
-          const locationResponse = await fetch(`/api/locations/${result.data.location_id}`)
-          if (locationResponse.ok) {
-            const locationResult = await locationResponse.json()
-            setLocation(locationResult.data)
-          }
-        }
-
-        if (result.data.manager_id) {
-          const managerResponse = await fetch(`/api/people/${result.data.manager_id}`)
-          if (managerResponse.ok) {
-            const managerResult = await managerResponse.json()
-            setManager(managerResult.data)
-          }
-        }
-
-        // Fetch direct reports
-        const reportsResponse = await fetch(`/api/people?manager_id=${id}`)
-        if (reportsResponse.ok) {
-          const reportsResult = await reportsResponse.json()
-          setDirectReports(reportsResult.data?.people || [])
-        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred')
       } finally {
@@ -98,368 +48,432 @@ export default function PersonDetailPage() {
     fetchPerson()
   }, [id])
 
+  // Fetch related entities
+  useEffect(() => {
+    if (!person) return
+
+    const fetchRelated = async () => {
+      try {
+        // Fetch company
+        if (person.company_id) {
+          const companyResponse = await fetch(`/api/companies/${person.company_id}`)
+          if (companyResponse.ok) {
+            const result = await companyResponse.json()
+            setCompany(result.data)
+          }
+        }
+
+        // Fetch location
+        if (person.location_id) {
+          const locationResponse = await fetch(`/api/locations/${person.location_id}`)
+          if (locationResponse.ok) {
+            const result = await locationResponse.json()
+            setLocation(result.data)
+          }
+        }
+
+        // Fetch manager
+        if (person.manager_id) {
+          const managerResponse = await fetch(`/api/people/${person.manager_id}`)
+          if (managerResponse.ok) {
+            const result = await managerResponse.json()
+            setManager(result.data)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching related data:', err)
+      }
+    }
+
+    fetchRelated()
+  }, [person])
+
+  const handleEdit = () => {
+    router.push(`/people/${id}/edit`)
+  }
+
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this person?')) return
+    if (!confirm('Are you sure you want to delete this person? This action cannot be undone.')) {
+      return
+    }
 
     try {
       const response = await fetch(`/api/people/${id}`, {
         method: 'DELETE',
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        alert(result.message || 'Failed to delete person')
-        return
+        const result = await response.json()
+        throw new Error(result.message || 'Failed to delete person')
       }
 
+      toast.success('Person deleted successfully')
       router.push('/people')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'An error occurred')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete person')
     }
   }
 
   if (loading) {
     return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
+      <div className="loading-container">
+        <div className="loading-spinner">Loading...</div>
       </div>
     )
   }
 
   if (error || !person) {
     return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error || 'Person not found'}</div>
-          <button onClick={() => router.push('/people')}>Back to People</button>
-        </div>
+      <div className="error-container">
+        <h1>Error</h1>
+        <p>{error || 'Person not found'}</p>
+        <button onClick={handleBack}>Back to People</button>
       </div>
     )
   }
 
+  // Helper to format person type
+  const formatPersonType = (type: string): string => {
+    return type
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+
+  // Helper to format date
+  const formatDate = (date: Date | string | null | undefined): string => {
+    if (!date) return '—'
+    try {
+      const d = typeof date === 'string' ? new Date(date) : date
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    } catch {
+      return '—'
+    }
+  }
+
+  // Define field groups for overview tab
+  const fieldGroups: FieldGroup[] = [
+    {
+      title: 'Basic Information',
+      fields: [
+        { label: 'Full Name', value: person.full_name },
+        { label: 'Email', value: person.email || '—' },
+        { label: 'Username', value: person.username || '—' },
+        {
+          label: 'Person Type',
+          value: (
+            <Badge
+              variant={
+                person.person_type === 'employee'
+                  ? 'blue'
+                  : person.person_type === 'contractor'
+                    ? 'purple'
+                    : person.person_type === 'vendor_contact'
+                      ? 'orange'
+                      : 'default'
+              }
+            >
+              {formatPersonType(person.person_type)}
+            </Badge>
+          ),
+        },
+        { label: 'Employee ID', value: person.employee_id || '—' },
+      ],
+    },
+    {
+      title: 'Job Details',
+      fields: [
+        { label: 'Job Title', value: person.job_title || '—' },
+        { label: 'Department', value: person.department || '—' },
+        {
+          label: 'Manager',
+          value: manager ? (
+            <a
+              href={`/people/${manager.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {manager.full_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        { label: 'Start Date', value: formatDate(person.start_date) },
+      ],
+    },
+    {
+      title: 'Contact Information',
+      fields: [
+        { label: 'Phone', value: person.phone || '—' },
+        { label: 'Mobile', value: person.mobile || '—' },
+        { label: 'Preferred Contact Method', value: person.preferred_contact_method || '—' },
+      ],
+    },
+    {
+      title: 'Location & Company',
+      fields: [
+        {
+          label: 'Company',
+          value: company ? (
+            <a
+              href={`/companies/${company.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {company.company_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+        {
+          label: 'Location',
+          value: location ? (
+            <a
+              href={`/locations/${location.id}`}
+              style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+            >
+              {location.location_name}
+            </a>
+          ) : (
+            '—'
+          ),
+        },
+      ],
+    },
+    {
+      title: 'Notes',
+      fields: [{ label: 'Notes', value: person.notes || '—', width: 'full' }],
+    },
+    {
+      title: 'System Information',
+      fields: [
+        { label: 'Person ID', value: person.id },
+        { label: 'Created', value: new Date(person.created_at).toLocaleString() },
+        { label: 'Last Updated', value: new Date(person.updated_at).toLocaleString() },
+      ],
+    },
+  ]
+
+  // Define columns for related items
+  const deviceColumns: RelatedColumn<Device>[] = [
+    { key: 'hostname', label: 'Hostname' },
+    {
+      key: 'device_type',
+      label: 'Type',
+      render: (device) => {
+        const typeMap: Record<string, string> = {
+          computer: 'Computer',
+          server: 'Server',
+          mobile: 'Mobile',
+          printer: 'Printer',
+          switch: 'Switch',
+          router: 'Router',
+        }
+        return typeMap[device.device_type] || device.device_type
+      },
+    },
+    { key: 'manufacturer', label: 'Manufacturer' },
+    { key: 'model', label: 'Model' },
+    { key: 'serial_number', label: 'Serial Number' },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (device) => (
+        <Badge
+          variant={
+            device.status === 'active'
+              ? 'success'
+              : device.status === 'inactive'
+                ? 'secondary'
+                : 'default'
+          }
+        >
+          {device.status.charAt(0).toUpperCase() + device.status.slice(1)}
+        </Badge>
+      ),
+      width: '100px',
+    },
+  ]
+
+  const directReportColumns: RelatedColumn<Person>[] = [
+    { key: 'full_name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'job_title', label: 'Title' },
+    { key: 'department', label: 'Department' },
+    { key: 'phone', label: 'Phone' },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (p) => (
+        <Badge
+          variant={
+            p.status === 'active' ? 'success' : p.status === 'inactive' ? 'secondary' : 'default'
+          }
+        >
+          {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+        </Badge>
+      ),
+      width: '100px',
+    },
+  ]
+
+  const groupColumns: RelatedColumn<Group>[] = [
+    { key: 'group_name', label: 'Group Name' },
+    {
+      key: 'group_type',
+      label: 'Type',
+      render: (group) => {
+        const typeMap: Record<string, { label: string; color: string }> = {
+          active_directory: { label: 'AD', color: 'blue' },
+          okta: { label: 'Okta', color: 'purple' },
+          google_workspace: { label: 'Google', color: 'green' },
+          jamf_smart_group: { label: 'Jamf', color: 'orange' },
+          custom: { label: 'Custom', color: 'gray' },
+          security: { label: 'Security', color: 'red' },
+        }
+        const type = group.group_type ? typeMap[group.group_type] : null
+        return type ? (
+          <Badge variant={type.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
+            {type.label}
+          </Badge>
+        ) : (
+          '—'
+        )
+      },
+      width: '120px',
+    },
+    { key: 'description', label: 'Description' },
+  ]
+
+  // Define tabs
+  const tabs: TabConfig[] = [
+    {
+      id: 'overview',
+      label: 'Overview',
+      content: <div>Overview content is rendered by GenericDetailView</div>,
+    },
+    {
+      id: 'devices',
+      label: 'Assigned Devices',
+      content: (
+        <RelatedItemsList<Device>
+          apiEndpoint={`/api/devices?assigned_to_id=${id}`}
+          columns={deviceColumns}
+          linkPattern="/devices/:id"
+          addButtonLabel="Assign Device"
+          onAdd={() => router.push(`/devices/new?assigned_to_id=${id}`)}
+          emptyMessage="No devices assigned to this person"
+          limit={50}
+        />
+      ),
+    },
+    {
+      id: 'direct-reports',
+      label: 'Direct Reports',
+      content: (
+        <RelatedItemsList<Person>
+          apiEndpoint={`/api/people?manager_id=${id}`}
+          columns={directReportColumns}
+          linkPattern="/people/:id"
+          emptyMessage="No direct reports for this person"
+          limit={50}
+        />
+      ),
+    },
+    {
+      id: 'groups',
+      label: 'Groups',
+      content: (
+        <RelatedItemsList<Group>
+          apiEndpoint={`/api/people/${id}/groups`}
+          columns={groupColumns}
+          linkPattern="/groups/:id"
+          emptyMessage="Not a member of any groups"
+          limit={50}
+        />
+      ),
+    },
+    {
+      id: 'attachments',
+      label: 'Attachments',
+      content: <AttachmentsTab objectType="person" objectId={id} canEdit={true} />,
+    },
+    {
+      id: 'history',
+      label: 'History',
+      content: (
+        <div className="tab-content">
+          <p className="text-muted">Change history for this person will appear here.</p>
+          <p className="text-muted">
+            <em>Audit log functionality coming soon...</em>
+          </p>
+        </div>
+      ),
+    },
+  ]
+
   return (
-    <div className="container">
-      <div className="p-lg">
-        {/* Breadcrumbs */}
-        <nav
-          className="mb-md"
-          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
-        >
-          <Link href="/people" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
-            People
-          </Link>
-          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
-          <span>{person.full_name}</span>
-        </nav>
+    <>
+      <GenericDetailView
+        title={person.full_name}
+        subtitle={person.job_title || formatPersonType(person.person_type)}
+        status={person.status}
+        breadcrumbs={[{ label: 'People', href: '/people' }, { label: person.full_name }]}
+        tabs={tabs}
+        fieldGroups={fieldGroups}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+      />
 
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: 'var(--spacing-lg)',
-          }}
-        >
-          <div>
-            <h1 style={{ marginBottom: 'var(--spacing-xs)' }}>{person.full_name}</h1>
-            <div
-              style={{ fontSize: 'var(--font-size-lg)', color: 'var(--color-black)', opacity: 0.7 }}
-            >
-              {person.job_title || formatPersonType(person.person_type)}
-            </div>
-          </div>
+      <style jsx global>{`
+        .loading-container,
+        .error-container {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 400px;
+          padding: 2rem;
+        }
 
-          <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
-            <button
-              onClick={() => router.push(`/people/${id}/edit`)}
-              style={{
-                padding: 'var(--spacing-sm) var(--spacing-md)',
-                backgroundColor: 'var(--color-blue)',
-                color: 'var(--color-off-white)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Edit
-            </button>
-            <button
-              onClick={handleDelete}
-              style={{
-                padding: 'var(--spacing-sm) var(--spacing-md)',
-                backgroundColor: 'var(--color-orange)',
-                color: 'var(--color-off-white)',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
+        .loading-spinner {
+          font-size: 1.2rem;
+          color: var(--color-brew-black-60);
+        }
 
-        {/* Tabs */}
-        <div style={{ marginBottom: 'var(--spacing-lg)' }}>
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--spacing-md)',
-              borderBottom: '2px solid var(--color-border)',
-            }}
-          >
-            {['overview', 'organization', 'contact'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: 'var(--spacing-sm) var(--spacing-md)',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  borderBottom: `2px solid ${activeTab === tab ? 'var(--color-blue)' : 'transparent'}`,
-                  cursor: 'pointer',
-                  fontWeight: activeTab === tab ? '600' : '400',
-                  color: activeTab === tab ? 'var(--color-blue)' : 'var(--color-black)',
-                  marginBottom: '-2px',
-                }}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
+        .error-container h1 {
+          color: var(--color-orange);
+          margin-bottom: 1rem;
+        }
 
-        {/* Tab Content */}
-        {activeTab === 'overview' && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 'var(--spacing-lg)',
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Basic Information</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Employee ID:</dt>
-                <dd>{person.employee_id || '—'}</dd>
+        .error-container p {
+          margin-bottom: 1.5rem;
+          color: var(--color-brew-black-60);
+        }
 
-                <dt style={{ fontWeight: '600' }}>Type:</dt>
-                <dd>{formatPersonType(person.person_type)}</dd>
+        .error-container button {
+          padding: 0.75rem 1.5rem;
+          background: var(--color-morning-blue);
+          color: var(--color-off-white);
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 1rem;
+        }
 
-                <dt style={{ fontWeight: '600' }}>Status:</dt>
-                <dd>
-                  <span
-                    style={{
-                      display: 'inline-block',
-                      padding: '4px 8px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      backgroundColor:
-                        person.status === 'active'
-                          ? '#28C077'
-                          : person.status === 'inactive'
-                            ? '#ACD7FF'
-                            : '#FD6A3D',
-                      color: person.status === 'inactive' ? '#231F20' : '#FAF9F5',
-                    }}
-                  >
-                    {person.status.charAt(0).toUpperCase() + person.status.slice(1)}
-                  </span>
-                </dd>
+        .error-container button:hover {
+          opacity: 0.9;
+        }
 
-                <dt style={{ fontWeight: '600' }}>Department:</dt>
-                <dd>{person.department || '—'}</dd>
+        .tab-content {
+          padding: 2rem;
+        }
 
-                <dt style={{ fontWeight: '600' }}>Job Title:</dt>
-                <dd>{person.job_title || '—'}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Start Date:</dt>
-                <dd>{formatDate(person.start_date)}</dd>
-              </dl>
-            </div>
-
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Organization</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Company:</dt>
-                <dd>
-                  {company ? (
-                    <Link
-                      href={`/companies/${company.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {company.company_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Location:</dt>
-                <dd>
-                  {location ? (
-                    <Link
-                      href={`/locations/${location.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {location.location_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Manager:</dt>
-                <dd>
-                  {manager ? (
-                    <Link
-                      href={`/people/${manager.id}`}
-                      style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
-                    >
-                      {manager.full_name}
-                    </Link>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Direct Reports:</dt>
-                <dd>{directReports.length}</dd>
-              </dl>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'organization' && (
-          <div>
-            <h3 style={{ marginBottom: 'var(--spacing-md)' }}>
-              Direct Reports ({directReports.length})
-            </h3>
-            {directReports.length > 0 ? (
-              <ul style={{ listStyle: 'none', padding: 0 }}>
-                {directReports.map((report) => (
-                  <li
-                    key={report.id}
-                    style={{
-                      padding: 'var(--spacing-sm)',
-                      marginBottom: 'var(--spacing-sm)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    <Link
-                      href={`/people/${report.id}`}
-                      style={{
-                        color: 'var(--color-blue)',
-                        textDecoration: 'none',
-                        fontWeight: '600',
-                      }}
-                    >
-                      {report.full_name}
-                    </Link>
-                    <div
-                      style={{
-                        fontSize: 'var(--font-size-sm)',
-                        color: 'var(--color-black)',
-                        opacity: 0.7,
-                      }}
-                    >
-                      {report.job_title || formatPersonType(report.person_type)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p style={{ color: 'var(--color-black)', opacity: 0.6 }}>No direct reports</p>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'contact' && (
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: 'var(--spacing-lg)',
-            }}
-          >
-            <div>
-              <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Contact Information</h3>
-              <dl
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '140px 1fr',
-                  gap: 'var(--spacing-sm)',
-                }}
-              >
-                <dt style={{ fontWeight: '600' }}>Email:</dt>
-                <dd>
-                  {person.email ? (
-                    <a href={`mailto:${person.email}`} style={{ color: 'var(--color-blue)' }}>
-                      {person.email}
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Phone:</dt>
-                <dd>
-                  {person.phone ? (
-                    <a href={`tel:${person.phone}`} style={{ color: 'var(--color-blue)' }}>
-                      {person.phone}
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Mobile:</dt>
-                <dd>
-                  {person.mobile ? (
-                    <a href={`tel:${person.mobile}`} style={{ color: 'var(--color-blue)' }}>
-                      {person.mobile}
-                    </a>
-                  ) : (
-                    '—'
-                  )}
-                </dd>
-
-                <dt style={{ fontWeight: '600' }}>Username:</dt>
-                <dd>{person.username || '—'}</dd>
-
-                <dt style={{ fontWeight: '600' }}>Preferred Contact:</dt>
-                <dd>{person.preferred_contact_method || '—'}</dd>
-              </dl>
-            </div>
-
-            {person.notes && (
-              <div>
-                <h3 style={{ marginBottom: 'var(--spacing-md)' }}>Notes</h3>
-                <p style={{ whiteSpace: 'pre-wrap' }}>{person.notes}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+        .text-muted {
+          color: var(--color-brew-black-60);
+          line-height: 1.6;
+        }
+      `}</style>
+    </>
   )
 }

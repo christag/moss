@@ -1,66 +1,122 @@
 /**
  * Locations List Page
  *
- * Lists all locations with filtering, search, and pagination
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { GenericListView, Column, Filter, Pagination } from '@/components/GenericListView'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Location } from '@/types'
 
-const COLUMNS: Column<Location>[] = [
+// Define ALL possible columns for locations
+const ALL_COLUMNS: ColumnConfig<Location>[] = [
   {
     key: 'location_name',
     label: 'Location Name',
     sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide location name
     render: (location) => location.location_name,
   },
   {
-    key: 'city',
-    label: 'City',
-    sortable: true,
-    render: (location) => location.city || <span className="text-muted">—</span>,
-  },
-  {
-    key: 'state',
-    label: 'State/Province',
-    sortable: true,
-    render: (location) => location.state || <span className="text-muted">—</span>,
-  },
-  {
-    key: 'country',
-    label: 'Country',
-    sortable: true,
-    render: (location) => location.country || <span className="text-muted">—</span>,
-  },
-  {
     key: 'location_type',
     label: 'Type',
     sortable: true,
-    render: (location) => location.location_type || <span className="text-muted">—</span>,
-  },
-  {
-    key: 'created_at',
-    label: 'Created',
-    sortable: true,
-    render: (location) => new Date(location.created_at).toLocaleDateString(),
-  },
-]
-
-const FILTERS: Filter[] = [
-  {
-    key: 'location_type',
-    label: 'Type',
-    type: 'select',
-    options: [
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
       { value: 'office', label: 'Office' },
       { value: 'datacenter', label: 'Data Center' },
       { value: 'warehouse', label: 'Warehouse' },
       { value: 'remote', label: 'Remote' },
       { value: 'other', label: 'Other' },
     ],
+    render: (location) => location.location_type || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'city',
+    label: 'City',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (location) => location.city || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'state',
+    label: 'State/Province',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (location) => location.state || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'country',
+    label: 'Country',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (location) => location.country || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'address',
+    label: 'Address',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (location) => location.address || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'zip',
+    label: 'ZIP/Postal Code',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (location) => location.zip || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'timezone',
+    label: 'Timezone',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (location) => location.timezone || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'contact_phone',
+    label: 'Contact Phone',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (location) => location.contact_phone || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'access_instructions',
+    label: 'Access Instructions',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (location) => location.access_instructions || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (location) => new Date(location.created_at).toLocaleDateString(),
   },
 ]
 
@@ -90,7 +146,7 @@ export default function LocationsPage() {
           params.append('search', searchValue)
         }
 
-        // Only add filter values that are not empty
+        // Add all filter values (both column filters and legacy filters)
         Object.entries(filterValues).forEach(([key, value]) => {
           if (value && value !== '') {
             params.append(key, value)
@@ -151,10 +207,9 @@ export default function LocationsPage() {
     <>
       <GenericListView
         title="Locations"
-        columns={COLUMNS}
+        columns={ALL_COLUMNS}
         data={locations}
         pagination={pagination}
-        filters={FILTERS}
         filterValues={filterValues}
         searchPlaceholder="Search locations..."
         searchValue={searchValue}
@@ -169,6 +224,8 @@ export default function LocationsPage() {
         addButtonLabel="Add Location"
         emptyMessage="No locations found. Create your first location to get started."
         rowLink={(location) => `/locations/${location.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
       />
 
       <style jsx global>{`

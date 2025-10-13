@@ -1,165 +1,239 @@
 /**
  * Software List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import type { Software } from '@/types'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { Software, SoftwareCategory } from '@/types'
+
+// Helper function to format software category for display
+function formatSoftwareCategory(category: SoftwareCategory): string {
+  const formatted = category
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  return formatted
+}
+
+// Define ALL possible columns for software
+const ALL_COLUMNS: ColumnConfig<Software>[] = [
+  {
+    key: 'product_name',
+    label: 'Product Name',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide product name
+    render: (software) => software.product_name,
+  },
+  {
+    key: 'software_category',
+    label: 'Category',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'productivity', label: 'Productivity' },
+      { value: 'security', label: 'Security' },
+      { value: 'development', label: 'Development' },
+      { value: 'communication', label: 'Communication' },
+      { value: 'infrastructure', label: 'Infrastructure' },
+      { value: 'collaboration', label: 'Collaboration' },
+      { value: 'broadcast', label: 'Broadcast' },
+      { value: 'media', label: 'Media' },
+      { value: 'other', label: 'Other' },
+    ],
+    render: (software) =>
+      software.software_category ? (
+        formatSoftwareCategory(software.software_category)
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'description',
+    label: 'Description',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (software) => software.description || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'website',
+    label: 'Website',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (software) =>
+      software.website ? (
+        <a
+          href={software.website}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="link"
+          style={{ color: 'var(--color-morning-blue)' }}
+        >
+          Link
+        </a>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (software) => software.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (software) => new Date(software.created_at).toLocaleDateString(),
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (software) => new Date(software.updated_at).toLocaleDateString(),
+  },
+]
 
 export default function SoftwarePage() {
+  const router = useRouter()
   const [software, setSoftware] = useState<Software[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('product_name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchSoftware = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        limit: '50',
-        sort_by: 'product_name',
-        sort_order: 'asc',
-      })
-      if (search) params.append('search', search)
-      if (categoryFilter) params.append('software_category', categoryFilter)
-
-      const response = await fetch(`/api/software?${params}`)
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.message || 'Failed to fetch software')
-      setSoftware(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, categoryFilter])
-
+  // Fetch software from API
   useEffect(() => {
+    const fetchSoftware = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
+
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/software?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch software')
+        }
+
+        const result = await response.json()
+        setSoftware(result.data?.software || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching software:', error)
+        setSoftware([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchSoftware()
-  }, [fetchSoftware])
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
 
-  const formatCategory = (category: string | null) => {
-    if (!category) return '-'
-    return category.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1) // Reset to first page on search
   }
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    )
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
-  if (error) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error}</div>
-        </div>
-      </div>
-    )
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleAdd = () => {
+    router.push('/software/new')
   }
 
   return (
-    <div className="container">
-      <div className="p-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-h1">Software Catalog</h1>
-          <Link href="/software/new" className="btn btn-primary">
-            Add Software
-          </Link>
-        </div>
+    <>
+      <GenericListView
+        title="Software Catalog"
+        columns={ALL_COLUMNS}
+        data={software}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search software..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add Software"
+        emptyMessage="No software found. Add your first software to get started."
+        rowLink={(sw) => `/software/${sw.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-2 gap-4">
-            <div>
-              <label htmlFor="search" className="block mb-2 font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search software..."
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label htmlFor="category" className="block mb-2 font-bold">
-                Category
-              </label>
-              <select
-                id="category"
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Categories</option>
-                <option value="productivity">Productivity</option>
-                <option value="security">Security</option>
-                <option value="development">Development</option>
-                <option value="communication">Communication</option>
-                <option value="infrastructure">Infrastructure</option>
-                <option value="collaboration">Collaboration</option>
-                <option value="broadcast">Broadcast</option>
-                <option value="media">Media</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Software Table */}
-        <div className="card">
-          {software.length === 0 ? (
-            <p className="text-center py-8">No software found.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left p-2">Product Name</th>
-                  <th className="text-left p-2">Category</th>
-                  <th className="text-left p-2">Website</th>
-                  <th className="text-left p-2">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {software.map((sw) => (
-                  <tr key={sw.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">
-                      <Link href={`/software/${sw.id}`} className="text-blue hover:underline">
-                        {sw.product_name}
-                      </Link>
-                    </td>
-                    <td className="p-2">{formatCategory(sw.software_category)}</td>
-                    <td className="p-2">
-                      {sw.website ? (
-                        <a
-                          href={sw.website}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue hover:underline"
-                        >
-                          Link
-                        </a>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="p-2">{new Date(sw.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+        .link {
+          color: var(--color-morning-blue);
+          text-decoration: none;
+        }
+        .link:hover {
+          text-decoration: underline;
+        }
+      `}</style>
+    </>
   )
 }

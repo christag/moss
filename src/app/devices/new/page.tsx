@@ -5,6 +5,7 @@
 
 import React from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { DeviceForm } from '@/components/DeviceForm'
 import type { Device } from '@/types'
 
@@ -24,6 +25,17 @@ export default function NewDevicePage() {
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/devices" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            Devices
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>New</span>
+        </nav>
+
         <DeviceForm onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>

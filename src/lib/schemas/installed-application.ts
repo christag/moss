@@ -6,16 +6,16 @@ import { z } from 'zod'
 export const DeploymentStatusSchema = z.enum(['pilot', 'production', 'deprecated', 'retired'])
 
 export const CreateInstalledApplicationSchema = z.object({
-  software_id: z.string().uuid().optional(),
+  software_id: z.string().uuid().nullable().optional(),
   application_name: z.string().min(1).max(255),
-  version: z.string().max(100).optional(),
-  install_method: z.string().max(50).optional(),
-  deployment_platform: z.string().max(50).optional(),
-  package_id: z.string().max(255).optional(),
-  deployment_status: DeploymentStatusSchema.optional(),
-  install_date: z.string().optional(),
-  auto_update_enabled: z.boolean().optional(),
-  notes: z.string().optional(),
+  version: z.string().max(100).nullable().optional(),
+  install_method: z.string().max(50).nullable().optional(),
+  deployment_platform: z.string().max(50).nullable().optional(),
+  package_id: z.string().max(255).nullable().optional(),
+  deployment_status: DeploymentStatusSchema.nullable().optional(),
+  install_date: z.string().nullable().optional(),
+  auto_update_enabled: z.boolean().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const UpdateInstalledApplicationSchema = z.object({

@@ -63,6 +63,13 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
       helpText: 'The name or identifier of this room',
     },
     {
+      name: 'room_number',
+      label: 'Room Number',
+      type: 'text',
+      placeholder: 'e.g., 101, DC-01, B1-05',
+      helpText: 'Room number or code (optional)',
+    },
+    {
       name: 'location_id',
       label: 'Location',
       type: 'select',
@@ -105,6 +112,13 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
       placeholder: 'Describe access requirements...',
       helpText: 'Special access requirements, badge levels, or security notes',
     },
+    {
+      name: 'notes',
+      label: 'Notes',
+      type: 'textarea',
+      placeholder: 'Additional notes about this room...',
+      helpText: 'Any additional information or notes',
+    },
   ]
 
   // Determine API endpoint and method based on mode
@@ -116,11 +130,13 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
   const initialValues = isEditMode
     ? {
         room_name: room.room_name,
+        room_number: room.room_number || '',
         location_id: room.location_id,
         room_type: room.room_type || '',
         floor: room.floor || '',
         capacity: room.capacity ?? undefined,
         access_requirements: room.access_requirements || '',
+        notes: room.notes || '',
       }
     : {}
 

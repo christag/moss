@@ -4,7 +4,7 @@
   "private": true,
   "description": "M.O.S.S. - Material Organization & Storage System: IT Asset Management Platform",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -18,11 +18,23 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.908.0",
+    "@aws-sdk/s3-request-presigner": "^3.908.0",
+    "@types/papaparse": "^5.3.16",
+    "@types/react-window": "^1.8.8",
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.3",
+    "express-rate-limit": "^8.1.0",
     "next": "^15.0.0",
+    "next-auth": "^5.0.0-beta.29",
+    "papaparse": "^5.5.3",
     "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-dropzone": "^14.3.8",
+    "react-window": "^2.2.0",
+    "sonner": "^2.0.7",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.1"
   },
   "devDependencies": {
@@ -30,6 +42,7 @@
     "@eslint/js": "^9.37.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
+    "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.11.10",
@@ -51,7 +64,7 @@
   },
   "lint-staged": {
     "src/**/*.{ts,tsx,js,jsx}": [
-      "eslint --fix",
+      "eslint --fix --max-warnings=20",
       "prettier --write"
     ],
     "src/**/*.{json,css,md}": [

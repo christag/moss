@@ -12,16 +12,27 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 
 **CRITICAL**: Follow this workflow for EVERY development task:
 
-### Task Tracking
+### Task Tracking System
+
+**All TODO items are managed in [CLAUDE-TODO.md](CLAUDE-TODO.md)** - This is the single source of truth for all pending work.
+
 - **BEFORE starting ANY task**: Read [CLAUDE-TODO.md](CLAUDE-TODO.md) to understand current state and pending tasks
-- **AFTER completing EACH step**: Update [CLAUDE-TODO.md](CLAUDE-TODO.md) with:
-  - Mark completed items as done (strikethrough or move to completed section)
-  - Add any new tasks discovered during implementation
-  - Note any blockers or issues encountered
-  - Update priority if needed
-  - Keep the file current and accurate
+- **AFTER completing EACH task**:
+  - ✅ **Mark completed items with strikethrough** or move to completed section
+  - ➕ **Add new tasks discovered during implementation** to the appropriate section
+  - 🚨 **Note any blockers or issues encountered**
+  - 📝 **Update priority if needed**
+  - 🔄 **Keep the file current and accurate** - this is critical for continuity
+
+**Session Documentation in [CLAUDE-UPDATES.md](CLAUDE-UPDATES.md)** - Document completed work here for future LLM context:
+- After completing a significant milestone or work session
+- Write comprehensive session summaries with what was accomplished
+- Include key decisions, patterns established, and lessons learned
+- This helps future Claude instances quickly understand project history and context
+- Format: Date, milestone description, files changed, key learnings
 
 ### Testing Workflow
+
 - **AFTER implementing ANY feature or change**: Use Playwright MCP tools to test
 - **Testing Requirements**:
   - Navigate to the affected page(s) using `mcp__playwright__browser_navigate`
@@ -34,10 +45,13 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 - **Document Test Results**: Update CLAUDE-TODO.md with test outcomes
 
 ### Why This Matters
-- CLAUDE-TODO.md prevents duplicating work and losing track of progress
+
+- **CLAUDE-TODO.md** prevents duplicating work and losing track of progress
+- **CLAUDE-UPDATES.md** provides rich context for future Claude sessions
 - Playwright testing catches issues before the user discovers them
 - Systematic testing ensures consistent quality across features
 - Documentation of test results helps track what's been verified
+- Striking through completed tasks maintains clear progress tracking
 
 ### Container Management (MANDATORY)
 
@@ -61,6 +75,8 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 
 The system uses PostgreSQL with UUID primary keys throughout. The database schema is defined in [dbsetup.sql](dbsetup.sql).
 
+**For detailed database documentation, see [planning/database-architecture.md](planning/database-architecture.md).**
+
 ### Core Object Hierarchy
 
 **Physical Infrastructure**:
@@ -76,73 +92,48 @@ The system uses PostgreSQL with UUID primary keys throughout. The database schem
   - Power: AC/DC input/output, PoE
   - Infrastructure: patch panel ports
 - `ios.connected_to_io_id` creates physical topology (IO-to-IO relationships)
-- VLAN configuration:
-  - `ios.native_network_id` → untagged/native VLAN
-  - `io_tagged_networks` junction table → trunk VLANs (many-to-many)
-  - `ios.trunk_mode`: access, trunk, hybrid, n/a
-- `ip_addresses` associated with IOs
+- VLAN configuration via `ios.native_network_id` + `io_tagged_networks` junction table
 
 **People & Access**:
 - `people` represents all individuals (employees, contractors, vendor contacts)
 - `people.manager_id` creates organizational hierarchy
 - `groups` supports multiple types: AD, Okta, Jamf smart groups, custom
-- People and groups can be assigned to devices, SaaS services, and applications
 
 **Software & Services**:
 - `software` → product catalog (vendor-agnostic)
 - `saas_services` → specific service instances (prod/staging/dev environments)
-- `saas_service_integrations` → service-to-service relationships (e.g., Slack → Jira)
 - `installed_applications` → deployed software with version tracking
 - `software_licenses` → license management with seat tracking
-- Junction tables link licenses to services, applications, and people
 
 **Documentation**:
 - `documents` → internal documentation (policies, runbooks, diagrams)
 - `external_documents` → links to external systems (password vaults, tickets, wikis)
 - `contracts` → vendor agreements
-- Multiple junction tables associate documents with devices, networks, services, locations, rooms
 
-**RBAC**:
-- `roles` → role definitions (system and custom)
+**RBAC** (Enhanced - Implemented 2025-10-12):
+- `roles` → role definitions (system and custom) with hierarchical inheritance via `parent_role_id`
 - `permissions` → granular object-type and action permissions (view, edit, delete, manage_permissions)
 - `role_assignments` → assign roles to people/groups with scoping (global, location, specific objects)
 - `object_permissions` → object-level overrides for specific items
 
-### Key Relationship Patterns
-
-- **Modular Equipment**: `devices.parent_device_id` enables chassis → line card relationships
-- **Physical Topology**: `ios.connected_to_io_id` chains IOs together (e.g., server NIC → switch port → router port)
-- **Power Topology**: IOs with `interface_type='power_input'` or `'power_output'` map power dependencies
-- **Network Trunk Ports**: Combine `ios.native_network_id` + `io_tagged_networks` for trunk configuration
-- **Service Integration**: `saas_service_integrations` links services (e.g., Okta provides SSO to multiple services)
-- **Multi-object Documentation**: Document junction tables link to devices, networks, services, locations, and rooms
-
-### Database Patterns
-
-- All tables use UUID primary keys (`uuid_generate_v4()`)
-- Audit fields: `created_at`, `updated_at` (with triggers for automatic updates)
-- Soft deletes via `status` fields where appropriate (active, inactive, retired, etc.)
-- Foreign keys enforce referential integrity with appropriate CASCADE/SET NULL behaviors
-- Comprehensive indexes on frequently queried fields and foreign keys
+**For complete database patterns, relationships, and query examples, see [planning/database-architecture.md](planning/database-architecture.md).**
 
 ## Development Context
 
-**Current Phase**: Pre-development - database schema and requirements defined
-**Technology Stack** (planned):
-- Database: PostgreSQL (or Cloudflare D1)
-- Backend: REST API (framework TBD)
-- Frontend: React/Next.js preferred
-- Hosting: Cloudflare Pages/Workers (free tier priority)
-- Storage: Cloudflare R2 for file uploads
-- Authentication: SAML 2.0 with SCIM (Okta, Azure AD, etc.)
-- API: OpenAPI-compatible with ChatGPT support
-- LLM Integration: MCP SSE/HTTP server with OAuth2 for Claude and other assistants
+**Current Phase**: Phase 1 ~90% complete - All 16 core objects have full CRUD, Enhanced RBAC implemented
+**Technology Stack**:
+- Database: PostgreSQL (local development)
+- Backend: Next.js API Routes (REST)
+- Frontend: React/Next.js with TypeScript
+- Hosting: Vercel (planned) or Cloudflare Pages/Workers (free tier priority)
+- Storage: Local filesystem (production: Cloudflare R2 or S3)
+- Authentication: Local database (production: SAML 2.0 with SCIM)
 
 **Constraints**:
 - Single developer (IT Director with systems architecture background)
 - Must be free/near-free for development phase
 - Low-maintenance operational requirements
-- Cloudflare free tier preferred
+- Cloudflare free tier preferred for production
 
 ## Key Design Principles
 
@@ -191,6 +182,8 @@ The system uses PostgreSQL with UUID primary keys throughout. The database schem
 
 ## UI Architecture
 
+**For complete UI specifications, see [planning/ui-specifications.md](planning/ui-specifications.md).**
+
 ### Page Structure Pattern
 
 All detail views follow a consistent pattern:
@@ -209,76 +202,18 @@ All list views follow this structure:
 - **Bulk Actions**: Checkbox selection + bulk action dropdown
 - **Pagination**: Bottom, default 50 per page
 
-### Key UI Pages by Category
+### Relationship Navigation
 
-**Core Pages (MVP - Phase 1)**:
-1. Dashboard (widgets: expiring warranties/licenses, recent activity, quick stats)
-2. Device List/Detail (tabs: Overview, Assignment, Hardware, Network, Software, Documentation, History)
-3. Person List/Detail (tabs: Overview, Devices, Software, Groups, Licenses, Access, Documents, Direct Reports)
-4. Location List/Detail (tabs: Overview, Rooms, Devices, Networks, People, Documentation)
-5. Room Detail (tabs: Overview, Devices, Patch Panels, Documentation)
-6. Network List/Detail (tabs: Overview, IOs, IP Addresses, Devices, Documentation)
-7. Software Catalog List/Detail
-8. SaaS Service List/Detail (tabs: Overview, Access, SSO/Provisioning, Users, Groups, Licenses, Integrations, Documentation, Contracts)
-9. License List/Detail (tabs: Overview, Allocation, Assigned To, Services, Applications, Contract)
-10. Document List/Detail (Markdown editor with preview)
-11. Contract List/Detail
-12. Global Search (real-time suggestions, multi-object results)
+Every object detail view includes relationship tabs using the **RelatedItemsList** component pattern (`src/components/RelatedItemsList.tsx`):
+- Generic component: `RelatedItemsList<T extends { id: string }>`
+- API-driven data fetching with loading/error states
+- Configurable columns with custom render functions
+- Click-through navigation via `linkPattern` (e.g., `/devices/:id`)
+- "Add New" button support with pre-populated parent IDs
 
-**Advanced Pages (Phase 2)**:
-- Network Topology View (interactive graph, drag nodes, export PNG/SVG)
-- IP Address Management (subnet visualization, conflict detection)
-- Custom Report Builder (select fields, filter, aggregate, schedule)
-- Bulk Import Wizard (CSV upload, field mapping, validation, preview)
-- Audit Log View (all changes with JSON diffs)
+### Design System
 
-**Admin Pages**:
-- Role List/Detail (permission grid: object types × actions)
-- Role Assignment (with scoping: global, location, specific objects)
-- Object Permission Override (accessible from any detail view)
-- System Settings (org config, SMTP, SSO, backups)
-- User Settings (profile, preferences, notifications, API tokens)
-
-### Form Patterns
-
-**Device Form UX**:
-- Auto-populate manufacturer from model if previously entered
-- Filter room dropdown by selected location
-- Show/hide parent device field based on device type
-- Validate serial number uniqueness on blur
-- Conditional fields: OS fields only for computers/servers, power fields only for UPS/PDU
-
-**IO Form (Modal)**:
-- Interface type dropdown changes available fields dynamically
-- For network IOs: Show speed, duplex, trunk mode, VLAN fields
-- For power IOs: Show voltage, amperage, wattage, connector type
-- For broadcast IOs: Show media type specific to SDI/HDMI/XLR
-- "Connect to IO" lookup with device filter (only show compatible IOs)
-
-**Person Form**:
-- Manager lookup (search by name, show org chart context)
-- Location dropdown affects available rooms
-- Person type affects which fields are required (employees need employee_id, vendors need company)
-
-### Mobile-First Pages
-
-Priority for mobile responsive design:
-1. Global Search (iOS Safari optimized)
-2. Device Detail View (field technician use case)
-3. Person Detail View (help desk lookups)
-4. Network Detail View (on-site troubleshooting)
-5. Dashboard (quick glance metrics)
-
-Mobile-specific features:
-- QR code scanning for asset tags
-- Camera integration for device photos
-- Offline mode for cached data viewing
-- Tap-to-call on phone numbers
-- GPS location tagging for new device creation
-
-### Design System Colors
-
-**IMPORTANT**: Use the official design system colors from [designguides.md](designguides.md), not arbitrary colors.
+**IMPORTANT**: Use the official design system colors from [planning/designguides.md](planning/designguides.md), not arbitrary colors.
 
 **Primary Palette** (should be dominant):
 - Morning Blue (#1C7FF2): Primary brand color, main actions, primary buttons, headers
@@ -292,156 +227,106 @@ Mobile-specific features:
 - Orange (#FD6A3D): Warnings, errors, critical states
 - Tangerine (#FFBB5C): Attention, high priority
 
-**Status Colors** (mapped to design system):
-- Active: Green (#28C077)
-- Inactive: Light Blue (#ACD7FF)
-- Repair/Warning: Orange (#FD6A3D) or Tangerine (#FFBB5C)
-- Retired: Brew Black at 40% opacity (#231F20)
+**Typography**:
+- Font Family: Inter (all headings and body copy)
+- Base: 18px, Ratio: 1.25
+- Type Scale: Display (72px), H1 (57.6px), H2 (46px), H3 (36.8px), Body (18px), Small (14.4px)
 
-**Criticality Colors**:
-- Critical: Orange (#FD6A3D)
-- High: Tangerine (#FFBB5C)
-- Medium: Light Blue (#ACD7FF)
-- Low: Green (#28C077)
+**For complete design system rules, color combinations, grid system, and accessibility standards, see [planning/designguides.md](planning/designguides.md) and [planning/ui-specifications.md](planning/ui-specifications.md).**
 
-**Action Colors**:
-- Primary Actions: Morning Blue (#1C7FF2)
-- Secondary Actions: Light Blue (#ACD7FF)
-- Destructive Actions: Orange (#FD6A3D)
-- Success Actions: Green (#28C077)
+## Admin Settings Panel
 
-**Object Type Colors** (use Morning Blue with variations):
-- All object types should use Morning Blue (#1C7FF2) or Light Blue (#ACD7FF) for consistency
-- Differentiate via icons and labels, not color alone
+**For complete admin panel documentation, see [planning/admin-panel-architecture.md](planning/admin-panel-architecture.md).**
 
-### Relationship Navigation
+The admin settings panel (`/admin`) provides centralized system configuration accessible only to users with `admin` or `super_admin` roles. The panel uses a sidebar navigation pattern with 11 configuration sections:
 
-Every object detail view includes relationship tabs using the **RelatedItemsList** component pattern.
+1. **Overview** - Dashboard with quick action cards
+2. **Branding** - Site name, logo, favicon, color customization
+3. **Storage** - Backend selection (local, NFS, SMB, S3-compatible)
+4. **Authentication** [Super Admin Only] - Backend selection (local, LDAP, SAML/SSO), MFA settings
+5. **Integrations** - External system connections (IdP, MDM, RMM, cloud providers, ticketing)
+6. **Fields** - Custom field management per object type
+7. **RBAC** [Super Admin Only] - Roles, permissions, assignments, testing (see below)
+8. **Import/Export** - CSV upload/download with field mapping
+9. **Audit Logs** - Filterable admin action history with before/after comparison
+10. **Notifications** - SMTP configuration and notification templates
+11. **Backup** - Database backup triggers and restore
 
-**RelatedItemsList Component** (`src/components/RelatedItemsList.tsx`):
-- Generic component: `RelatedItemsList<T extends { id: string }>`
-- API-driven data fetching with loading/error states
-- Configurable columns with custom render functions
-- Click-through navigation via `linkPattern` (e.g., `/devices/:id`)
-- "Add New" button support with pre-populated parent IDs
-- Item count badges and pagination messaging
+**Key Files**:
+- `src/middleware.ts` - Route protection
+- `src/lib/adminAuth.ts` - Helper functions (`requireAdmin()`, `requireSuperAdmin()`, `logAdminAction()`)
+- `src/lib/schemas/admin.ts` - Zod validation schemas
+- `src/types/index.ts` - TypeScript types for admin entities
 
-**Usage Pattern**:
+## Enhanced RBAC Implementation
+
+**For complete RBAC documentation, see [planning/rbac-implementation.md](planning/rbac-implementation.md).**
+
+The Enhanced RBAC system provides hierarchical roles with permission inheritance, location-based scoping, and object-level permission overrides. Implementation completed 2025-10-12.
+
+### Core Library: src/lib/rbac.ts
+
+**Key Functions**:
+- `checkPermission(userId, action, objectType, objectId?)` - Main permission check
+  - Returns: `{ granted: boolean, reason: string, path: string[] }`
+  - Checks object permissions first, then role permissions, then denies by default
+- `getRoleHierarchy(roleId)` - Gets complete role inheritance chain
+- `getRolePermissions(roleId, includeInherited)` - Gets permissions with inheritance flag
+- `getUserPermissions(userId)` - Aggregates all permissions from all assigned roles
+
+**Cache Management**:
+- In-memory cache with 5-minute TTL
+- `invalidateUserCache(userId)` - Called when user's role assignments change
+- `invalidateRoleCache(roleId)` - Called when role permissions change
+- Cache keys: `user:{userId}:permissions`, `role:{roleId}:permissions`
+
+**Circular Hierarchy Prevention**:
+- `checkRoleHierarchyCycle(roleId, parentRoleId)` - Database function validates no cycles
+- Called before any parent_role_id update in API
+
+### API Routes
+
+**Base Paths**: `/api/permissions`, `/api/roles`, `/api/role-assignments`, `/api/object-permissions`, `/api/rbac`
+
+All routes require `super_admin` role. See [planning/rbac-implementation.md](planning/rbac-implementation.md) for complete endpoint documentation.
+
+### UI Components
+
+**Key Components**:
+- `src/components/PermissionGrid.tsx` - Interactive permission checkbox grid (16 object types × 4 actions)
+- `src/components/AssignRoleModal.tsx` - 5-step assignment wizard with scope selection
+- `src/components/RoleForm.tsx` - Shared form for role creation/editing
+
+**Admin Pages**:
+- `/admin/rbac/roles` - Roles list with search and filters
+- `/admin/rbac/roles/[id]` - Role detail with PermissionGrid
+- `/admin/rbac/assignments` - Assignments list with revoke functionality
+- `/admin/rbac/test` - Permission testing tool for debugging
+
+### Usage Example
+
 ```typescript
-<RelatedItemsList<Room>
-  apiEndpoint={`/api/rooms?location_id=${id}`}
-  columns={[
-    { key: 'room_name', label: 'Room Name' },
-    { key: 'room_number', label: 'Room #', width: '100px' },
-    {
-      key: 'room_type',
-      label: 'Type',
-      render: (room) => <Badge variant="blue">{room.room_type}</Badge>,
-      width: '150px'
-    }
-  ]}
-  linkPattern="/rooms/:id"
-  addButtonLabel="Add Room"
-  onAdd={() => router.push(`/rooms/new?location_id=${id}`)}
-  emptyMessage="No rooms at this location"
-  limit={20}
-/>
+import { checkPermission } from '@/lib/rbac'
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions)
+  const { granted } = await checkPermission(session.user.id, 'delete', 'device', params.id)
+
+  if (!granted) {
+    return NextResponse.json({ success: false, message: 'Permission denied' }, { status: 403 })
+  }
+
+  // Proceed with deletion
+}
 ```
 
-**Standard Relationship Tabs by Object Type**:
+## Detailed Documentation References
 
-- **Locations**: Rooms, Devices, People
-- **Devices**: Interfaces/Ports, Child Devices, Installed Applications
-- **People**: Assigned Devices, Direct Reports, Groups
-- **Networks**: Interfaces, IP Addresses, Devices
-- **Rooms**: Devices, Patch Panels (when implemented)
-- **Software**: Installed Applications, Licenses, SaaS Services (when implemented)
+When working on specific features, refer to these detailed planning documents:
 
-**Navigation Flows Enabled**:
-- Location → Rooms → Devices → IOs
-- Person → Assigned Devices → IOs
-- Person → Direct Reports (recursive org chart navigation)
-- Network → Interfaces → Devices
-- Device → Parent Device (modular equipment hierarchy)
-
-### Search & Filter UX
-
-**Global Search**:
-- Header search box (always visible, keyboard shortcut: /)
-- Real-time suggestions grouped by object type
-- Recent searches saved per user
-- Advanced filters slide-out panel
-- Saved searches for power users
-
-**List View Filters**:
-- Sidebar filter panel (collapsible on mobile)
-- Filters persist in URL query params (shareable links)
-- Active filters shown as removable chips
-- "Clear all filters" button
-- Filter count badges
-
-### Typography System
-
-**Font Family**: Inter (all headings and body copy)
-
-**Type Scale** (base 18px, ratio 1.25):
-- Display: 72px
-- H1: 57.6px
-- H2: 46px
-- H3: 36.8px
-- H4: 29.4px
-- H5: 23.5px
-- Body: 18px
-- Small: 14.4px
-
-**Typography Rules**:
-- Use scale for emphasis, NEVER text case (no UPPERCASE for emphasis)
-- Always align to grid
-- Generous padding and consistent margins
-- Left-align all text
-- Don't let text overflow margins
-
-### Grid System
-
-**Structure**:
-- Even number of columns
-- Margin = 1/4 column width
-- Gutter = 1/2 margin width
-- Symmetrical column proportions
-
-**Implementation**:
-- All elements must align to grid
-- No floating elements
-- Canvas width determines column count
-
-### Color Usage Rules
-
-**Text on Background** (approved combinations only):
-- Morning Blue background → Brew Black or Off White text
-- Green background → Brew Black or Off White text
-- Orange background → Brew Black or Off White text
-- Light Blue background → Brew Black text ONLY
-- Lime Green background → Brew Black text ONLY
-- Tangerine background → Brew Black text ONLY
-- Off White background → Morning Blue or Brew Black text
-- Brew Black background → Any color except Off White
-
-**Block Layering** (approved combinations):
-- Morning Blue on Light Blue
-- Tangerine on Orange
-- Green on Lime Green
-- Off White on Morning Blue
-- Brew Black on any color except Off White
-
-**Design Strategy Rules**:
-- ✅ Use recognizable icons with clear focal points
-- ✅ Logical, easy-to-follow element order
-- ✅ Use scale and color for emphasis
-- ✅ Sufficient text/background contrast
-- ✅ Text alternatives for images
-- ✅ Responsive layouts
-- ❌ No aggressive/overwhelming colors
-- ❌ No menacing aesthetics
-- ❌ Never rely solely on color to communicate
-- ❌ No complicated navigation
-- ❌ No tiny font sizes
+- **Database schema, relationships, queries**: [planning/database-architecture.md](planning/database-architecture.md)
+- **UI patterns, components, design system**: [planning/ui-specifications.md](planning/ui-specifications.md)
+- **Admin panel features and implementation**: [planning/admin-panel-architecture.md](planning/admin-panel-architecture.md)
+- **RBAC system details and usage**: [planning/rbac-implementation.md](planning/rbac-implementation.md)
+- **Product requirements and use cases**: [planning/prd.md](planning/prd.md)
+- **Design system colors and typography**: [planning/designguides.md](planning/designguides.md)

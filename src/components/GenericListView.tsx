@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui'
+import { Button, Icon } from '@/components/ui'
 import {
   parseViewStateFromURL,
   updateURLWithViewState,
   type ViewState,
 } from '@/lib/urlStateManager'
+import { ExportModal } from '@/components/ExportModal'
 
 /**
  * Enhanced column definition with filtering and visibility control
@@ -78,6 +79,10 @@ export interface GenericListViewProps<T> {
   enableColumnManagement?: boolean // Enable show/hide columns
   enablePerColumnFiltering?: boolean // Enable filters in column headers
   onViewStateChange?: (viewState: ViewState) => void // Callback when view state changes
+  // Export functionality
+  enableExport?: boolean // Enable CSV export button
+  exportObjectType?: string // Object type identifier for export API (e.g., 'devices', 'people')
+  exportObjectTypeName?: string // Display name for export modal (e.g., 'Devices', 'People')
 }
 
 /**
@@ -107,6 +112,9 @@ export function GenericListView<T extends { id: string }>({
   enableColumnManagement = true,
   enablePerColumnFiltering = true,
   onViewStateChange,
+  enableExport = false,
+  exportObjectType,
+  exportObjectTypeName,
 }: GenericListViewProps<T>) {
   const router = useRouter()
   const pathname = usePathname()
@@ -129,6 +137,7 @@ export function GenericListView<T extends { id: string }>({
     urlViewState.columnFilters || {}
   )
   const [selectedRowIndex, setSelectedRowIndex] = useState<number>(-1)
+  const [exportModalOpen, setExportModalOpen] = useState(false)
 
   // Get visible column configs
   const visibleColumnConfigs = columns.filter((col) => visibleColumns.includes(col.key as string))
@@ -318,7 +327,7 @@ export function GenericListView<T extends { id: string }>({
         }}
       >
         <div className="container">
-          <div className="p-lg">
+          <div className="p-md">
             {/* Header */}
             <div
               style={{
@@ -327,13 +336,13 @@ export function GenericListView<T extends { id: string }>({
                 alignItems: 'center',
                 marginBottom:
                   onSearch || (filters && filters.length > 0) || hasActiveFilters
-                    ? 'var(--spacing-lg)'
+                    ? 'var(--spacing-md)'
                     : '0',
               }}
             >
               <h1
                 style={{
-                  fontSize: 'var(--font-size-h2)',
+                  fontSize: 'var(--font-size-3xl)',
                   fontWeight: '700',
                   color: 'var(--color-off-white)',
                   margin: '0',
@@ -342,6 +351,29 @@ export function GenericListView<T extends { id: string }>({
                 {title}
               </h1>
               <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+                {enableExport && exportObjectType && exportObjectTypeName && (
+                  <button
+                    onClick={() => setExportModalOpen(true)}
+                    aria-label="Export to CSV"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'var(--color-off-white)',
+                      padding: 'var(--spacing-sm) var(--spacing-md)',
+                      borderRadius: '4px',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      cursor: 'pointer',
+                      fontSize: 'var(--font-size-base)',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--spacing-xs)',
+                    }}
+                    title="Export to CSV"
+                  >
+                    <Icon name="download" size={16} aria-hidden="true" />
+                    Export
+                  </button>
+                )}
                 {enableColumnManagement && (
                   <button
                     onClick={() => setColumnManagerOpen(!columnManagerOpen)}
@@ -357,10 +389,14 @@ export function GenericListView<T extends { id: string }>({
                       cursor: 'pointer',
                       fontSize: 'var(--font-size-base)',
                       fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--spacing-xs)',
                     }}
                     title="Manage Columns"
                   >
-                    ⚙ Columns
+                    <Icon name="table_chart" size={16} aria-hidden="true" />
+                    Columns
                   </button>
                 )}
                 {onAdd && (
@@ -390,9 +426,23 @@ export function GenericListView<T extends { id: string }>({
                 {onSearch && (
                   <div
                     style={{
+                      position: 'relative',
                       marginBottom: filters && filters.length > 0 ? 'var(--spacing-sm)' : '0',
                     }}
                   >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: 'var(--spacing-sm)',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <Icon name="magnifying-glass-search" size={16} aria-label="Search" />
+                    </span>
                     <input
                       type="text"
                       placeholder={searchPlaceholder}
@@ -403,6 +453,7 @@ export function GenericListView<T extends { id: string }>({
                       style={{
                         width: '100%',
                         padding: 'var(--spacing-sm)',
+                        paddingLeft: 'calc(var(--spacing-sm) * 2 + 16px)',
                         borderRadius: '4px',
                         border: '1px solid rgba(255, 255, 255, 0.3)',
                         fontSize: 'var(--font-size-base)',
@@ -835,6 +886,21 @@ export function GenericListView<T extends { id: string }>({
           )}
         </div>
       </div>
+
+      {/* Export Modal */}
+      {enableExport && exportObjectType && exportObjectTypeName && (
+        <ExportModal
+          isOpen={exportModalOpen}
+          onClose={() => setExportModalOpen(false)}
+          objectType={exportObjectType}
+          objectTypeName={exportObjectTypeName}
+          currentFilters={{
+            ...filterValues,
+            ...columnFilters,
+            search: localSearch,
+          }}
+        />
+      )}
     </>
   )
 }

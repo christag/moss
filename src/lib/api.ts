@@ -98,3 +98,71 @@ export function handleApiError(error: unknown): NextResponse<ApiErrorResponse> {
 
   return errorResponse('An unexpected error occurred')
 }
+
+/**
+ * Safely parse JSON from request body with XSS protection
+ * Returns { success: true, data } or { success: false, response }
+ */
+export async function parseRequestBody(
+  request: Request,
+  options: {
+    sanitize?: boolean
+    allowHTML?: boolean
+    allowLinks?: boolean
+    richTextFields?: string[]
+  } = {}
+): Promise<
+  { success: true; data: unknown } | { success: false; response: NextResponse<ApiErrorResponse> }
+> {
+  const { sanitize = true, allowHTML = false, allowLinks = false, richTextFields } = options
+
+  try {
+    const data = await request.json()
+
+    // Apply XSS sanitization if enabled
+    if (sanitize && typeof data === 'object' && data !== null) {
+      const { sanitizeRequestBody, detectXSSPatterns, logXSSAttempt } = await import('./sanitize')
+
+      // Check for XSS patterns before sanitization
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const checkForXSS = (obj: any, path = ''): void => {
+        if (typeof obj === 'string') {
+          const patterns = detectXSSPatterns(obj)
+          if (patterns.length > 0) {
+            logXSSAttempt(request.url, path, obj, patterns)
+          }
+        } else if (typeof obj === 'object' && obj !== null) {
+          for (const [key, value] of Object.entries(obj)) {
+            checkForXSS(value, path ? `${path}.${key}` : key)
+          }
+        }
+      }
+
+      checkForXSS(data)
+
+      // Sanitize the data
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sanitizedData = sanitizeRequestBody(data as Record<string, any>, {
+        allowHTML,
+        allowLinks,
+        richTextFields,
+      })
+
+      return { success: true, data: sanitizedData }
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    return {
+      success: false,
+      response: NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid JSON in request body',
+          details: error instanceof Error ? error.message : 'Failed to parse JSON',
+        },
+        { status: 400 }
+      ),
+    }
+  }
+}

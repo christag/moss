@@ -5,9 +5,10 @@
  */
 import { NextRequest } from 'next/server'
 import { query } from '@/lib/db'
-import { successResponse, errorResponse } from '@/lib/api'
+import { successResponse, errorResponse, parseRequestBody } from '@/lib/api'
 import { safeValidate, getValidationErrors } from '@/lib/validation'
 import { CreateCompanySchema, ListCompaniesQuerySchema } from '@/lib/schemas/company'
+import { cache, generateListCacheKey } from '@/lib/cache'
 import type { Company } from '@/types'
 
 /**
@@ -16,9 +17,14 @@ import type { Company } from '@/types'
  */
 export async function POST(request: NextRequest) {
   try {
-    // Parse and validate request body
-    const body = await request.json()
-    const validation = safeValidate(CreateCompanySchema, body)
+    // Parse request body with JSON error handling
+    const parseResult = await parseRequestBody(request)
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    // Validate request body
+    const validation = safeValidate(CreateCompanySchema, parseResult.data)
 
     if (!validation.success) {
       return errorResponse('Validation failed', getValidationErrors(validation.errors), 400)
@@ -73,6 +79,9 @@ export async function POST(request: NextRequest) {
 
     const company = result.rows[0]
 
+    // Invalidate list cache when creating a new company
+    cache.invalidatePattern('companies:list:*')
+
     return successResponse(company, 'Company created successfully', 201)
   } catch (error) {
     console.error('Error creating company:', error)
@@ -104,6 +113,22 @@ export async function GET(request: NextRequest) {
     }
 
     const { page, limit, company_type, search, sort_by, sort_order } = validation.data
+
+    // Generate cache key for this specific query
+    const cacheKey = generateListCacheKey('companies', {
+      page,
+      limit,
+      company_type,
+      search,
+      sort_by,
+      sort_order,
+    })
+
+    // Check cache first
+    const cached = cache.get(cacheKey)
+    if (cached) {
+      return successResponse(cached, 'Companies retrieved successfully (cached)')
+    }
 
     // Build WHERE clause
     const conditions: string[] = []
@@ -149,20 +174,22 @@ export async function GET(request: NextRequest) {
       [...values, limit, offset]
     )
 
-    return successResponse(
-      {
-        companies: result.rows,
-        pagination: {
-          page,
-          limit,
-          total_count: totalCount,
-          total_pages: totalPages,
-          has_next: page < totalPages,
-          has_prev: page > 1,
-        },
+    const responseData = {
+      companies: result.rows,
+      pagination: {
+        page,
+        limit,
+        total_count: totalCount,
+        total_pages: totalPages,
+        has_next: page < totalPages,
+        has_prev: page > 1,
       },
-      'Companies retrieved successfully'
-    )
+    }
+
+    // Cache the response for 30 seconds (list data changes frequently)
+    cache.set(cacheKey, responseData, 30)
+
+    return successResponse(responseData, 'Companies retrieved successfully')
   } catch (error) {
     console.error('Error fetching companies:', error)
     return errorResponse('Failed to fetch companies', error, 500)

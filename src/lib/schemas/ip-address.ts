@@ -17,14 +17,14 @@ const IPV6_REGEX =
 
 export const CreateIPAddressSchema = z
   .object({
-    io_id: z.string().uuid().optional(),
-    network_id: z.string().uuid().optional(),
+    io_id: z.string().uuid().nullable().optional(),
+    network_id: z.string().uuid().nullable().optional(),
     ip_address: z.string().min(1).max(50),
-    ip_version: IPVersionSchema.optional(),
-    type: IPAddressTypeSchema.optional(),
-    dns_name: z.string().max(255).optional(),
-    assignment_date: z.string().optional(),
-    notes: z.string().optional(),
+    ip_version: IPVersionSchema.nullable().optional(),
+    type: IPAddressTypeSchema.nullable().optional(),
+    dns_name: z.string().max(255).nullable().optional(),
+    assignment_date: z.string().nullable().optional(),
+    notes: z.string().nullable().optional(),
   })
   .refine(
     (data) => {

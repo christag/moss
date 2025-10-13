@@ -1,134 +1,311 @@
-import Link from 'next/link'
-import type { Document } from '@/types'
+/**
+ * Documents List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
+ */
+'use client'
 
-export default async function DocumentsPage() {
-  let documents: Document[] = []
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { Document, DocumentType, DocumentStatus } from '@/types'
 
-  try {
-    const response = await fetch('http://localhost:3000/api/documents', {
-      cache: 'no-store',
-    })
-    const data = await response.json()
-    if (data.success && Array.isArray(data.data)) {
-      documents = data.data
+// Helper function to format document type for display
+function formatDocumentType(type: DocumentType): string {
+  const formatted = type
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  return formatted
+}
+
+// Helper function to get status color (using design system)
+function getStatusColor(status: DocumentStatus): string {
+  switch (status) {
+    case 'published':
+      return '#28C077' // Green
+    case 'draft':
+      return '#ACD7FF' // Light Blue
+    case 'archived':
+      return '#FD6A3D' // Orange
+    default:
+      return '#231F20' // Brew Black
+  }
+}
+
+// Helper function to get type color (using Morning Blue variations)
+function getTypeColor(type: DocumentType): string {
+  const typeColors: Record<string, string> = {
+    policy: '#1C7FF2', // Morning Blue
+    procedure: '#ACD7FF', // Light Blue
+    diagram: '#28C077', // Green
+    runbook: '#FFBB5C', // Tangerine
+    architecture: '#1C7FF2', // Morning Blue
+    sop: '#ACD7FF', // Light Blue
+    network_diagram: '#28C077', // Green
+    rack_diagram: '#28C077', // Green
+    other: '#231F20', // Brew Black
+  }
+  return typeColors[type] || '#231F20'
+}
+
+// Define ALL possible columns for documents
+const ALL_COLUMNS: ColumnConfig<Document>[] = [
+  {
+    key: 'title',
+    label: 'Title',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide title
+    render: (doc) => doc.title,
+  },
+  {
+    key: 'document_type',
+    label: 'Type',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'policy', label: 'Policy' },
+      { value: 'procedure', label: 'Procedure' },
+      { value: 'diagram', label: 'Diagram' },
+      { value: 'runbook', label: 'Runbook' },
+      { value: 'architecture', label: 'Architecture' },
+      { value: 'sop', label: 'SOP' },
+      { value: 'network_diagram', label: 'Network Diagram' },
+      { value: 'rack_diagram', label: 'Rack Diagram' },
+      { value: 'other', label: 'Other' },
+    ],
+    render: (doc) =>
+      doc.document_type ? (
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: getTypeColor(doc.document_type),
+            color:
+              doc.document_type === 'other' ||
+              doc.document_type === 'policy' ||
+              doc.document_type === 'architecture'
+                ? '#FAF9F5'
+                : '#231F20',
+          }}
+        >
+          {formatDocumentType(doc.document_type)}
+        </span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'draft', label: 'Draft' },
+      { value: 'published', label: 'Published' },
+      { value: 'archived', label: 'Archived' },
+    ],
+    render: (doc) => (
+      <span
+        style={{
+          display: 'inline-block',
+          padding: '4px 8px',
+          borderRadius: '4px',
+          fontSize: '12px',
+          fontWeight: '500',
+          backgroundColor: getStatusColor(doc.status),
+          color: doc.status === 'draft' ? '#231F20' : '#FAF9F5',
+        }}
+      >
+        {doc.status.charAt(0).toUpperCase() + doc.status.slice(1)}
+      </span>
+    ),
+  },
+  {
+    key: 'version',
+    label: 'Version',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (doc) => doc.version || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_date',
+    label: 'Document Created Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (doc) =>
+      doc.created_date ? (
+        new Date(doc.created_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'updated_date',
+    label: 'Document Updated Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (doc) =>
+      doc.updated_date ? (
+        new Date(doc.updated_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (doc) => doc.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (doc) => new Date(doc.created_at).toLocaleDateString(),
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    sortable: true,
+    filterable: false,
+    defaultVisible: true,
+    render: (doc) => new Date(doc.updated_at).toLocaleDateString(),
+  },
+]
+
+export default function DocumentsPage() {
+  const router = useRouter()
+  const [documents, setDocuments] = useState<Document[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
+  const [loading, setLoading] = useState(true)
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('title')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Fetch documents from API
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
+
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/documents?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch documents')
+        }
+
+        const result = await response.json()
+        setDocuments(result.data?.documents || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching documents:', error)
+        setDocuments([])
+      } finally {
+        setLoading(false)
+      }
     }
-  } catch (error) {
-    console.error('Error fetching documents:', error)
+
+    fetchDocuments()
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1) // Reset to first page on search
   }
 
-  const getStatusBadge = (status: string) => {
-    const badges = {
-      draft: 'bg-gray-200 text-gray-800',
-      published: 'bg-green-100 text-green-800',
-      archived: 'bg-orange-100 text-orange-800',
-    }
-    return badges[status as keyof typeof badges] || 'bg-gray-200 text-gray-800'
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
-  const getTypeBadge = (type: string) => {
-    const badges = {
-      policy: 'bg-blue-100 text-blue-800',
-      procedure: 'bg-purple-100 text-purple-800',
-      diagram: 'bg-indigo-100 text-indigo-800',
-      runbook: 'bg-teal-100 text-teal-800',
-      architecture: 'bg-cyan-100 text-cyan-800',
-      sop: 'bg-violet-100 text-violet-800',
-      network_diagram: 'bg-sky-100 text-sky-800',
-      rack_diagram: 'bg-slate-100 text-slate-800',
-      other: 'bg-gray-100 text-gray-800',
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
     }
-    return badges[type as keyof typeof badges] || 'bg-gray-100 text-gray-800'
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleAdd = () => {
+    router.push('/documents/new')
   }
 
   return (
-    <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Documents</h1>
-        <Link
-          href="/documents/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-        >
-          Add Document
-        </Link>
-      </div>
+    <>
+      <GenericListView
+        title="Documents"
+        columns={ALL_COLUMNS}
+        data={documents}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search documents..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add Document"
+        emptyMessage="No documents found. Create your first document to get started."
+        rowLink={(doc) => `/documents/${doc.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-      {documents.length === 0 ? (
-        <div className="rounded-md border border-gray-200 bg-white p-8 text-center">
-          <p className="text-gray-500">
-            No documents found. Create your first document to get started.
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-hidden rounded-md border border-gray-200 bg-white">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Version
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Updated
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {documents.map((doc) => (
-                <tr key={doc.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <Link href={`/documents/${doc.id}`} className="text-blue-600 hover:underline">
-                      {doc.title}
-                    </Link>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    {doc.document_type ? (
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-semibold ${getTypeBadge(doc.document_type)}`}
-                      >
-                        {doc.document_type.replace(/_/g, ' ')}
-                      </span>
-                    ) : (
-                      '-'
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadge(doc.status)}`}
-                    >
-                      {doc.status}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-900">
-                    {doc.version || '-'}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
-                    {new Date(doc.updated_at).toLocaleDateString()}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-sm">
-                    <Link
-                      href={`/documents/${doc.id}/edit`}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+      `}</style>
+    </>
   )
 }

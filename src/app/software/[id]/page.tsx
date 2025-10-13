@@ -6,6 +6,7 @@
 import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import type { Software } from '@/types'
 
 export default function SoftwareDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,9 +36,10 @@ export default function SoftwareDetailPage({ params }: { params: Promise<{ id: s
         const result = await response.json()
         throw new Error(result.message || 'Failed to delete software')
       }
+      toast.success('Software deleted successfully')
       router.push('/software')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete software')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete software')
     }
   }
 
@@ -70,6 +72,25 @@ export default function SoftwareDetailPage({ params }: { params: Promise<{ id: s
   return (
     <div className="container">
       <div className="p-lg">
+        {/* Breadcrumbs */}
+        <nav
+          className="mb-md"
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-black)',
+            opacity: 0.6,
+            marginBottom: '1rem',
+          }}
+        >
+          <span>
+            <Link href="/software" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+              Software
+            </Link>
+            <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          </span>
+          <span>{software.product_name}</span>
+        </nav>
+
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-h1">{software.product_name}</h1>

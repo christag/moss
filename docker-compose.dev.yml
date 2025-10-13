@@ -1,0 +1,41 @@
+# ============================================================================
+# M.O.S.S. Development Docker Compose Override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+# ============================================================================
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts with local PostgreSQL
+    environment:
+      POSTGRES_PASSWORD: moss_dev_password  # Development password
+
+  redis:
+    ports:
+      - "6380:6379"  # Different port to avoid conflicts with local Redis
+    environment:
+      REDIS_PASSWORD: redis_dev_password  # Development password
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Stop at builder stage for faster dev builds
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://moss:moss_dev_password@postgres:5432/moss
+      REDIS_URL: redis://:redis_dev_password@redis:6379
+      NEXTAUTH_SECRET: development-secret-change-in-production
+      NEXTAUTH_URL: http://localhost:3001
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+    ports:
+      - "3001:3000"
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    healthcheck:
+      interval: 60s  # Less frequent checks in dev

@@ -6,9 +6,10 @@
  */
 import { NextRequest } from 'next/server'
 import { query } from '@/lib/db'
-import { successResponse, errorResponse } from '@/lib/api'
+import { successResponse, errorResponse, parseRequestBody } from '@/lib/api'
 import { safeValidate } from '@/lib/validation'
 import { UpdateCompanySchema, UUIDSchema } from '@/lib/schemas/company'
+import { cache, generateDetailCacheKey } from '@/lib/cache'
 import type { Company } from '@/types'
 
 /**
@@ -25,6 +26,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return errorResponse('Invalid company ID', validation.errors.errors, 400)
     }
 
+    // Check cache first
+    const cacheKey = generateDetailCacheKey('companies', validation.data)
+    const cached = cache.get<Company>(cacheKey)
+    if (cached) {
+      return successResponse(cached, 'Company retrieved successfully (cached)')
+    }
+
     // Fetch company from database
     const result = await query<Company>('SELECT * FROM companies WHERE id = $1', [validation.data])
 
@@ -32,7 +40,12 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return errorResponse('Company not found', undefined, 404)
     }
 
-    return successResponse(result.rows[0], 'Company retrieved successfully')
+    const company = result.rows[0]
+
+    // Cache the result for 60 seconds (detail data doesn't change as frequently)
+    cache.set(cacheKey, company, 60)
+
+    return successResponse(company, 'Company retrieved successfully')
   } catch (error) {
     console.error('Error fetching company:', error)
     return errorResponse('Failed to fetch company', error, 500)
@@ -54,7 +67,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Parse and validate request body
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validation = safeValidate(UpdateCompanySchema, body)
 
     if (!validation.success) {
@@ -189,6 +210,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       values
     )
 
+    // Invalidate both list and detail caches
+    cache.invalidatePattern('companies:list:*')
+    cache.delete(generateDetailCacheKey('companies', idValidation.data))
+
     return successResponse(result.rows[0], 'Company updated successfully')
   } catch (error) {
     console.error('Error updating company:', error)
@@ -267,6 +292,10 @@ export async function DELETE(
 
     // Delete company
     await query('DELETE FROM companies WHERE id = $1', [validation.data])
+
+    // Invalidate both list and detail caches
+    cache.invalidatePattern('companies:list:*')
+    cache.delete(generateDetailCacheKey('companies', validation.data))
 
     return successResponse({ id, deleted: true }, 'Company deleted successfully')
   } catch (error) {

@@ -1,178 +1,332 @@
 /**
  * Networks List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import type { Network } from '@/types'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { Network, NetworkType } from '@/types'
+
+// Helper function to format network type for display
+function formatNetworkType(type: NetworkType): string {
+  const typeMap: Record<string, string> = {
+    lan: 'LAN',
+    wan: 'WAN',
+    dmz: 'DMZ',
+    guest: 'Guest',
+    management: 'Management',
+    storage: 'Storage',
+    production: 'Production',
+    broadcast: 'Broadcast',
+  }
+  return typeMap[type] || type
+}
+
+// Define ALL possible columns for networks
+const ALL_COLUMNS: ColumnConfig<Network>[] = [
+  {
+    key: 'network_name',
+    label: 'Network Name',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide network name
+    render: (network) => network.network_name,
+  },
+  {
+    key: 'network_type',
+    label: 'Type',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'lan', label: 'LAN' },
+      { value: 'wan', label: 'WAN' },
+      { value: 'dmz', label: 'DMZ' },
+      { value: 'guest', label: 'Guest' },
+      { value: 'management', label: 'Management' },
+      { value: 'storage', label: 'Storage' },
+      { value: 'production', label: 'Production' },
+      { value: 'broadcast', label: 'Broadcast' },
+    ],
+    render: (network) =>
+      network.network_type ? (
+        formatNetworkType(network.network_type)
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'network_address',
+    label: 'Network Address',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (network) =>
+      network.network_address ? (
+        <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>
+          {network.network_address}
+        </span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'vlan_id',
+    label: 'VLAN ID',
+    sortable: true,
+    filterable: true,
+    filterType: 'number',
+    defaultVisible: true,
+    render: (network) =>
+      network.vlan_id !== null && network.vlan_id !== undefined ? (
+        network.vlan_id.toString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'gateway',
+    label: 'Gateway',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (network) =>
+      network.gateway ? (
+        <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{network.gateway}</span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'dhcp_enabled',
+    label: 'DHCP',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'true', label: 'Enabled' },
+      { value: 'false', label: 'Disabled' },
+    ],
+    render: (network) =>
+      network.dhcp_enabled ? (
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: '#28C077',
+            color: '#FAF9F5',
+          }}
+        >
+          Enabled
+        </span>
+      ) : (
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: 'rgba(35, 31, 32, 0.4)',
+            color: '#FAF9F5',
+          }}
+        >
+          Disabled
+        </span>
+      ),
+  },
+  {
+    key: 'dns_servers',
+    label: 'DNS Servers',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (network) => network.dns_servers || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'dhcp_range_start',
+    label: 'DHCP Range Start',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (network) =>
+      network.dhcp_range_start ? (
+        <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>
+          {network.dhcp_range_start}
+        </span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'dhcp_range_end',
+    label: 'DHCP Range End',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (network) =>
+      network.dhcp_range_end ? (
+        <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{network.dhcp_range_end}</span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'description',
+    label: 'Description',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (network) => network.description || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (network) => network.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (network) => new Date(network.created_at).toLocaleDateString(),
+  },
+]
 
 export default function NetworksPage() {
+  const router = useRouter()
   const [networks, setNetworks] = useState<Network[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [networkTypeFilter, setNetworkTypeFilter] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('network_name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchNetworks = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        limit: '50',
-        sort_by: 'network_name',
-        sort_order: 'asc',
-      })
-
-      if (search) params.append('search', search)
-      if (networkTypeFilter) params.append('network_type', networkTypeFilter)
-
-      const response = await fetch(`/api/networks?${params}`)
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch networks')
-      }
-
-      setNetworks(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, networkTypeFilter])
-
+  // Fetch networks from API
   useEffect(() => {
-    fetchNetworks()
-  }, [fetchNetworks])
+    const fetchNetworks = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
 
-  const formatNetworkType = (type: string | null) => {
-    if (!type) return '-'
-    const typeMap: Record<string, string> = {
-      lan: 'LAN',
-      wan: 'WAN',
-      dmz: 'DMZ',
-      guest: 'Guest',
-      management: 'Management',
-      storage: 'Storage',
-      production: 'Production',
-      broadcast: 'Broadcast',
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/networks?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch networks')
+        }
+
+        const result = await response.json()
+        setNetworks(result.data?.networks || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching networks:', error)
+        setNetworks([])
+      } finally {
+        setLoading(false)
+      }
     }
-    return typeMap[type] || type
+
+    fetchNetworks()
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1) // Reset to first page on search
   }
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    )
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
-  if (error) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error}</div>
-        </div>
-      </div>
-    )
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleAdd = () => {
+    router.push('/networks/new')
   }
 
   return (
-    <div className="container">
-      <div className="p-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-h1">Networks</h1>
-          <Link href="/networks/new" className="btn btn-primary">
-            Add Network
-          </Link>
-        </div>
+    <>
+      <GenericListView
+        title="Networks"
+        columns={ALL_COLUMNS}
+        data={networks}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search networks..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add Network"
+        emptyMessage="No networks found. Create your first network to get started."
+        rowLink={(network) => `/networks/${network.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-2 gap-4">
-            <div>
-              <label htmlFor="search" className="block mb-2 font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search networks..."
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label htmlFor="network_type" className="block mb-2 font-bold">
-                Network Type
-              </label>
-              <select
-                id="network_type"
-                value={networkTypeFilter}
-                onChange={(e) => setNetworkTypeFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Types</option>
-                <option value="lan">LAN</option>
-                <option value="wan">WAN</option>
-                <option value="dmz">DMZ</option>
-                <option value="guest">Guest</option>
-                <option value="management">Management</option>
-                <option value="storage">Storage</option>
-                <option value="production">Production</option>
-                <option value="broadcast">Broadcast</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Networks Table */}
-        <div className="card">
-          {networks.length === 0 ? (
-            <p className="text-center py-8">No networks found.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left p-2">Network Name</th>
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-left p-2">Network Address</th>
-                  <th className="text-left p-2">VLAN ID</th>
-                  <th className="text-left p-2">Gateway</th>
-                  <th className="text-left p-2">DHCP</th>
-                  <th className="text-left p-2">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {networks.map((network) => (
-                  <tr key={network.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">
-                      <Link href={`/networks/${network.id}`} className="text-blue hover:underline">
-                        {network.network_name}
-                      </Link>
-                    </td>
-                    <td className="p-2">{formatNetworkType(network.network_type)}</td>
-                    <td className="p-2 font-mono text-sm">{network.network_address || '-'}</td>
-                    <td className="p-2">{network.vlan_id || '-'}</td>
-                    <td className="p-2 font-mono text-sm">{network.gateway || '-'}</td>
-                    <td className="p-2">
-                      {network.dhcp_enabled ? (
-                        <span className="badge badge-success">Enabled</span>
-                      ) : (
-                        <span className="badge badge-default">Disabled</span>
-                      )}
-                    </td>
-                    <td className="p-2">{new Date(network.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+      `}</style>
+    </>
   )
 }

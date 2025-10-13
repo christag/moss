@@ -6,6 +6,7 @@
 import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import type { InstalledApplication } from '@/types'
 
 export default function InstalledApplicationDetailPage({
@@ -43,9 +44,10 @@ export default function InstalledApplicationDetailPage({
         const result = await response.json()
         throw new Error(result.message || 'Failed to delete application')
       }
+      toast.success('Application deleted successfully')
       router.push('/installed-applications')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete application')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete application')
     }
   }
 
@@ -78,6 +80,28 @@ export default function InstalledApplicationDetailPage({
   return (
     <div className="container">
       <div className="p-lg">
+        {/* Breadcrumbs */}
+        <nav
+          className="mb-md"
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-black)',
+            opacity: 0.6,
+            marginBottom: '1rem',
+          }}
+        >
+          <span>
+            <Link
+              href="/installed-applications"
+              style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+            >
+              Installed Applications
+            </Link>
+            <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          </span>
+          <span>{application.application_name}</span>
+        </nav>
+
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-h1">{application.application_name}</h1>

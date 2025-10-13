@@ -13,18 +13,18 @@ export const LicenseTypeSchema = z.enum([
 ])
 
 export const CreateSoftwareLicenseSchema = z.object({
-  software_id: z.string().uuid().optional(),
-  purchased_from_id: z.string().uuid().optional(),
-  license_key: z.string().optional(),
-  license_type: LicenseTypeSchema.optional(),
-  purchase_date: z.string().optional(),
-  expiration_date: z.string().optional(),
-  seat_count: z.number().int().positive().optional(),
-  seats_used: z.number().int().nonnegative().optional(),
-  cost: z.number().positive().optional(),
-  renewal_date: z.string().optional(),
-  auto_renew: z.boolean().optional(),
-  notes: z.string().optional(),
+  software_id: z.string().uuid().nullable().optional(),
+  purchased_from_id: z.string().uuid().nullable().optional(),
+  license_key: z.string().nullable().optional(),
+  license_type: LicenseTypeSchema.nullable().optional(),
+  purchase_date: z.string().nullable().optional(),
+  expiration_date: z.string().nullable().optional(),
+  seat_count: z.number().int().positive().nullable().optional(),
+  seats_used: z.number().int().nonnegative().nullable().optional(),
+  cost: z.number().positive().nullable().optional(),
+  renewal_date: z.string().nullable().optional(),
+  auto_renew: z.boolean().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const UpdateSoftwareLicenseSchema = z.object({

@@ -1,186 +1,350 @@
 /**
  * Software Licenses List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import type { SoftwareLicense } from '@/types'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { SoftwareLicense, LicenseType } from '@/types'
+
+// Helper function to format license type for display
+function formatLicenseType(type: LicenseType): string {
+  return type.charAt(0).toUpperCase() + type.slice(1)
+}
+
+// Helper function to check if license is expired
+function isExpired(expirationDate: Date | null): boolean {
+  if (!expirationDate) return false
+  return new Date(expirationDate) < new Date()
+}
+
+// Helper function to check if license is expiring soon (within 90 days)
+function isExpiringSoon(expirationDate: Date | null): boolean {
+  if (!expirationDate) return false
+  const today = new Date()
+  const expiry = new Date(expirationDate)
+  const daysUntilExpiry = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+  return daysUntilExpiry >= 0 && daysUntilExpiry <= 90
+}
+
+// Define ALL possible columns for software licenses
+const ALL_COLUMNS: ColumnConfig<SoftwareLicense>[] = [
+  {
+    key: 'license_type',
+    label: 'License Type',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    alwaysVisible: true,
+    filterOptions: [
+      { value: 'perpetual', label: 'Perpetual' },
+      { value: 'subscription', label: 'Subscription' },
+      { value: 'free', label: 'Free' },
+      { value: 'volume', label: 'Volume' },
+      { value: 'site', label: 'Site' },
+      { value: 'concurrent', label: 'Concurrent' },
+    ],
+    render: (license) =>
+      license.license_type ? (
+        formatLicenseType(license.license_type)
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'license_key',
+    label: 'License Key',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (license) =>
+      license.license_key ? (
+        <span style={{ fontFamily: 'monospace', fontSize: '0.9em' }}>{license.license_key}</span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'expiration_date',
+    label: 'Expiration Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: true,
+    render: (license) => {
+      if (!license.expiration_date) {
+        return <span className="text-muted">—</span>
+      }
+      const dateStr = new Date(license.expiration_date).toLocaleDateString()
+      const expired = isExpired(license.expiration_date)
+      const expiringSoon = isExpiringSoon(license.expiration_date)
+
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span>{dateStr}</span>
+          {expired && (
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: '500',
+                backgroundColor: '#FD6A3D',
+                color: '#FAF9F5',
+              }}
+            >
+              Expired
+            </span>
+          )}
+          {!expired && expiringSoon && (
+            <span
+              style={{
+                display: 'inline-block',
+                padding: '4px 8px',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: '500',
+                backgroundColor: '#FFBB5C',
+                color: '#231F20',
+              }}
+            >
+              Expiring Soon
+            </span>
+          )}
+        </div>
+      )
+    },
+  },
+  {
+    key: 'seat_count',
+    label: 'Seats',
+    sortable: true,
+    filterable: true,
+    filterType: 'number',
+    defaultVisible: true,
+    render: (license) => {
+      if (license.seat_count !== null && license.seat_count !== undefined) {
+        const used = license.seats_used || 0
+        return (
+          <span>
+            {used} / {license.seat_count}
+          </span>
+        )
+      }
+      return <span className="text-muted">—</span>
+    },
+  },
+  {
+    key: 'seats_used',
+    label: 'Seats Used',
+    sortable: true,
+    filterable: true,
+    filterType: 'number',
+    defaultVisible: false,
+    render: (license) =>
+      license.seats_used !== null && license.seats_used !== undefined ? (
+        license.seats_used.toString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'cost',
+    label: 'Cost',
+    sortable: true,
+    filterable: true,
+    filterType: 'number',
+    defaultVisible: true,
+    render: (license) =>
+      license.cost !== null && license.cost !== undefined ? (
+        `$${license.cost.toLocaleString()}`
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'auto_renew',
+    label: 'Auto Renew',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'true', label: 'Yes' },
+      { value: 'false', label: 'No' },
+    ],
+    render: (license) => (license.auto_renew ? 'Yes' : 'No'),
+  },
+  {
+    key: 'purchase_date',
+    label: 'Purchase Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (license) =>
+      license.purchase_date ? (
+        new Date(license.purchase_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'renewal_date',
+    label: 'Renewal Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (license) =>
+      license.renewal_date ? (
+        new Date(license.renewal_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (license) => license.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (license) => new Date(license.created_at).toLocaleDateString(),
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (license) => new Date(license.updated_at).toLocaleDateString(),
+  },
+]
 
 export default function SoftwareLicensesPage() {
+  const router = useRouter()
   const [licenses, setLicenses] = useState<SoftwareLicense[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [licenseTypeFilter, setLicenseTypeFilter] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('expiration_date')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchLicenses = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        limit: '50',
-        sort_by: 'expiration_date',
-        sort_order: 'asc',
-      })
-      if (search) params.append('search', search)
-      if (licenseTypeFilter) params.append('license_type', licenseTypeFilter)
-
-      const response = await fetch(`/api/software-licenses?${params}`)
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.message || 'Failed to fetch licenses')
-      setLicenses(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, licenseTypeFilter])
-
+  // Fetch licenses from API
   useEffect(() => {
+    const fetchLicenses = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
+
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/software-licenses?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch licenses')
+        }
+
+        const result = await response.json()
+        setLicenses(result.data?.software_licenses || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching licenses:', error)
+        setLicenses([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchLicenses()
-  }, [fetchLicenses])
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
 
-  const formatType = (type: string | null) => {
-    if (!type) return '-'
-    return type.charAt(0).toUpperCase() + type.slice(1)
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1)
   }
 
-  const isExpired = (expirationDate: Date | null) => {
-    if (!expirationDate) return false
-    return new Date(expirationDate) < new Date()
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1)
   }
 
-  const isExpiringSoon = (expirationDate: Date | null) => {
-    if (!expirationDate) return false
-    const today = new Date()
-    const expiry = new Date(expirationDate)
-    const daysUntilExpiry = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    return daysUntilExpiry >= 0 && daysUntilExpiry <= 90
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
   }
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    )
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
   }
 
-  if (error) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error}</div>
-        </div>
-      </div>
-    )
+  const handleAdd = () => {
+    router.push('/software-licenses/new')
   }
 
   return (
-    <div className="container">
-      <div className="p-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-h1">Software Licenses</h1>
-          <Link href="/software-licenses/new" className="btn btn-primary">
-            Add License
-          </Link>
-        </div>
+    <>
+      <GenericListView
+        title="Software Licenses"
+        columns={ALL_COLUMNS}
+        data={licenses}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search licenses..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add License"
+        emptyMessage="No software licenses found. Add your first license to get started."
+        rowLink={(license) => `/software-licenses/${license.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-2 gap-4">
-            <div>
-              <label htmlFor="search" className="block mb-2 font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search license keys..."
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label htmlFor="license_type" className="block mb-2 font-bold">
-                License Type
-              </label>
-              <select
-                id="license_type"
-                value={licenseTypeFilter}
-                onChange={(e) => setLicenseTypeFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Types</option>
-                <option value="perpetual">Perpetual</option>
-                <option value="subscription">Subscription</option>
-                <option value="free">Free</option>
-                <option value="volume">Volume</option>
-                <option value="site">Site</option>
-                <option value="concurrent">Concurrent</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Licenses Table */}
-        <div className="card">
-          {licenses.length === 0 ? (
-            <p className="text-center py-8">No software licenses found.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left p-2">License Type</th>
-                  <th className="text-left p-2">Expiration Date</th>
-                  <th className="text-left p-2">Seats</th>
-                  <th className="text-left p-2">Cost</th>
-                  <th className="text-left p-2">Auto Renew</th>
-                  <th className="text-left p-2">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {licenses.map((license) => (
-                  <tr key={license.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">
-                      <Link
-                        href={`/software-licenses/${license.id}`}
-                        className="text-blue hover:underline"
-                      >
-                        {formatType(license.license_type)}
-                      </Link>
-                    </td>
-                    <td className="p-2">
-                      {license.expiration_date ? (
-                        <>
-                          {new Date(license.expiration_date).toLocaleDateString()}
-                          {isExpired(license.expiration_date) ? (
-                            <span className="badge badge-danger ml-2">Expired</span>
-                          ) : isExpiringSoon(license.expiration_date) ? (
-                            <span className="badge badge-warning ml-2">Expiring Soon</span>
-                          ) : null}
-                        </>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="p-2">
-                      {license.seat_count
-                        ? `${license.seats_used || 0} / ${license.seat_count}`
-                        : '-'}
-                    </td>
-                    <td className="p-2">{license.cost ? `$${license.cost}` : '-'}</td>
-                    <td className="p-2">{license.auto_renew ? 'Yes' : 'No'}</td>
-                    <td className="p-2">{new Date(license.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+      `}</style>
+    </>
   )
 }

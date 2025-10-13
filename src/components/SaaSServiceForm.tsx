@@ -289,6 +289,38 @@ export function SaaSServiceForm({ service, onSuccess, onCancel }: SaaSServiceFor
           />
         </div>
 
+        {/* SSO Provider */}
+        <div>
+          <label htmlFor="sso_provider" className="block mb-2 font-bold">
+            SSO Provider
+          </label>
+          <input
+            type="text"
+            id="sso_provider"
+            value={formData.sso_provider}
+            onChange={(e) => setFormData({ ...formData, sso_provider: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="Okta, Azure AD, Google Workspace"
+            maxLength={50}
+          />
+        </div>
+
+        {/* SSO Protocol */}
+        <div>
+          <label htmlFor="sso_protocol" className="block mb-2 font-bold">
+            SSO Protocol
+          </label>
+          <input
+            type="text"
+            id="sso_protocol"
+            value={formData.sso_protocol}
+            onChange={(e) => setFormData({ ...formData, sso_protocol: e.target.value })}
+            className="w-full p-2 border rounded"
+            placeholder="SAML 2.0, OAuth 2.0, OpenID Connect"
+            maxLength={50}
+          />
+        </div>
+
         {/* SSO Checkboxes */}
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2">

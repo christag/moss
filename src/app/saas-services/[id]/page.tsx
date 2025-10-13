@@ -6,6 +6,7 @@
 import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import type { SaaSService } from '@/types'
 
 export default function SaaSServiceDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -35,9 +36,10 @@ export default function SaaSServiceDetailPage({ params }: { params: Promise<{ id
         const result = await response.json()
         throw new Error(result.message || 'Failed to delete service')
       }
+      toast.success('SaaS service deleted successfully')
       router.push('/saas-services')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete service')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete service')
     }
   }
 
@@ -65,6 +67,28 @@ export default function SaaSServiceDetailPage({ params }: { params: Promise<{ id
   return (
     <div className="container">
       <div className="p-lg">
+        {/* Breadcrumbs */}
+        <nav
+          className="mb-md"
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-black)',
+            opacity: 0.6,
+            marginBottom: '1rem',
+          }}
+        >
+          <span>
+            <Link
+              href="/saas-services"
+              style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+            >
+              SaaS Services
+            </Link>
+            <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          </span>
+          <span>{service.service_name}</span>
+        </nav>
+
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-h1">{service.service_name}</h1>

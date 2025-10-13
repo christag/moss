@@ -8,6 +8,7 @@ import {
   InstalledApplicationQuerySchema,
 } from '@/lib/schemas/installed-application'
 import type { InstalledApplication } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 /**
  * GET /api/installed-applications
@@ -108,7 +109,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validation = CreateInstalledApplicationSchema.safeParse(body)
 
     if (!validation.success) {

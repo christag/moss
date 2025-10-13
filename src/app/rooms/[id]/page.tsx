@@ -7,7 +7,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { toast } from 'sonner'
 import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
+import { AttachmentsTab } from '@/components/AttachmentsTab'
 import type { Room, Location } from '@/types'
 
 export default function RoomDetailPage() {
@@ -70,9 +72,10 @@ export default function RoomDetailPage() {
         throw new Error(result.message || 'Failed to delete room')
       }
 
+      toast.success('Room deleted successfully')
       router.push('/rooms')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete room')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete room')
     }
   }
 
@@ -198,6 +201,11 @@ export default function RoomDetailPage() {
           </p>
         </div>
       ),
+    },
+    {
+      id: 'attachments',
+      label: 'Attachments',
+      content: <AttachmentsTab objectType="room" objectId={id} canEdit={true} />,
     },
     {
       id: 'history',

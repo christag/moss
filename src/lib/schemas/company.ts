@@ -18,20 +18,20 @@ export const CompanyTypeSchema = z.enum([
 export const CreateCompanySchema = z.object({
   company_name: z.string().min(1, 'Company name is required').max(255),
   company_type: CompanyTypeSchema,
-  website: z.string().url('Invalid URL').max(255).optional().or(z.literal('')),
-  phone: z.string().max(50).optional(),
-  email: z.string().email('Invalid email').max(255).optional().or(z.literal('')),
-  address: z.string().optional(),
-  city: z.string().max(100).optional(),
-  state: z.string().max(100).optional(),
-  zip: z.string().max(20).optional(),
-  country: z.string().max(100).optional(),
-  account_number: z.string().max(100).optional(),
-  support_url: z.string().url('Invalid URL').max(255).optional().or(z.literal('')),
-  support_phone: z.string().max(50).optional(),
-  support_email: z.string().email('Invalid email').max(255).optional().or(z.literal('')),
-  tax_id: z.string().max(100).optional(),
-  notes: z.string().optional(),
+  website: z.string().url('Invalid URL').max(255).nullable().optional().or(z.literal('')),
+  phone: z.string().max(50).nullable().optional(),
+  email: z.string().email('Invalid email').max(255).nullable().optional().or(z.literal('')),
+  address: z.string().nullable().optional(),
+  city: z.string().max(100).nullable().optional(),
+  state: z.string().max(100).nullable().optional(),
+  zip: z.string().max(20).nullable().optional(),
+  country: z.string().max(100).nullable().optional(),
+  account_number: z.string().max(100).nullable().optional(),
+  support_url: z.string().url('Invalid URL').max(255).nullable().optional().or(z.literal('')),
+  support_phone: z.string().max(50).nullable().optional(),
+  support_email: z.string().email('Invalid email').max(255).nullable().optional().or(z.literal('')),
+  tax_id: z.string().max(100).nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 // Update Company schema (all fields optional)
@@ -66,6 +66,36 @@ export const ListCompaniesQuerySchema = z.object({
 
 // UUID validation schema
 export const UUIDSchema = z.string().uuid('Invalid UUID format')
+
+/**
+ * Schema for bulk creating multiple companies (1-100 records)
+ */
+export const CreateManyCompaniesSchema = z
+  .array(CreateCompanySchema)
+  .min(1, 'At least one company is required')
+  .max(100, 'Maximum 100 companies per batch')
+
+/**
+ * Column names for companies table (for bulk insert operations)
+ */
+export const COMPANY_COLUMNS = [
+  'company_name',
+  'company_type',
+  'website',
+  'phone',
+  'email',
+  'address',
+  'city',
+  'state',
+  'zip',
+  'country',
+  'account_number',
+  'support_url',
+  'support_phone',
+  'support_email',
+  'tax_id',
+  'notes',
+] as const
 
 // Types inferred from schemas
 export type CreateCompanyInput = z.infer<typeof CreateCompanySchema>

@@ -1,172 +1,263 @@
 /**
  * IP Addresses List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import type { IPAddress } from '@/types'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { IPAddress, IPAddressType } from '@/types'
+
+// Helper function to format IP type for display
+function formatIPType(type: IPAddressType): string {
+  return type.charAt(0).toUpperCase() + type.slice(1)
+}
+
+// Helper function to get type color
+function getTypeColor(type: IPAddressType): string {
+  switch (type) {
+    case 'static':
+      return '#1C7FF2' // Morning Blue
+    case 'dhcp':
+      return '#28C077' // Green
+    case 'reserved':
+      return '#FFBB5C' // Tangerine
+    case 'floating':
+      return '#ACD7FF' // Light Blue
+    default:
+      return '#231F20' // Brew Black
+  }
+}
+
+// Define ALL possible columns for IP addresses
+const ALL_COLUMNS: ColumnConfig<IPAddress>[] = [
+  {
+    key: 'ip_address',
+    label: 'IP Address',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true,
+    render: (ip) => (
+      <span style={{ fontFamily: 'monospace', fontSize: '0.95em', fontWeight: '500' }}>
+        {ip.ip_address}
+      </span>
+    ),
+  },
+  {
+    key: 'ip_version',
+    label: 'Version',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'v4', label: 'IPv4' },
+      { value: 'v6', label: 'IPv6' },
+    ],
+    render: (ip) =>
+      ip.ip_version ? (
+        <span style={{ fontWeight: '500' }}>{ip.ip_version.toUpperCase()}</span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'type',
+    label: 'Type',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'static', label: 'Static' },
+      { value: 'dhcp', label: 'DHCP' },
+      { value: 'reserved', label: 'Reserved' },
+      { value: 'floating', label: 'Floating' },
+    ],
+    render: (ip) =>
+      ip.type ? (
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: getTypeColor(ip.type),
+            color: ip.type === 'floating' ? '#231F20' : '#FAF9F5',
+          }}
+        >
+          {formatIPType(ip.type)}
+        </span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'dns_name',
+    label: 'DNS Name',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (ip) => ip.dns_name || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'assignment_date',
+    label: 'Assignment Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: true,
+    render: (ip) =>
+      ip.assignment_date ? (
+        new Date(ip.assignment_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (ip) => ip.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (ip) => new Date(ip.created_at).toLocaleDateString(),
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (ip) => new Date(ip.updated_at).toLocaleDateString(),
+  },
+]
 
 export default function IPAddressesPage() {
+  const router = useRouter()
   const [ipAddresses, setIPAddresses] = useState<IPAddress[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [ipVersionFilter, setIPVersionFilter] = useState('')
-  const [typeFilter, setTypeFilter] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('ip_address')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchIPAddresses = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        limit: '50',
-        sort_by: 'ip_address',
-        sort_order: 'asc',
-      })
-
-      if (search) params.append('search', search)
-      if (ipVersionFilter) params.append('ip_version', ipVersionFilter)
-      if (typeFilter) params.append('type', typeFilter)
-
-      const response = await fetch(`/api/ip-addresses?${params}`)
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch IP addresses')
-      }
-
-      setIPAddresses(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, ipVersionFilter, typeFilter])
-
+  // Fetch IP addresses from API
   useEffect(() => {
-    fetchIPAddresses()
-  }, [fetchIPAddresses])
+    const fetchIPAddresses = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    )
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/ip-addresses?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch IP addresses')
+        }
+
+        const result = await response.json()
+        setIPAddresses(result.data?.ip_addresses || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching IP addresses:', error)
+        setIPAddresses([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchIPAddresses()
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1)
   }
 
-  if (error) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error}</div>
-        </div>
-      </div>
-    )
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1)
+  }
+
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleAdd = () => {
+    router.push('/ip-addresses/new')
   }
 
   return (
-    <div className="container">
-      <div className="p-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-h1">IP Addresses</h1>
-          <Link href="/ip-addresses/new" className="btn btn-primary">
-            Add IP Address
-          </Link>
-        </div>
+    <>
+      <GenericListView
+        title="IP Addresses"
+        columns={ALL_COLUMNS}
+        data={ipAddresses}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search IP addresses..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add IP Address"
+        emptyMessage="No IP addresses found. Add your first IP address to get started."
+        rowLink={(ip) => `/ip-addresses/${ip.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-3 gap-4">
-            <div>
-              <label htmlFor="search" className="block mb-2 font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search IP addresses..."
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label htmlFor="ip_version" className="block mb-2 font-bold">
-                IP Version
-              </label>
-              <select
-                id="ip_version"
-                value={ipVersionFilter}
-                onChange={(e) => setIPVersionFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Versions</option>
-                <option value="v4">IPv4</option>
-                <option value="v6">IPv6</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="type" className="block mb-2 font-bold">
-                Type
-              </label>
-              <select
-                id="type"
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Types</option>
-                <option value="static">Static</option>
-                <option value="dhcp">DHCP</option>
-                <option value="reserved">Reserved</option>
-                <option value="floating">Floating</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* IP Addresses Table */}
-        <div className="card">
-          {ipAddresses.length === 0 ? (
-            <p className="text-center py-8">No IP addresses found.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left p-2">IP Address</th>
-                  <th className="text-left p-2">Version</th>
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-left p-2">DNS Name</th>
-                  <th className="text-left p-2">Assignment Date</th>
-                  <th className="text-left p-2">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ipAddresses.map((ip) => (
-                  <tr key={ip.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">
-                      <Link href={`/ip-addresses/${ip.id}`} className="text-blue hover:underline">
-                        {ip.ip_address}
-                      </Link>
-                    </td>
-                    <td className="p-2">{ip.ip_version?.toUpperCase() || '-'}</td>
-                    <td className="p-2">
-                      {ip.type ? ip.type.charAt(0).toUpperCase() + ip.type.slice(1) : '-'}
-                    </td>
-                    <td className="p-2">{ip.dns_name || '-'}</td>
-                    <td className="p-2">
-                      {ip.assignment_date ? new Date(ip.assignment_date).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="p-2">{new Date(ip.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+      `}</style>
+    </>
   )
 }

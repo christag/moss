@@ -7,7 +7,10 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { toast } from 'sonner'
 import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
+import { Icon } from '@/components/ui'
+import { AttachmentsTab } from '@/components/AttachmentsTab'
 import type { Company } from '@/types'
 
 export default function CompanyDetailPage() {
@@ -62,18 +65,15 @@ export default function CompanyDetailPage() {
         // API structure: { success: false, error: "main error", details: { message: "detailed message", dependencies: {...} } }
         const errorMessage =
           result.details?.message || result.error || result.message || 'Failed to delete company'
-        alert(errorMessage)
+        toast.error(errorMessage)
         return
       }
 
+      toast.success('Company deleted successfully')
       router.push('/companies')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete company')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete company')
     }
-  }
-
-  const handleBack = () => {
-    router.push('/companies')
   }
 
   if (loading) {
@@ -120,9 +120,15 @@ export default function CompanyDetailPage() {
               href={company.website}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: 'var(--color-morning-blue)' }}
+              style={{
+                color: 'var(--color-morning-blue)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.25rem',
+              }}
             >
               {company.website}
+              <Icon name="external_link" size={14} aria-label="Opens in new tab" />
             </a>
           ) : (
             '—'
@@ -194,6 +200,11 @@ export default function CompanyDetailPage() {
       ),
     },
     {
+      id: 'attachments',
+      label: 'Attachments',
+      content: <AttachmentsTab objectType="company" objectId={id} canEdit={true} />,
+    },
+    {
       id: 'history',
       label: 'History',
       content: (
@@ -217,7 +228,6 @@ export default function CompanyDetailPage() {
         fieldGroups={fieldGroups}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        onBack={handleBack}
       />
 
       <style jsx global>{`

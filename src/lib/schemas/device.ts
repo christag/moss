@@ -35,26 +35,26 @@ export const DeviceStatusSchema = z.enum(['active', 'retired', 'repair', 'storag
  * Schema for creating a new device
  */
 export const CreateDeviceSchema = z.object({
-  parent_device_id: z.string().uuid().optional(),
-  assigned_to_id: z.string().uuid().optional(),
-  last_used_by_id: z.string().uuid().optional(),
-  location_id: z.string().uuid().optional(),
-  room_id: z.string().uuid().optional(),
-  company_id: z.string().uuid().optional(),
-  hostname: z.string().max(255).optional(),
+  parent_device_id: z.string().uuid().nullable().optional(),
+  assigned_to_id: z.string().uuid().nullable().optional(),
+  last_used_by_id: z.string().uuid().nullable().optional(),
+  location_id: z.string().uuid().nullable().optional(),
+  room_id: z.string().uuid().nullable().optional(),
+  company_id: z.string().uuid().nullable().optional(),
+  hostname: z.string().max(255).nullable().optional(),
   device_type: DeviceTypeSchema,
-  serial_number: z.string().max(255).optional(),
-  model: z.string().max(255).optional(),
-  manufacturer: z.string().max(255).optional(),
-  purchase_date: z.string().date().optional(),
-  warranty_expiration: z.string().date().optional(),
-  install_date: z.string().date().optional(),
+  serial_number: z.string().max(255).nullable().optional(),
+  model: z.string().max(255).nullable().optional(),
+  manufacturer: z.string().max(255).nullable().optional(),
+  purchase_date: z.string().date().nullable().optional(),
+  warranty_expiration: z.string().date().nullable().optional(),
+  install_date: z.string().date().nullable().optional(),
   status: DeviceStatusSchema.default('active'),
-  asset_tag: z.string().max(100).optional(),
-  operating_system: z.string().max(100).optional(),
-  os_version: z.string().max(100).optional(),
-  last_audit_date: z.string().date().optional(),
-  notes: z.string().optional(),
+  asset_tag: z.string().max(100).nullable().optional(),
+  operating_system: z.string().max(100).nullable().optional(),
+  os_version: z.string().max(100).nullable().optional(),
+  last_audit_date: z.string().date().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 /**
@@ -82,6 +82,15 @@ export const UpdateDeviceSchema = z.object({
   last_audit_date: z.string().date().nullable().optional(),
   notes: z.string().nullable().optional(),
 })
+
+/**
+ * Schema for bulk creating devices (array of 1-100 devices)
+ * Used for CSV imports and batch operations
+ */
+export const CreateManyDevicesSchema = z
+  .array(CreateDeviceSchema)
+  .min(1, 'At least one device is required')
+  .max(100, 'Maximum 100 devices per batch')
 
 /**
  * Query parameters schema for device list endpoint
@@ -114,3 +123,30 @@ export const DeviceQuerySchema = z.object({
     .default('created_at'),
   sort_order: z.enum(['asc', 'desc']).default('desc'),
 })
+
+/**
+ * Device column names for bulk insert operations
+ * Must match the order of fields in the CREATE/UPDATE schemas
+ */
+export const DEVICE_COLUMNS = [
+  'parent_device_id',
+  'assigned_to_id',
+  'last_used_by_id',
+  'location_id',
+  'room_id',
+  'company_id',
+  'hostname',
+  'device_type',
+  'serial_number',
+  'model',
+  'manufacturer',
+  'purchase_date',
+  'warranty_expiration',
+  'install_date',
+  'status',
+  'asset_tag',
+  'operating_system',
+  'os_version',
+  'last_audit_date',
+  'notes',
+] as const

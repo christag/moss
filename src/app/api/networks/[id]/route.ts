@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { UpdateNetworkSchema } from '@/lib/schemas/network'
 import type { Network } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 /**
  * GET /api/networks/:id
@@ -39,7 +40,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validated = UpdateNetworkSchema.parse(body)

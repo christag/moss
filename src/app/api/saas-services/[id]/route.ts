@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { UpdateSaaSServiceSchema } from '@/lib/schemas/saas-service'
 import type { SaaSService } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 // GET /api/saas-services/[id] - Get single SaaS service
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -41,7 +42,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validatedData = UpdateSaaSServiceSchema.parse(body)
 
     const updates: string[] = []

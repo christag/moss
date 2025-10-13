@@ -1,104 +1,329 @@
+/**
+ * Dashboard Homepage
+ * Main dashboard with overview statistics and expiring items
+ */
+
 'use client'
 
-import {
-  Button,
-  Input,
-  Select,
-  Textarea,
-  Badge,
-  Card,
-  CardHeader,
-  CardContent,
-  Checkbox,
-} from '@/components/ui'
+import { useEffect, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import Link from 'next/link'
+import StatWidget from '@/components/dashboard/StatWidget'
+import ExpiringItemsWidget from '@/components/dashboard/ExpiringItemsWidget'
 
-export default function Home() {
+interface DashboardStats {
+  devices: number
+  people: number
+  locations: number
+  networks: number
+  software: number
+  saas_services: number
+  documents: number
+  contracts: number
+}
+
+export default function Dashboard() {
+  const { data: session } = useSession()
+  const [stats, setStats] = useState<DashboardStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  async function fetchStats() {
+    try {
+      const response = await fetch('/api/dashboard/stats')
+      if (!response.ok) throw new Error('Failed to fetch stats')
+      const data = await response.json()
+      setStats(data)
+    } catch (error) {
+      console.error('Error fetching stats:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
-    <main className="container">
-      <div className="p-3xl">
-        <h1 className="text-4xl font-bold text-blue mb-lg">M.O.S.S.</h1>
-        <p className="text-lg mb-md">Material Organization & Storage System</p>
-        <p className="text-md mb-2xl">IT Asset Management Platform</p>
+    <div style={{ padding: 'var(--spacing-lg)' }}>
+      {/* Welcome Header */}
+      <div style={{ marginBottom: 'var(--spacing-lg)' }}>
+        <h1 style={{ fontSize: '2rem', fontWeight: '600', marginBottom: 'var(--spacing-xs)' }}>
+          Welcome back{session?.user?.name ? `, ${session.user.name}` : ''}!
+        </h1>
+        <p style={{ color: 'var(--color-brew-black-60)' }}>
+          Here&apos;s what&apos;s happening with your IT infrastructure today.
+        </p>
+      </div>
 
-        <div className="grid grid-2 mb-3xl">
-          <Card>
-            <CardHeader>Design System Demo</CardHeader>
-            <CardContent>
-              <p className="mb-lg">
-                Welcome to M.O.S.S.! The application foundation has been successfully set up with:
-              </p>
-              <ul className="mb-lg pl-lg">
-                <li>✓ Next.js 15 with TypeScript</li>
-                <li>✓ Custom design system with Inter font</li>
-                <li>✓ ESLint + Prettier configuration</li>
-                <li>✓ Git hooks with Husky</li>
-                <li>✓ Jest testing framework</li>
-                <li>✓ Core UI component library</li>
-              </ul>
-            </CardContent>
-          </Card>
+      {/* Quick Stats Grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+          gap: 'var(--spacing-md)',
+          marginBottom: 'var(--spacing-xl)',
+        }}
+      >
+        {loading ? (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: 'var(--spacing-xl)',
+              color: 'var(--color-brew-black-60)',
+            }}
+          >
+            Loading statistics...
+          </div>
+        ) : stats ? (
+          <>
+            <StatWidget
+              title="Devices"
+              value={stats.devices}
+              icon="toggle_on_off"
+              color="var(--color-morning-blue)"
+              link="/devices"
+              description="Total managed devices"
+            />
+            <StatWidget
+              title="People"
+              value={stats.people}
+              icon="people-group"
+              color="var(--color-morning-blue)"
+              link="/people"
+              description="Total users and contacts"
+            />
+            <StatWidget
+              title="Locations"
+              value={stats.locations}
+              icon="location-pin"
+              color="var(--color-morning-blue)"
+              link="/locations"
+              description="Physical locations"
+            />
+            <StatWidget
+              title="Networks"
+              value={stats.networks}
+              icon="map"
+              color="var(--color-morning-blue)"
+              link="/networks"
+              description="VLANs and subnets"
+            />
+            <StatWidget
+              title="Software"
+              value={stats.software}
+              icon="bar_code_sku"
+              color="var(--color-morning-blue)"
+              link="/software"
+              description="Software catalog items"
+            />
+            <StatWidget
+              title="SaaS Services"
+              value={stats.saas_services}
+              icon="up-arrow-line-chart"
+              color="var(--color-morning-blue)"
+              link="/saas-services"
+              description="Cloud services"
+            />
+            <StatWidget
+              title="Documents"
+              value={stats.documents}
+              icon="folder_drawer_category"
+              color="var(--color-morning-blue)"
+              link="/documents"
+              description="Documentation pages"
+            />
+            <StatWidget
+              title="Contracts"
+              value={stats.contracts}
+              icon="ticket-event-stub"
+              color="var(--color-orange)"
+              link="/contracts"
+              description="Active contracts"
+            />
+          </>
+        ) : (
+          <div
+            style={{
+              gridColumn: '1 / -1',
+              textAlign: 'center',
+              padding: 'var(--spacing-xl)',
+              color: 'var(--color-orange)',
+            }}
+          >
+            Failed to load statistics
+          </div>
+        )}
+      </div>
 
-          <Card>
-            <CardHeader>Component Library</CardHeader>
-            <CardContent>
-              <div className="mb-md">
-                <h6 className="mb-sm">Badges</h6>
-                <div className="flex gap-sm mb-md">
-                  <Badge variant="success">Active</Badge>
-                  <Badge variant="warning">Warning</Badge>
-                  <Badge variant="error">Error</Badge>
-                  <Badge variant="info">Info</Badge>
-                </div>
-              </div>
-
-              <div className="mb-md">
-                <h6 className="mb-sm">Buttons</h6>
-                <div className="flex gap-sm mb-md">
-                  <Button variant="primary" size="sm">
-                    Primary
-                  </Button>
-                  <Button variant="secondary" size="sm">
-                    Secondary
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    Outline
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-3xl">
-          <Card>
-            <CardHeader>Form Components</CardHeader>
-            <CardContent>
-              <div className="grid grid-2">
-                <Input label="Text Input" placeholder="Enter text..." />
-                <Select
-                  label="Select Option"
-                  options={[
-                    { value: 'option1', label: 'Option 1' },
-                    { value: 'option2', label: 'Option 2' },
-                  ]}
-                  placeholder="Choose an option"
-                />
-              </div>
-              <Textarea label="Textarea" placeholder="Enter description..." />
-              <Checkbox label="I agree to the terms and conditions" />
-              <Button variant="primary" className="mt-md">
-                Submit
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="mt-2xl">
-          <p className="text-sm text-black opacity-60">
-            Phase 0 Setup Complete ✓ | Next: Database Setup & API Foundation
-          </p>
+      {/* Quick Actions */}
+      <div
+        style={{
+          backgroundColor: 'white',
+          padding: 'var(--spacing-md)',
+          borderRadius: '8px',
+          border: '1px solid var(--color-border)',
+          marginBottom: 'var(--spacing-xl)',
+        }}
+      >
+        <h2 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: 'var(--spacing-md)' }}>
+          Quick Actions
+        </h2>
+        <div
+          style={{
+            display: 'flex',
+            gap: 'var(--spacing-md)',
+            flexWrap: 'wrap',
+          }}
+        >
+          <Link
+            href="/devices/new"
+            style={{
+              display: 'inline-block',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              backgroundColor: 'var(--color-morning-blue)',
+              color: 'white',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+          >
+            + Add Device
+          </Link>
+          <Link
+            href="/people/new"
+            style={{
+              display: 'inline-block',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              backgroundColor: 'var(--color-green)',
+              color: 'white',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+          >
+            + Add Person
+          </Link>
+          <Link
+            href="/locations/new"
+            style={{
+              display: 'inline-block',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              backgroundColor: 'var(--color-tangerine)',
+              color: 'var(--color-brew-black)',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+          >
+            + Add Location
+          </Link>
+          <Link
+            href="/networks/new"
+            style={{
+              display: 'inline-block',
+              padding: 'var(--spacing-sm) var(--spacing-md)',
+              backgroundColor: 'var(--color-light-blue)',
+              color: 'var(--color-brew-black)',
+              borderRadius: '4px',
+              textDecoration: 'none',
+              fontSize: '0.875rem',
+              fontWeight: '500',
+            }}
+          >
+            + Add Network
+          </Link>
         </div>
       </div>
-    </main>
+
+      {/* Expiring Items Grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+          gap: 'var(--spacing-md)',
+        }}
+      >
+        <ExpiringItemsWidget
+          title="Expiring Warranties"
+          apiEndpoint="/api/dashboard/expiring-warranties"
+          columns={[
+            {
+              key: 'device_name',
+              label: 'Device',
+              render: (item) => (
+                <Link
+                  href={`/devices/${item.id}`}
+                  style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+                >
+                  {item.device_name}
+                </Link>
+              ),
+            },
+            { key: 'manufacturer', label: 'Manufacturer' },
+          ]}
+          linkPattern="/devices/:id"
+          emptyMessage="No warranties expiring in the next 90 days"
+          days={90}
+          limit={5}
+        />
+
+        <ExpiringItemsWidget
+          title="Expiring Licenses"
+          apiEndpoint="/api/dashboard/expiring-licenses"
+          columns={[
+            {
+              key: 'license_name',
+              label: 'License',
+              render: (item) => (
+                <Link
+                  href={`/software-licenses/${item.id}`}
+                  style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+                >
+                  {item.license_name}
+                </Link>
+              ),
+            },
+            {
+              key: 'utilization_percentage',
+              label: 'Utilization',
+              render: (item) => `${item.utilization_percentage}%`,
+            },
+          ]}
+          linkPattern="/software-licenses/:id"
+          emptyMessage="No licenses expiring in the next 90 days"
+          days={90}
+          limit={5}
+        />
+
+        <ExpiringItemsWidget
+          title="Expiring Contracts"
+          apiEndpoint="/api/dashboard/expiring-contracts"
+          columns={[
+            {
+              key: 'contract_title',
+              label: 'Contract',
+              render: (item) => (
+                <Link
+                  href={`/contracts/${item.id}`}
+                  style={{ color: 'var(--color-morning-blue)', textDecoration: 'none' }}
+                >
+                  {item.contract_title}
+                </Link>
+              ),
+            },
+            { key: 'vendor', label: 'Vendor' },
+          ]}
+          linkPattern="/contracts/:id"
+          emptyMessage="No contracts expiring in the next 90 days"
+          days={90}
+          limit={5}
+        />
+      </div>
+    </div>
   )
 }

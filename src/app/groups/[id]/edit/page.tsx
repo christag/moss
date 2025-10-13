@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { GroupForm } from '@/components/GroupForm'
 import type { Group } from '@/types'
 
@@ -73,6 +74,24 @@ export default function EditGroupPage({ params }: { params: Promise<{ id: string
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/groups" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            Groups
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/groups/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {group.group_name}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <GroupForm group={group} onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>

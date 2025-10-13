@@ -4,8 +4,10 @@
  */
 import { NextRequest } from 'next/server'
 import { query } from '@/lib/db'
-import { successResponse, errorResponse } from '@/lib/api'
+import { successResponse, errorResponse, parseRequestBody } from '@/lib/api'
 import { CreateDeviceSchema, DeviceQuerySchema } from '@/lib/schemas/device'
+import { cache, generateListCacheKey } from '@/lib/cache'
+import { applyRateLimit } from '@/lib/rateLimitMiddleware'
 import type { Device } from '@/types'
 
 /**
@@ -13,6 +15,9 @@ import type { Device } from '@/types'
  * List devices with optional filtering, searching, and pagination
  */
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await applyRateLimit(request, 'api')
+  if (rateLimitResult) return rateLimitResult
   try {
     const { searchParams } = new URL(request.url)
     const params = Object.fromEntries(searchParams.entries())
@@ -33,6 +38,15 @@ export async function GET(request: NextRequest) {
       sort_by,
       sort_order,
     } = validated
+
+    // Generate cache key
+    const cacheKey = generateListCacheKey('devices', validated)
+
+    // Check cache first
+    const cached = cache.get(cacheKey)
+    if (cached) {
+      return successResponse(cached, 'Devices retrieved successfully (cached)')
+    }
 
     // Build WHERE clauses
     const conditions: string[] = []
@@ -109,7 +123,7 @@ export async function GET(request: NextRequest) {
       values
     )
 
-    return successResponse({
+    const responseData = {
       devices: devicesResult.rows,
       pagination: {
         page,
@@ -117,7 +131,12 @@ export async function GET(request: NextRequest) {
         total,
         total_pages: Math.ceil(total / limit),
       },
-    })
+    }
+
+    // Cache for 30 seconds
+    cache.set(cacheKey, responseData, 30)
+
+    return successResponse(responseData, 'Devices retrieved successfully')
   } catch (error) {
     console.error('Error fetching devices:', error)
     return errorResponse('Failed to fetch devices', undefined, 500)
@@ -129,11 +148,79 @@ export async function GET(request: NextRequest) {
  * Create a new device
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await applyRateLimit(request, 'api')
+  if (rateLimitResult) return rateLimitResult
+
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validated = CreateDeviceSchema.parse(body)
+
+    // Validate foreign key references before insertion
+    if (validated.parent_device_id) {
+      const parentCheck = await query('SELECT id FROM devices WHERE id = $1', [
+        validated.parent_device_id,
+      ])
+      if (parentCheck.rows.length === 0) {
+        return errorResponse('Parent device not found', undefined, 404)
+      }
+
+      // Check for circular reference (parent pointing to itself would be caught at PATCH time)
+      // For POST, we just ensure parent exists
+    }
+
+    if (validated.assigned_to_id) {
+      const assignedToCheck = await query('SELECT id FROM people WHERE id = $1', [
+        validated.assigned_to_id,
+      ])
+      if (assignedToCheck.rows.length === 0) {
+        return errorResponse('Assigned person not found', undefined, 404)
+      }
+    }
+
+    if (validated.last_used_by_id) {
+      const lastUsedByCheck = await query('SELECT id FROM people WHERE id = $1', [
+        validated.last_used_by_id,
+      ])
+      if (lastUsedByCheck.rows.length === 0) {
+        return errorResponse('Last used by person not found', undefined, 404)
+      }
+    }
+
+    if (validated.location_id) {
+      const locationCheck = await query('SELECT id FROM locations WHERE id = $1', [
+        validated.location_id,
+      ])
+      if (locationCheck.rows.length === 0) {
+        return errorResponse('Location not found', undefined, 404)
+      }
+    }
+
+    if (validated.room_id) {
+      const roomCheck = await query('SELECT id FROM rooms WHERE id = $1', [validated.room_id])
+      if (roomCheck.rows.length === 0) {
+        return errorResponse('Room not found', undefined, 404)
+      }
+    }
+
+    if (validated.company_id) {
+      const companyCheck = await query('SELECT id FROM companies WHERE id = $1', [
+        validated.company_id,
+      ])
+      if (companyCheck.rows.length === 0) {
+        return errorResponse('Company not found', undefined, 404)
+      }
+    }
 
     // Insert device
     const result = await query<Device>(
@@ -186,12 +273,34 @@ export async function POST(request: NextRequest) {
       ]
     )
 
-    return successResponse(result.rows[0], undefined, 201)
+    // Invalidate list cache
+    cache.invalidatePattern('devices:list:*')
+
+    return successResponse(result.rows[0], 'Device created successfully', 201)
   } catch (error) {
     console.error('Error creating device:', error)
+
+    // Handle database constraint violations
+    if (error && typeof error === 'object' && 'code' in error) {
+      // Unique constraint violation (duplicate hostname)
+      if (error.code === '23505' && error.constraint === 'devices_hostname_unique') {
+        return errorResponse(
+          'A device with this hostname already exists. Hostnames must be unique.',
+          undefined,
+          400
+        )
+      }
+
+      // Foreign key constraint violation
+      if (error.code === '23503') {
+        return errorResponse('Invalid reference ID provided', undefined, 400)
+      }
+    }
+
     if (error instanceof Error && error.message.includes('violates foreign key constraint')) {
       return errorResponse('Invalid reference ID provided', undefined, 400)
     }
+
     return errorResponse('Failed to create device', undefined, 500)
   }
 }

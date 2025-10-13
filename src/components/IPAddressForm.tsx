@@ -103,17 +103,24 @@ export function IPAddressForm({ ipAddress, onSuccess, onCancel }: IPAddressFormP
       const url = isEdit ? `/api/ip-addresses/${ipAddress.id}` : '/api/ip-addresses'
       const method = isEdit ? 'PATCH' : 'POST'
 
+      // Build request body dynamically, only including fields with values
+      const requestBody: Record<string, unknown> = {
+        ip_address: formData.ip_address,
+        ip_version: formData.ip_version,
+        type: formData.type,
+      }
+
+      // Only include optional fields if they have values
+      if (formData.io_id) requestBody.io_id = formData.io_id
+      if (formData.network_id) requestBody.network_id = formData.network_id
+      if (formData.dns_name) requestBody.dns_name = formData.dns_name
+      if (formData.assignment_date) requestBody.assignment_date = formData.assignment_date
+      if (formData.notes) requestBody.notes = formData.notes
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          io_id: formData.io_id || null,
-          network_id: formData.network_id || null,
-          dns_name: formData.dns_name || null,
-          assignment_date: formData.assignment_date || null,
-          notes: formData.notes || null,
-        }),
+        body: JSON.stringify(requestBody),
       })
 
       const result = await response.json()

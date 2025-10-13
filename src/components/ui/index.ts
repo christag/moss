@@ -9,6 +9,9 @@ export type { ButtonProps, ButtonVariant, ButtonSize } from './Button'
 export { Input } from './Input'
 export type { InputProps } from './Input'
 
+export { Icon } from './Icon'
+export type { IconProps, IconName } from './Icon'
+
 export { Select } from './Select'
 export type { SelectProps, SelectOption } from './Select'
 
@@ -23,3 +26,6 @@ export type { CardProps, CardHeaderProps, CardContentProps } from './Card'
 
 export { Checkbox } from './Checkbox'
 export type { CheckboxProps } from './Checkbox'
+
+export { Breadcrumb } from './Breadcrumb'
+export type { BreadcrumbProps, BreadcrumbItem } from './Breadcrumb'

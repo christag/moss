@@ -1,26 +1,61 @@
 /**
  * Rooms List Page
  *
- * Lists all rooms with filtering, search, and pagination
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { GenericListView, Column, Filter, Pagination } from '@/components/GenericListView'
-import type { Room } from '@/types'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { Room, RoomType } from '@/types'
 
-const COLUMNS: Column<Room>[] = [
+// Helper function to format room type for display
+function formatRoomType(type: RoomType): string {
+  const formatted = type
+    .split('_')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+  return formatted
+}
+
+// Define ALL possible columns for rooms
+const ALL_COLUMNS: ColumnConfig<Room>[] = [
   {
     key: 'room_name',
     label: 'Room Name',
     sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide room name
     render: (room) => room.room_name,
+  },
+  {
+    key: 'room_number',
+    label: 'Room Number',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (room) => room.room_number || <span className="text-muted">—</span>,
   },
   {
     key: 'room_type',
     label: 'Type',
     sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'server_room', label: 'Server Room' },
+      { value: 'office', label: 'Office' },
+      { value: 'conference_room', label: 'Conference Room' },
+      { value: 'storage', label: 'Storage' },
+      { value: 'studio', label: 'Studio' },
+      { value: 'control_room', label: 'Control Room' },
+      { value: 'other', label: 'Other' },
+    ],
     render: (room) =>
       room.room_type ? formatRoomType(room.room_type) : <span className="text-muted">—</span>,
   },
@@ -28,12 +63,18 @@ const COLUMNS: Column<Room>[] = [
     key: 'floor',
     label: 'Floor',
     sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
     render: (room) => room.floor || <span className="text-muted">—</span>,
   },
   {
     key: 'capacity',
     label: 'Capacity',
     sortable: true,
+    filterable: true,
+    filterType: 'number',
+    defaultVisible: true,
     render: (room) =>
       room.capacity !== null && room.capacity !== undefined ? (
         room.capacity.toString()
@@ -45,41 +86,29 @@ const COLUMNS: Column<Room>[] = [
     key: 'access_requirements',
     label: 'Access Requirements',
     sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
     render: (room) => room.access_requirements || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (room) => room.notes || <span className="text-muted">—</span>,
   },
   {
     key: 'created_at',
     label: 'Created',
     sortable: true,
+    filterable: false,
+    defaultVisible: false,
     render: (room) => new Date(room.created_at).toLocaleDateString(),
   },
 ]
-
-const FILTERS: Filter[] = [
-  {
-    key: 'room_type',
-    label: 'Room Type',
-    type: 'select',
-    options: [
-      { value: 'server_room', label: 'Server Room' },
-      { value: 'office', label: 'Office' },
-      { value: 'conference_room', label: 'Conference Room' },
-      { value: 'storage', label: 'Storage' },
-      { value: 'studio', label: 'Studio' },
-      { value: 'control_room', label: 'Control Room' },
-      { value: 'other', label: 'Other' },
-    ],
-  },
-]
-
-// Helper function to format room type for display
-function formatRoomType(type: string): string {
-  const formatted = type
-    .split('_')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-  return formatted
-}
 
 export default function RoomsPage() {
   const router = useRouter()
@@ -107,7 +136,7 @@ export default function RoomsPage() {
           params.append('search', searchValue)
         }
 
-        // Only add filter values that are not empty
+        // Add all filter values (both column filters and legacy filters)
         Object.entries(filterValues).forEach(([key, value]) => {
           if (value && value !== '') {
             params.append(key, value)
@@ -168,10 +197,9 @@ export default function RoomsPage() {
     <>
       <GenericListView
         title="Rooms"
-        columns={COLUMNS}
+        columns={ALL_COLUMNS}
         data={rooms}
         pagination={pagination}
-        filters={FILTERS}
         filterValues={filterValues}
         searchPlaceholder="Search rooms..."
         searchValue={searchValue}
@@ -186,6 +214,8 @@ export default function RoomsPage() {
         addButtonLabel="Add Room"
         emptyMessage="No rooms found. Create your first room to get started."
         rowLink={(room) => `/rooms/${room.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
       />
 
       <style jsx global>{`

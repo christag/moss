@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { IOForm } from '@/components/IOForm'
 import type { IO } from '@/types'
 
@@ -70,6 +71,21 @@ export default function EditIOPage({ params }: { params: Promise<{ id: string }>
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/ios" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            IOs
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link href={`/ios/${id}`} style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            {io.interface_name}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <IOForm io={io} onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>

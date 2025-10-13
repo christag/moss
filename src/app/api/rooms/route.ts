@@ -8,6 +8,7 @@ import { query } from '@/lib/db'
 import { safeValidate } from '@/lib/validation'
 import { CreateRoomSchema, ListRoomsQuerySchema } from '@/lib/schemas/room'
 import type { Room } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 /**
  * GET /api/rooms
@@ -103,7 +104,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validation = safeValidate(CreateRoomSchema, body)

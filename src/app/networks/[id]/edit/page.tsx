@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { NetworkForm } from '@/components/NetworkForm'
 import type { Network } from '@/types'
 
@@ -70,6 +71,24 @@ export default function EditNetworkPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/networks" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            Networks
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/networks/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {network.network_name}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <NetworkForm network={network} onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>

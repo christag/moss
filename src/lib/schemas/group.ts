@@ -23,10 +23,10 @@ export const GroupTypeSchema = z.enum([
 export const CreateGroupSchema = z.object({
   group_name: z.string().min(1).max(255),
   group_type: GroupTypeSchema,
-  description: z.string().optional(),
-  group_id_external: z.string().max(255).optional(),
-  created_date: z.string().date().optional(),
-  notes: z.string().optional(),
+  description: z.string().nullable().optional(),
+  group_id_external: z.string().max(255).nullable().optional(),
+  created_date: z.string().date().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 /**

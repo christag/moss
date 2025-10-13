@@ -16,12 +16,12 @@ export const SoftwareCategorySchema = z.enum([
 ])
 
 export const CreateSoftwareSchema = z.object({
-  company_id: z.string().uuid().optional(),
+  company_id: z.string().uuid().nullable().optional(),
   product_name: z.string().min(1).max(255),
-  description: z.string().optional(),
-  website: z.string().max(255).optional(),
-  software_category: SoftwareCategorySchema.optional(),
-  notes: z.string().optional(),
+  description: z.string().nullable().optional(),
+  website: z.string().max(255).nullable().optional(),
+  software_category: SoftwareCategorySchema.nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const UpdateSoftwareSchema = z.object({

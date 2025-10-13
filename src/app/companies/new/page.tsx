@@ -25,73 +25,21 @@ export default function CreateCompanyPage() {
   }
 
   return (
-    <div className="create-company-page">
-      <div className="page-header">
-        <div className="breadcrumbs">
-          <Link href="/companies" className="breadcrumb-link">
+    <div className="container">
+      <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/companies" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
             Companies
           </Link>
-          <span className="breadcrumb-separator">/</span>
-          <span className="breadcrumb-current">New Company</span>
-        </div>
-      </div>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>New</span>
+        </nav>
 
-      <div className="page-content">
         <CompanyForm onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
-
-      <style jsx>{`
-        .create-company-page {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 2rem;
-        }
-
-        .page-header {
-          margin-bottom: 2rem;
-        }
-
-        .breadcrumbs {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          font-size: 0.9rem;
-        }
-
-        .breadcrumb-link {
-          color: var(--color-morning-blue);
-          text-decoration: none;
-        }
-
-        .breadcrumb-link:hover {
-          text-decoration: underline;
-        }
-
-        .breadcrumb-separator {
-          color: var(--color-brew-black-40);
-        }
-
-        .breadcrumb-current {
-          color: var(--color-brew-black);
-          font-weight: 500;
-        }
-
-        .page-content {
-          background: var(--color-off-white);
-          border-radius: 8px;
-          padding: 2rem;
-        }
-
-        @media (max-width: 768px) {
-          .create-company-page {
-            padding: 1rem;
-          }
-
-          .page-content {
-            padding: 1rem;
-          }
-        }
-      `}</style>
     </div>
   )
 }

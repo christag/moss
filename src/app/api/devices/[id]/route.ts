@@ -4,8 +4,9 @@
  */
 import { NextRequest } from 'next/server'
 import { query } from '@/lib/db'
-import { successResponse, errorResponse } from '@/lib/api'
+import { successResponse, errorResponse, parseRequestBody } from '@/lib/api'
 import { UpdateDeviceSchema } from '@/lib/schemas/device'
+import { cache, generateDetailCacheKey } from '@/lib/cache'
 import type { Device } from '@/types'
 
 /**
@@ -16,13 +17,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const { id } = await params
 
+    // Check cache first
+    const cacheKey = generateDetailCacheKey('devices', id)
+    const cached = cache.get<Device>(cacheKey)
+    if (cached) {
+      return successResponse(cached, 'Device retrieved successfully (cached)')
+    }
+
     const result = await query<Device>('SELECT * FROM devices WHERE id = $1', [id])
 
     if (result.rows.length === 0) {
       return errorResponse('Device not found', undefined, 404)
     }
 
-    return successResponse(result.rows[0])
+    const device = result.rows[0]
+
+    // Cache for 60 seconds
+    cache.set(cacheKey, device, 60)
+
+    return successResponse(device, 'Device retrieved successfully')
   } catch (error) {
     console.error('Error fetching device:', error)
     return errorResponse('Failed to fetch device', undefined, 500)
@@ -36,10 +49,76 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validated = UpdateDeviceSchema.parse(body)
+
+    // Validate foreign key references before update
+    if (validated.parent_device_id !== undefined && validated.parent_device_id !== null) {
+      // Prevent self-referential parent
+      if (validated.parent_device_id === id) {
+        return errorResponse('A device cannot be its own parent', undefined, 400)
+      }
+
+      const parentCheck = await query('SELECT id FROM devices WHERE id = $1', [
+        validated.parent_device_id,
+      ])
+      if (parentCheck.rows.length === 0) {
+        return errorResponse('Parent device not found', undefined, 404)
+      }
+    }
+
+    if (validated.assigned_to_id !== undefined && validated.assigned_to_id !== null) {
+      const assignedToCheck = await query('SELECT id FROM people WHERE id = $1', [
+        validated.assigned_to_id,
+      ])
+      if (assignedToCheck.rows.length === 0) {
+        return errorResponse('Assigned person not found', undefined, 404)
+      }
+    }
+
+    if (validated.last_used_by_id !== undefined && validated.last_used_by_id !== null) {
+      const lastUsedByCheck = await query('SELECT id FROM people WHERE id = $1', [
+        validated.last_used_by_id,
+      ])
+      if (lastUsedByCheck.rows.length === 0) {
+        return errorResponse('Last used by person not found', undefined, 404)
+      }
+    }
+
+    if (validated.location_id !== undefined && validated.location_id !== null) {
+      const locationCheck = await query('SELECT id FROM locations WHERE id = $1', [
+        validated.location_id,
+      ])
+      if (locationCheck.rows.length === 0) {
+        return errorResponse('Location not found', undefined, 404)
+      }
+    }
+
+    if (validated.room_id !== undefined && validated.room_id !== null) {
+      const roomCheck = await query('SELECT id FROM rooms WHERE id = $1', [validated.room_id])
+      if (roomCheck.rows.length === 0) {
+        return errorResponse('Room not found', undefined, 404)
+      }
+    }
+
+    if (validated.company_id !== undefined && validated.company_id !== null) {
+      const companyCheck = await query('SELECT id FROM companies WHERE id = $1', [
+        validated.company_id,
+      ])
+      if (companyCheck.rows.length === 0) {
+        return errorResponse('Company not found', undefined, 404)
+      }
+    }
 
     // Build update query dynamically based on provided fields
     const updates: string[] = []
@@ -174,12 +253,35 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return errorResponse('Device not found', undefined, 404)
     }
 
-    return successResponse(result.rows[0])
+    // Invalidate caches
+    cache.invalidatePattern('devices:list:*')
+    cache.delete(generateDetailCacheKey('devices', id))
+
+    return successResponse(result.rows[0], 'Device updated successfully')
   } catch (error) {
     console.error('Error updating device:', error)
+
+    // Handle database constraint violations
+    if (error && typeof error === 'object' && 'code' in error) {
+      // Unique constraint violation (duplicate hostname)
+      if (error.code === '23505' && error.constraint === 'devices_hostname_unique') {
+        return errorResponse(
+          'A device with this hostname already exists. Hostnames must be unique.',
+          undefined,
+          400
+        )
+      }
+
+      // Foreign key constraint violation
+      if (error.code === '23503') {
+        return errorResponse('Invalid reference ID provided', undefined, 400)
+      }
+    }
+
     if (error instanceof Error && error.message.includes('violates foreign key constraint')) {
       return errorResponse('Invalid reference ID provided', undefined, 400)
     }
+
     return errorResponse('Failed to update device', undefined, 500)
   }
 }
@@ -213,6 +315,10 @@ export async function DELETE(
     if (result.rows.length === 0) {
       return errorResponse('Device not found', undefined, 404)
     }
+
+    // Invalidate caches
+    cache.invalidatePattern('devices:list:*')
+    cache.delete(generateDetailCacheKey('devices', id))
 
     return successResponse({ message: 'Device deleted successfully', id: result.rows[0].id })
   } catch (error) {

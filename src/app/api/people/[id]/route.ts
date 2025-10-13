@@ -7,6 +7,8 @@ import { query } from '@/lib/db'
 import { UpdatePersonSchema } from '@/lib/schemas/person'
 import type { Person } from '@/types'
 import { z } from 'zod'
+import { parseRequestBody } from '@/lib/api'
+import { cache, generateDetailCacheKey } from '@/lib/cache'
 
 const UUIDSchema = z.string().uuid('Invalid person ID format')
 
@@ -27,15 +29,32 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       )
     }
 
+    // Check cache first
+    const cacheKey = generateDetailCacheKey('people', validation.data)
+    const cached = cache.get<Person>(cacheKey)
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        message: 'Person retrieved successfully (cached)',
+        data: cached,
+      })
+    }
+
     const result = await query<Person>('SELECT * FROM people WHERE id = $1', [validation.data])
 
     if (result.rows.length === 0) {
       return NextResponse.json({ success: false, message: 'Person not found' }, { status: 404 })
     }
 
+    const person = result.rows[0]
+
+    // Cache for 60 seconds
+    cache.set(cacheKey, person, 60)
+
     return NextResponse.json({
       success: true,
-      data: result.rows[0],
+      message: 'Person retrieved successfully',
+      data: person,
     })
   } catch (error) {
     console.error('Error fetching person:', error)
@@ -63,7 +82,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       )
     }
 
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validation = UpdatePersonSchema.safeParse(body)
@@ -150,6 +177,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
     }
 
+    // Convert first_name + last_name to full_name if needed
+    const updatedData = { ...validation.data }
+    if (validation.data.first_name || validation.data.last_name) {
+      const firstName = validation.data.first_name?.trim() || ''
+      const lastName = validation.data.last_name?.trim() || ''
+      if (firstName && lastName) {
+        updatedData.full_name = `${firstName} ${lastName}`.trim()
+      }
+    }
+
     // Build dynamic UPDATE query
     const updates: string[] = []
     const values: unknown[] = []
@@ -174,8 +211,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       notes: 'notes',
     }
 
-    Object.entries(validation.data).forEach(([key, value]) => {
-      if (fieldMapping[key]) {
+    Object.entries(updatedData).forEach(([key, value]) => {
+      if (fieldMapping[key] && key !== 'first_name' && key !== 'last_name') {
         updates.push(`${fieldMapping[key]} = $${paramCount}`)
         values.push(value)
         paramCount++
@@ -196,6 +233,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       `UPDATE people SET ${updates.join(', ')} WHERE id = $${paramCount} RETURNING *`,
       values
     )
+
+    // Invalidate caches
+    cache.invalidatePattern('people:list:*')
+    cache.delete(generateDetailCacheKey('people', id))
 
     return NextResponse.json({
       success: true,
@@ -275,6 +316,10 @@ export async function DELETE(
 
     // Delete the person
     await query('DELETE FROM people WHERE id = $1', [validation.data])
+
+    // Invalidate caches
+    cache.invalidatePattern('people:list:*')
+    cache.delete(generateDetailCacheKey('people', validation.data))
 
     return NextResponse.json({
       success: true,

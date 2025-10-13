@@ -21,18 +21,18 @@ export const NetworkTypeSchema = z.enum([
  * Schema for creating a new network
  */
 export const CreateNetworkSchema = z.object({
-  location_id: z.string().uuid().optional(),
+  location_id: z.string().uuid().nullable().optional(),
   network_name: z.string().min(1).max(255),
-  network_address: z.string().max(50).optional(),
-  vlan_id: z.number().int().min(1).max(4094).optional(),
-  network_type: NetworkTypeSchema.optional(),
-  gateway: z.string().max(50).optional(),
-  dns_servers: z.string().optional(),
+  network_address: z.string().max(50).nullable().optional(),
+  vlan_id: z.number().int().min(1).max(4094).nullable().optional(),
+  network_type: NetworkTypeSchema.nullable().optional(),
+  gateway: z.string().max(50).nullable().optional(),
+  dns_servers: z.string().nullable().optional(),
   dhcp_enabled: z.boolean().default(false),
-  dhcp_range_start: z.string().max(50).optional(),
-  dhcp_range_end: z.string().max(50).optional(),
-  description: z.string().optional(),
-  notes: z.string().optional(),
+  dhcp_range_start: z.string().max(50).nullable().optional(),
+  dhcp_range_end: z.string().max(50).nullable().optional(),
+  description: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 /**
@@ -80,3 +80,29 @@ export const NetworkQuerySchema = z
     ...data,
     offset: (data.page - 1) * data.limit,
   }))
+
+/**
+ * Schema for bulk creating multiple networks (1-100 records)
+ */
+export const CreateManyNetworksSchema = z
+  .array(CreateNetworkSchema)
+  .min(1, 'At least one network is required')
+  .max(100, 'Maximum 100 networks per batch')
+
+/**
+ * Column names for networks table (for bulk insert operations)
+ */
+export const NETWORK_COLUMNS = [
+  'location_id',
+  'network_name',
+  'network_address',
+  'vlan_id',
+  'network_type',
+  'gateway',
+  'dns_servers',
+  'dhcp_enabled',
+  'dhcp_range_start',
+  'dhcp_range_end',
+  'description',
+  'notes',
+] as const

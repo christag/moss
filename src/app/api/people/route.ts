@@ -6,12 +6,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { CreatePersonSchema, ListPeopleQuerySchema } from '@/lib/schemas/person'
 import type { Person } from '@/types'
+import { parseRequestBody } from '@/lib/api'
+import { cache, generateListCacheKey } from '@/lib/cache'
+import { applyRateLimit } from '@/lib/rateLimitMiddleware'
 
 /**
  * GET /api/people
  * List people with optional filtering, sorting, and pagination
  */
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await applyRateLimit(request, 'api')
+  if (rateLimitResult) return rateLimitResult
   try {
     const { searchParams } = new URL(request.url)
     const params = Object.fromEntries(searchParams.entries())
@@ -38,6 +44,19 @@ export async function GET(request: NextRequest) {
       sort_by,
       sort_order,
     } = validation.data
+
+    // Generate cache key
+    const cacheKey = generateListCacheKey('people', validation.data)
+
+    // Check cache first
+    const cached = cache.get(cacheKey)
+    if (cached) {
+      return NextResponse.json({
+        success: true,
+        message: 'People retrieved successfully (cached)',
+        data: cached,
+      })
+    }
 
     // Build WHERE clause dynamically
     const conditions: string[] = []
@@ -107,17 +126,23 @@ export async function GET(request: NextRequest) {
       [...values, limit, offset]
     )
 
+    const responseData = {
+      people: peopleResult.rows,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+      },
+    }
+
+    // Cache for 30 seconds
+    cache.set(cacheKey, responseData, 30)
+
     return NextResponse.json({
       success: true,
-      data: {
-        people: peopleResult.rows,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages,
-        },
-      },
+      message: 'People retrieved successfully',
+      data: responseData,
     })
   } catch (error) {
     console.error('Error fetching people:', error)
@@ -133,8 +158,20 @@ export async function GET(request: NextRequest) {
  * Create a new person
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const rateLimitResult = await applyRateLimit(request, 'api')
+  if (rateLimitResult) return rateLimitResult
+
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validation = CreatePersonSchema.safeParse(body)
@@ -146,7 +183,9 @@ export async function POST(request: NextRequest) {
     }
 
     const {
-      full_name,
+      full_name: providedFullName,
+      first_name,
+      last_name,
       email,
       username,
       phone,
@@ -163,6 +202,12 @@ export async function POST(request: NextRequest) {
       preferred_contact_method,
       notes,
     } = validation.data
+
+    // Convert first_name + last_name to full_name if needed
+    const full_name =
+      providedFullName && providedFullName.trim().length > 0
+        ? providedFullName
+        : `${first_name?.trim()} ${last_name?.trim()}`.trim()
 
     // Verify foreign key references exist
     if (company_id) {
@@ -237,6 +282,9 @@ export async function POST(request: NextRequest) {
         notes || null,
       ]
     )
+
+    // Invalidate list cache
+    cache.invalidatePattern('people:list:*')
 
     return NextResponse.json(
       {

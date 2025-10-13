@@ -1,26 +1,43 @@
 /**
  * Companies List Page
  *
- * Lists all companies with filtering, search, and pagination
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { GenericListView, Column, Filter, Pagination } from '@/components/GenericListView'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Company } from '@/types'
 
-const COLUMNS: Column<Company>[] = [
+// Define ALL possible columns for companies
+const ALL_COLUMNS: ColumnConfig<Company>[] = [
   {
     key: 'company_name',
     label: 'Company Name',
     sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide company name
     render: (company) => company.company_name,
   },
   {
     key: 'company_type',
     label: 'Type',
     sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'own_organization', label: 'Own Organization' },
+      { value: 'vendor', label: 'Vendor' },
+      { value: 'manufacturer', label: 'Manufacturer' },
+      { value: 'service_provider', label: 'Service Provider' },
+      { value: 'partner', label: 'Partner' },
+      { value: 'customer', label: 'Customer' },
+      { value: 'other', label: 'Other' },
+    ],
     render: (company) => {
       const typeLabels: Record<string, string> = {
         own_organization: 'Own Organization',
@@ -38,6 +55,9 @@ const COLUMNS: Column<Company>[] = [
     key: 'website',
     label: 'Website',
     sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
     render: (company) =>
       company.website ? (
         <a href={company.website} target="_blank" rel="noopener noreferrer" className="link">
@@ -51,31 +71,99 @@ const COLUMNS: Column<Company>[] = [
     key: 'phone',
     label: 'Phone',
     sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
     render: (company) => company.phone || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false, // Hidden by default, can be shown
+    render: (company) => company.email || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'address',
+    label: 'Address',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.address || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'city',
+    label: 'City',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.city || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'state',
+    label: 'State',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.state || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'country',
+    label: 'Country',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.country || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'account_number',
+    label: 'Account #',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.account_number || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'support_phone',
+    label: 'Support Phone',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.support_phone || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'support_email',
+    label: 'Support Email',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.support_email || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'tax_id',
+    label: 'Tax ID',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (company) => company.tax_id || <span className="text-muted">—</span>,
   },
   {
     key: 'created_at',
     label: 'Created',
     sortable: true,
+    filterable: false, // Date filtering can be added later
+    defaultVisible: true,
     render: (company) => new Date(company.created_at).toLocaleDateString(),
-  },
-]
-
-const FILTERS: Filter[] = [
-  {
-    key: 'company_type',
-    label: 'Company Type',
-    type: 'select',
-    options: [
-      { value: '', label: 'All Types' },
-      { value: 'own_organization', label: 'Own Organization' },
-      { value: 'vendor', label: 'Vendor' },
-      { value: 'manufacturer', label: 'Manufacturer' },
-      { value: 'service_provider', label: 'Service Provider' },
-      { value: 'partner', label: 'Partner' },
-      { value: 'customer', label: 'Customer' },
-      { value: 'other', label: 'Other' },
-    ],
   },
 ]
 
@@ -105,7 +193,7 @@ export default function CompaniesPage() {
           params.append('search', searchValue)
         }
 
-        // Only add filter values that are not empty
+        // Add all filter values (both column filters and legacy filters)
         Object.entries(filterValues).forEach(([key, value]) => {
           if (value && value !== '') {
             params.append(key, value)
@@ -166,10 +254,9 @@ export default function CompaniesPage() {
     <>
       <GenericListView
         title="Companies"
-        columns={COLUMNS}
+        columns={ALL_COLUMNS}
         data={companies}
         pagination={pagination}
-        filters={FILTERS}
         filterValues={filterValues}
         searchPlaceholder="Search companies..."
         searchValue={searchValue}
@@ -184,6 +271,8 @@ export default function CompaniesPage() {
         addButtonLabel="Add Company"
         emptyMessage="No companies found. Create your first company to get started."
         rowLink={(company) => `/companies/${company.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
       />
 
       <style jsx global>{`

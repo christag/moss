@@ -18,6 +18,7 @@ M.O.S.S. is a modern alternative to other IT inventory products, built specifica
 - **Relationship-First Design**: Maintain complex relationships between devices, people, software, networks, and locations
 - **Role-Based Access Control**: Granular permissions with global, location-based, and object-specific scoping
 - **Modular Equipment Support**: Parent-child relationships for chassis-based systems with independent warranty tracking
+- **Admin Settings Panel**: Comprehensive system configuration dashboard for branding, authentication, storage, integrations, and more
 
 ---
 
@@ -118,6 +119,16 @@ Devices can have parent-child relationships to represent:
 | **RoleAssignment** | User/group-to-role mappings with scoping |
 | **ObjectPermission** | Object-level permission overrides |
 
+### Admin Settings
+
+| Object | Purpose |
+|--------|---------|
+| **SystemSetting** | Key-value configuration store (branding, auth, storage, etc.) |
+| **Integration** | External system connections (IdP, MDM, RMM, cloud providers) |
+| **IntegrationSyncLog** | Audit trail of synchronization operations |
+| **CustomField** | User-defined fields for extensibility |
+| **AdminAuditLog** | Complete audit trail of administrative actions |
+
 ### Documentation
 
 | Object | Purpose |
@@ -185,9 +196,10 @@ See [styles/design-system.css](styles/design-system.css) for complete implementa
 - [x] External documents (links to external systems)
 - [x] Authentication (NextAuth.js v5 with credentials provider)
 - [x] Enhanced table views with column management and filtering
+- [x] Admin panel foundation (layout, routing, auth, database schema)
+- [ ] Admin settings implementation (branding, storage, integrations, fields, RBAC)
 - [ ] Dashboard with widgets
 - [ ] Global search across all objects
-- [ ] Advanced RBAC with role management
 
 ### Phase 2: Advanced Features
 
@@ -350,6 +362,15 @@ See [LICENSE](LICENSE) for full legal terms
 - Protected routes with middleware
 - User-to-person relationship (1:1 mapping)
 - Role-based access (user, admin, super_admin)
+
+✅ **Admin Panel Foundation Complete**
+- Admin panel layout with sidebar navigation (11 sections)
+- Admin authentication helpers (requireAdmin, requireSuperAdmin)
+- Database schema for system settings, integrations, custom fields
+- Admin audit logging system
+- TypeScript types and Zod validation schemas
+- Route protection for admin panel
+- Admin dashboard overview page
 
 ✅ **Enhanced UI/UX Features**
 - **Enhanced Tables**: All 14 core list pages with column management, sorting, and per-column filtering

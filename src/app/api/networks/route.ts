@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { CreateNetworkSchema, NetworkQuerySchema } from '@/lib/schemas/network'
 import type { Network } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 /**
  * GET /api/networks
@@ -110,7 +111,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validated = CreateNetworkSchema.parse(body)

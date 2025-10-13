@@ -6,6 +6,7 @@
 import React, { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import type { IO } from '@/types'
 
 export default function IODetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -54,9 +55,10 @@ export default function IODetailPage({ params }: { params: Promise<{ id: string 
         throw new Error(result.message || 'Failed to delete IO')
       }
 
+      toast.success('Interface deleted successfully')
       router.push('/ios')
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete IO')
+      toast.error(err instanceof Error ? err.message : 'Failed to delete IO')
     }
   }
 
@@ -128,6 +130,25 @@ export default function IODetailPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="container">
       <div className="p-lg">
+        {/* Breadcrumbs */}
+        <nav
+          className="mb-md"
+          style={{
+            fontSize: 'var(--font-size-sm)',
+            color: 'var(--color-black)',
+            opacity: 0.6,
+            marginBottom: '1rem',
+          }}
+        >
+          <span>
+            <Link href="/ios" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+              IOs
+            </Link>
+            <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          </span>
+          <span>{io.interface_name}</span>
+        </nav>
+
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <div>

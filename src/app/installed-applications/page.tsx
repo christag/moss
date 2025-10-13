@@ -1,178 +1,281 @@
 /**
  * Installed Applications List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import type { InstalledApplication } from '@/types'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { InstalledApplication, DeploymentStatus } from '@/types'
+
+// Helper function to format deployment status for display
+function formatDeploymentStatus(status: DeploymentStatus): string {
+  return status.charAt(0).toUpperCase() + status.slice(1)
+}
+
+// Helper function to get deployment status color
+function getDeploymentStatusColor(status: DeploymentStatus): string {
+  switch (status) {
+    case 'production':
+      return '#28C077' // Green
+    case 'pilot':
+      return '#ACD7FF' // Light Blue
+    case 'deprecated':
+      return '#FFBB5C' // Tangerine
+    case 'retired':
+      return 'rgba(35, 31, 32, 0.4)' // Brew Black 40%
+    default:
+      return '#231F20' // Brew Black
+  }
+}
+
+// Define ALL possible columns for installed applications
+const ALL_COLUMNS: ColumnConfig<InstalledApplication>[] = [
+  {
+    key: 'application_name',
+    label: 'Application Name',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true,
+    render: (app) => app.application_name,
+  },
+  {
+    key: 'version',
+    label: 'Version',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (app) => app.version || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'deployment_status',
+    label: 'Deployment Status',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'pilot', label: 'Pilot' },
+      { value: 'production', label: 'Production' },
+      { value: 'deprecated', label: 'Deprecated' },
+      { value: 'retired', label: 'Retired' },
+    ],
+    render: (app) =>
+      app.deployment_status ? (
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: getDeploymentStatusColor(app.deployment_status),
+            color: app.deployment_status === 'pilot' ? '#231F20' : '#FAF9F5',
+          }}
+        >
+          {formatDeploymentStatus(app.deployment_status)}
+        </span>
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'deployment_platform',
+    label: 'Platform',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (app) => app.deployment_platform || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'install_date',
+    label: 'Install Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: true,
+    render: (app) =>
+      app.install_date ? (
+        new Date(app.install_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'auto_update_enabled',
+    label: 'Auto Update',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'true', label: 'Enabled' },
+      { value: 'false', label: 'Disabled' },
+    ],
+    render: (app) => (app.auto_update_enabled ? 'Yes' : 'No'),
+  },
+  {
+    key: 'install_method',
+    label: 'Install Method',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (app) => app.install_method || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'package_id',
+    label: 'Package ID',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (app) => app.package_id || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (app) => app.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (app) => new Date(app.created_at).toLocaleDateString(),
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (app) => new Date(app.updated_at).toLocaleDateString(),
+  },
+]
 
 export default function InstalledApplicationsPage() {
+  const router = useRouter()
   const [applications, setApplications] = useState<InstalledApplication[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [deploymentStatusFilter, setDeploymentStatusFilter] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('application_name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchApplications = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        limit: '50',
-        sort_by: 'application_name',
-        sort_order: 'asc',
-      })
-      if (search) params.append('search', search)
-      if (deploymentStatusFilter) params.append('deployment_status', deploymentStatusFilter)
-
-      const response = await fetch(`/api/installed-applications?${params}`)
-      const result = await response.json()
-      if (!response.ok) throw new Error(result.message || 'Failed to fetch applications')
-      setApplications(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, deploymentStatusFilter])
-
+  // Fetch applications from API
   useEffect(() => {
+    const fetchApplications = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
+
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/installed-applications?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch applications')
+        }
+
+        const result = await response.json()
+        setApplications(result.data?.installed_applications || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching applications:', error)
+        setApplications([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchApplications()
-  }, [fetchApplications])
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
 
-  const formatStatus = (status: string | null) => {
-    if (!status) return '-'
-    return status.charAt(0).toUpperCase() + status.slice(1)
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1)
   }
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    )
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1)
   }
 
-  if (error) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error}</div>
-        </div>
-      </div>
-    )
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleAdd = () => {
+    router.push('/installed-applications/new')
   }
 
   return (
-    <div className="container">
-      <div className="p-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-h1">Installed Applications</h1>
-          <Link href="/installed-applications/new" className="btn btn-primary">
-            Add Application
-          </Link>
-        </div>
+    <>
+      <GenericListView
+        title="Installed Applications"
+        columns={ALL_COLUMNS}
+        data={applications}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search applications..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add Application"
+        emptyMessage="No installed applications found. Add your first application to get started."
+        rowLink={(app) => `/installed-applications/${app.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-2 gap-4">
-            <div>
-              <label htmlFor="search" className="block mb-2 font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search applications..."
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label htmlFor="deployment_status" className="block mb-2 font-bold">
-                Deployment Status
-              </label>
-              <select
-                id="deployment_status"
-                value={deploymentStatusFilter}
-                onChange={(e) => setDeploymentStatusFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Statuses</option>
-                <option value="pilot">Pilot</option>
-                <option value="production">Production</option>
-                <option value="deprecated">Deprecated</option>
-                <option value="retired">Retired</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Applications Table */}
-        <div className="card">
-          {applications.length === 0 ? (
-            <p className="text-center py-8">No installed applications found.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left p-2">Application Name</th>
-                  <th className="text-left p-2">Version</th>
-                  <th className="text-left p-2">Deployment Status</th>
-                  <th className="text-left p-2">Platform</th>
-                  <th className="text-left p-2">Install Date</th>
-                  <th className="text-left p-2">Auto Update</th>
-                  <th className="text-left p-2">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((app) => (
-                  <tr key={app.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">
-                      <Link
-                        href={`/installed-applications/${app.id}`}
-                        className="text-blue hover:underline"
-                      >
-                        {app.application_name}
-                      </Link>
-                    </td>
-                    <td className="p-2">{app.version || '-'}</td>
-                    <td className="p-2">
-                      {app.deployment_status === 'production' ? (
-                        <span className="badge badge-success">
-                          {formatStatus(app.deployment_status)}
-                        </span>
-                      ) : app.deployment_status === 'pilot' ? (
-                        <span className="badge badge-info">
-                          {formatStatus(app.deployment_status)}
-                        </span>
-                      ) : app.deployment_status === 'deprecated' ? (
-                        <span className="badge badge-warning">
-                          {formatStatus(app.deployment_status)}
-                        </span>
-                      ) : app.deployment_status === 'retired' ? (
-                        <span className="badge badge-default">
-                          {formatStatus(app.deployment_status)}
-                        </span>
-                      ) : (
-                        '-'
-                      )}
-                    </td>
-                    <td className="p-2">{app.deployment_platform || '-'}</td>
-                    <td className="p-2">
-                      {app.install_date ? new Date(app.install_date).toLocaleDateString() : '-'}
-                    </td>
-                    <td className="p-2">{app.auto_update_enabled ? 'Yes' : 'No'}</td>
-                    <td className="p-2">{new Date(app.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+      `}</style>
+    </>
   )
 }

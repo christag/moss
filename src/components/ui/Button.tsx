@@ -8,6 +8,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: ButtonSize
   fullWidth?: boolean
   isLoading?: boolean
+  iconOnly?: boolean
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
@@ -17,6 +18,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size = 'md',
       fullWidth = false,
       isLoading = false,
+      iconOnly = false,
       className = '',
       children,
       disabled,
@@ -31,10 +33,11 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       outline: 'btn-outline',
       destructive: 'bg-orange text-off-white hover:opacity-90',
     }
+    // Icon-only buttons are square with equal padding
     const sizeClasses = {
-      sm: 'text-sm p-xs pl-md pr-md',
-      md: 'text-md p-sm pl-lg pr-lg',
-      lg: 'text-lg p-md pl-xl pr-xl',
+      sm: iconOnly ? 'text-sm p-xs' : 'text-sm p-xs pl-md pr-md',
+      md: iconOnly ? 'text-md p-sm' : 'text-md p-sm pl-lg pr-lg',
+      lg: iconOnly ? 'text-lg p-md' : 'text-lg p-md pl-xl pr-xl',
     }
 
     const classes = [
@@ -50,7 +53,38 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     return (
       <button ref={ref} className={classes} disabled={disabled || isLoading} {...props}>
-        {isLoading ? 'Loading...' : children}
+        {isLoading && (
+          <span className="btn-spinner" aria-hidden="true">
+            ⟳
+          </span>
+        )}
+        <span
+          style={{
+            opacity: isLoading ? 0.7 : 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.375rem',
+          }}
+        >
+          {children}
+        </span>
+
+        <style jsx>{`
+          .btn-spinner {
+            display: inline-block;
+            margin-right: 0.5rem;
+            animation: spin 1s linear infinite;
+          }
+
+          @keyframes spin {
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
+          }
+        `}</style>
       </button>
     )
   }

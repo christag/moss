@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { DeviceForm } from '@/components/DeviceForm'
 import type { Device } from '@/types'
 
@@ -72,6 +73,24 @@ export default function EditDevicePage() {
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/devices" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            Devices
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/devices/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {device.hostname || device.serial_number || 'Unknown'}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <DeviceForm device={device} onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>

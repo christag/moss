@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { IPAddressForm } from '@/components/IPAddressForm'
 import type { IPAddress } from '@/types'
 
@@ -70,6 +71,24 @@ export default function EditIPAddressPage({ params }: { params: Promise<{ id: st
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link href="/ip-addresses" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
+            IP Addresses
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/ip-addresses/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {ipAddress.ip_address}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <h1 className="text-h1 mb-6">Edit IP Address</h1>
         <div className="card">
           <IPAddressForm ipAddress={ipAddress} onSuccess={handleSuccess} onCancel={handleCancel} />

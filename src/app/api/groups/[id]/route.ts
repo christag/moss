@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { UpdateGroupSchema } from '@/lib/schemas/group'
 import type { Group } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 /**
  * GET /api/groups/:id
@@ -35,7 +36,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
 
     // Validate request body
     const validated = UpdateGroupSchema.parse(body)

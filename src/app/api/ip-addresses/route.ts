@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { CreateIPAddressSchema, IPAddressQuerySchema } from '@/lib/schemas/ip-address'
 import type { IPAddress } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 // GET /api/ip-addresses - List IP addresses with filters
 export async function GET(request: NextRequest) {
@@ -88,7 +89,15 @@ export async function GET(request: NextRequest) {
 // POST /api/ip-addresses - Create new IP address
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validatedData = CreateIPAddressSchema.parse(body)
 
     const { io_id, network_id, ip_address, ip_version, type, dns_name, assignment_date, notes } =

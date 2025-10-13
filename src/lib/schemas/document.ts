@@ -18,15 +18,15 @@ export const DocumentTypeSchema = z.enum([
 export const DocumentStatusSchema = z.enum(['draft', 'published', 'archived'])
 
 export const CreateDocumentSchema = z.object({
-  author_id: z.string().uuid().optional(),
+  author_id: z.string().uuid().nullable().optional(),
   title: z.string().min(1).max(255),
-  document_type: DocumentTypeSchema.optional(),
-  content: z.string().optional(),
-  version: z.string().max(50).optional(),
-  status: DocumentStatusSchema.optional(),
-  created_date: z.string().optional(),
-  updated_date: z.string().optional(),
-  notes: z.string().optional(),
+  document_type: DocumentTypeSchema.nullable().optional(),
+  content: z.string().nullable().optional(),
+  version: z.string().max(50).nullable().optional(),
+  status: DocumentStatusSchema.nullable().optional(),
+  created_date: z.string().nullable().optional(),
+  updated_date: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
 })
 
 export const UpdateDocumentSchema = z.object({

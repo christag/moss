@@ -8,6 +8,7 @@ import {
   SoftwareLicenseQuerySchema,
 } from '@/lib/schemas/software-license'
 import type { SoftwareLicense } from '@/types'
+import { parseRequestBody } from '@/lib/api'
 
 /**
  * GET /api/software-licenses
@@ -115,7 +116,15 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    // Parse request body with JSON error handling
+
+    const parseResult = await parseRequestBody(request)
+
+    if (!parseResult.success) {
+      return parseResult.response
+    }
+
+    const body = parseResult.data as Record<string, unknown>
     const validation = CreateSoftwareLicenseSchema.safeParse(body)
 
     if (!validation.success) {

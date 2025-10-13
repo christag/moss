@@ -5,6 +5,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { JunctionTableManager } from './JunctionTableManager'
 import type {
   IO,
   CreateIOInput,
@@ -89,6 +90,9 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
   const [networks, setNetworks] = useState<Network[]>([])
   const [ios, setIos] = useState<IO[]>([])
 
+  // Tagged networks for trunk/hybrid ports
+  const [taggedNetworks, setTaggedNetworks] = useState<Network[]>([])
+
   // Form state
   const [formData, setFormData] = useState<CreateIOInput>({
     device_id: io?.device_id || undefined,
@@ -159,6 +163,25 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
     fetchDropdownData()
   }, [io?.id])
 
+  // Fetch tagged networks for edit mode
+  useEffect(() => {
+    const fetchTaggedNetworks = async () => {
+      if (!io?.id) return
+
+      try {
+        const response = await fetch(`/api/ios/${io.id}/tagged-networks`)
+        const result = await response.json()
+        if (result.success && Array.isArray(result.data)) {
+          setTaggedNetworks(result.data)
+        }
+      } catch (err) {
+        console.error('Error fetching tagged networks:', err)
+      }
+    }
+
+    fetchTaggedNetworks()
+  }, [io?.id])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -213,6 +236,41 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
 
   const handleChange = (field: keyof CreateIOInput, value: string | undefined) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  // Handlers for tagged networks (VLAN tagging)
+  const handleAddTaggedNetwork = async (network: Network) => {
+    if (!io?.id) return
+
+    const response = await fetch(`/api/ios/${io.id}/tagged-networks`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ network_id: network.id }),
+    })
+
+    if (!response.ok) {
+      const result = await response.json()
+      throw new Error(result.message || 'Failed to tag network')
+    }
+
+    // Update local state
+    setTaggedNetworks((prev) => [...prev, network])
+  }
+
+  const handleRemoveTaggedNetwork = async (networkId: string) => {
+    if (!io?.id) return
+
+    const response = await fetch(`/api/ios/${io.id}/tagged-networks/${networkId}`, {
+      method: 'DELETE',
+    })
+
+    if (!response.ok) {
+      const result = await response.json()
+      throw new Error(result.message || 'Failed to remove network tag')
+    }
+
+    // Update local state
+    setTaggedNetworks((prev) => prev.filter((n) => n.id !== networkId))
   }
 
   return (
@@ -463,6 +521,29 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
                 </select>
               </div>
             </div>
+
+            {/* Tagged Networks (VLAN Tagging) - only for trunk/hybrid ports in edit mode */}
+            {isEditMode &&
+              (formData.trunk_mode === 'trunk' || formData.trunk_mode === 'hybrid') && (
+                <div className="mt-6">
+                  <h4 className="text-h5 mb-3">Tagged VLANs (Trunk Configuration)</h4>
+                  <JunctionTableManager<Network>
+                    currentItems={taggedNetworks}
+                    availableItemsEndpoint="/api/networks?limit=100&sort_by=network_name&sort_order=asc"
+                    getItemLabel={(network) =>
+                      `${network.network_name}${network.vlan_id ? ` (VLAN ${network.vlan_id})` : ''}`
+                    }
+                    onAdd={handleAddTaggedNetwork}
+                    onRemove={handleRemoveTaggedNetwork}
+                    placeholder="Search networks to tag..."
+                    emptyMessage="No VLANs tagged on this trunk port"
+                  />
+                  <p className="text-sm text-gray-600 mt-2">
+                    Tagged VLANs allow multiple networks to traverse this trunk port. The native
+                    VLAN (above) passes untagged traffic.
+                  </p>
+                </div>
+              )}
           </>
         )}
 

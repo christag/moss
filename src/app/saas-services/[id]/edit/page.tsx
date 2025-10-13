@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { SaaSServiceForm } from '@/components/SaaSServiceForm'
 import type { SaaSService } from '@/types'
 
@@ -48,6 +49,27 @@ export default function EditSaaSServicePage({ params }: { params: Promise<{ id: 
   return (
     <div className="container">
       <div className="p-lg">
+        <nav
+          className="mb-md"
+          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
+        >
+          <Link
+            href="/saas-services"
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            SaaS Services
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <Link
+            href={`/saas-services/${id}`}
+            style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
+          >
+            {service.service_name}
+          </Link>
+          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
+          <span>Edit</span>
+        </nav>
+
         <h1 className="text-h1 mb-6">Edit SaaS Service</h1>
         <div className="card">
           <SaaSServiceForm

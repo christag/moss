@@ -1,167 +1,224 @@
 /**
  * Groups List Page
+ *
+ * Enhanced with column management, per-column filtering, and URL persistence
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import type { Group } from '@/types'
+import { useRouter } from 'next/navigation'
+import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import type { Group, GroupType } from '@/types'
+
+// Helper function to format group type for display
+function formatGroupType(type: GroupType): string {
+  const typeMap: Record<string, string> = {
+    active_directory: 'Active Directory',
+    okta: 'Okta',
+    google_workspace: 'Google Workspace',
+    jamf_smart_group: 'Jamf Smart Group',
+    intune: 'Intune',
+    custom: 'Custom',
+    distribution_list: 'Distribution List',
+    security: 'Security',
+  }
+  return typeMap[type] || type
+}
+
+// Define ALL possible columns for groups
+const ALL_COLUMNS: ColumnConfig<Group>[] = [
+  {
+    key: 'group_name',
+    label: 'Group Name',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    alwaysVisible: true, // Can't hide group name
+    render: (group) => group.group_name,
+  },
+  {
+    key: 'group_type',
+    label: 'Type',
+    sortable: true,
+    filterable: true,
+    filterType: 'select',
+    defaultVisible: true,
+    filterOptions: [
+      { value: 'active_directory', label: 'Active Directory' },
+      { value: 'okta', label: 'Okta' },
+      { value: 'google_workspace', label: 'Google Workspace' },
+      { value: 'jamf_smart_group', label: 'Jamf Smart Group' },
+      { value: 'intune', label: 'Intune' },
+      { value: 'custom', label: 'Custom' },
+      { value: 'distribution_list', label: 'Distribution List' },
+      { value: 'security', label: 'Security' },
+    ],
+    render: (group) => formatGroupType(group.group_type),
+  },
+  {
+    key: 'description',
+    label: 'Description',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (group) => group.description || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'group_id_external',
+    label: 'External ID',
+    sortable: true,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: true,
+    render: (group) => group.group_id_external || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_date',
+    label: 'Group Created Date',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (group) =>
+      group.created_date ? (
+        new Date(group.created_date).toLocaleDateString()
+      ) : (
+        <span className="text-muted">—</span>
+      ),
+  },
+  {
+    key: 'notes',
+    label: 'Notes',
+    sortable: false,
+    filterable: true,
+    filterType: 'text',
+    defaultVisible: false,
+    render: (group) => group.notes || <span className="text-muted">—</span>,
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    sortable: true,
+    filterable: false,
+    defaultVisible: false,
+    render: (group) => new Date(group.created_at).toLocaleDateString(),
+  },
+]
 
 export default function GroupsPage() {
+  const router = useRouter()
   const [groups, setGroups] = useState<Group[]>([])
+  const [pagination, setPagination] = useState<Pagination | undefined>()
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState('')
-  const [groupTypeFilter, setGroupTypeFilter] = useState('')
+  const [searchValue, setSearchValue] = useState('')
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({})
+  const [sortBy, setSortBy] = useState('group_name')
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
 
-  const fetchGroups = React.useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        limit: '50',
-        sort_by: 'group_name',
-        sort_order: 'asc',
-      })
-
-      if (search) params.append('search', search)
-      if (groupTypeFilter) params.append('group_type', groupTypeFilter)
-
-      const response = await fetch(`/api/groups?${params}`)
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Failed to fetch groups')
-      }
-
-      setGroups(result.data)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [search, groupTypeFilter])
-
+  // Fetch groups from API
   useEffect(() => {
-    fetchGroups()
-  }, [search, groupTypeFilter, fetchGroups])
+    const fetchGroups = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.append('page', currentPage.toString())
+        params.append('limit', '50')
+        params.append('sort_by', sortBy)
+        params.append('sort_order', sortOrder)
 
-  const formatGroupType = (type: string) => {
-    const typeMap: Record<string, string> = {
-      active_directory: 'Active Directory',
-      okta: 'Okta',
-      google_workspace: 'Google Workspace',
-      jamf_smart_group: 'Jamf Smart Group',
-      intune: 'Intune',
-      custom: 'Custom',
-      distribution_list: 'Distribution List',
-      security: 'Security',
+        if (searchValue) {
+          params.append('search', searchValue)
+        }
+
+        // Add all filter values (both column filters and legacy filters)
+        Object.entries(filterValues).forEach(([key, value]) => {
+          if (value && value !== '') {
+            params.append(key, value)
+          }
+        })
+
+        const response = await fetch(`/api/groups?${params.toString()}`)
+        if (!response.ok) {
+          throw new Error('Failed to fetch groups')
+        }
+
+        const result = await response.json()
+        setGroups(result.data?.groups || result.data || [])
+        setPagination(result.data?.pagination)
+      } catch (error) {
+        console.error('Error fetching groups:', error)
+        setGroups([])
+      } finally {
+        setLoading(false)
+      }
     }
-    return typeMap[type] || type
+
+    fetchGroups()
+  }, [currentPage, sortBy, sortOrder, searchValue, filterValues])
+
+  const handleSearch = (value: string) => {
+    setSearchValue(value)
+    setCurrentPage(1) // Reset to first page on search
   }
 
-  if (loading) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    )
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+    setCurrentPage(1) // Reset to first page on filter change
   }
 
-  if (error) {
-    return (
-      <div className="container">
-        <div className="p-lg">
-          <div className="error-message">{error}</div>
-        </div>
-      </div>
-    )
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      // Toggle sort order if clicking the same column
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortBy(column)
+      setSortOrder('asc')
+    }
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleAdd = () => {
+    router.push('/groups/new')
   }
 
   return (
-    <div className="container">
-      <div className="p-lg">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-h1">Groups</h1>
-          <Link href="/groups/new" className="btn btn-primary">
-            Add Group
-          </Link>
-        </div>
+    <>
+      <GenericListView
+        title="Groups"
+        columns={ALL_COLUMNS}
+        data={groups}
+        pagination={pagination}
+        filterValues={filterValues}
+        searchPlaceholder="Search groups..."
+        searchValue={searchValue}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        loading={loading}
+        onSearch={handleSearch}
+        onFilterChange={handleFilterChange}
+        onSort={handleSort}
+        onPageChange={handlePageChange}
+        onAdd={handleAdd}
+        addButtonLabel="Add Group"
+        emptyMessage="No groups found. Create your first group to get started."
+        rowLink={(group) => `/groups/${group.id}`}
+        enableColumnManagement={true}
+        enablePerColumnFiltering={true}
+      />
 
-        {/* Filters */}
-        <div className="card mb-6">
-          <div className="grid grid-2 gap-4">
-            <div>
-              <label htmlFor="search" className="block mb-2 font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search groups..."
-                className="w-full p-2 border rounded"
-              />
-            </div>
-            <div>
-              <label htmlFor="group_type" className="block mb-2 font-bold">
-                Group Type
-              </label>
-              <select
-                id="group_type"
-                value={groupTypeFilter}
-                onChange={(e) => setGroupTypeFilter(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="">All Types</option>
-                <option value="active_directory">Active Directory</option>
-                <option value="okta">Okta</option>
-                <option value="google_workspace">Google Workspace</option>
-                <option value="jamf_smart_group">Jamf Smart Group</option>
-                <option value="intune">Intune</option>
-                <option value="custom">Custom</option>
-                <option value="distribution_list">Distribution List</option>
-                <option value="security">Security</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Groups Table */}
-        <div className="card">
-          {groups.length === 0 ? (
-            <p className="text-center py-8">No groups found.</p>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr>
-                  <th className="text-left p-2">Group Name</th>
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-left p-2">Description</th>
-                  <th className="text-left p-2">External ID</th>
-                  <th className="text-left p-2">Created</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groups.map((group) => (
-                  <tr key={group.id} className="border-t hover:bg-gray-50">
-                    <td className="p-2">
-                      <Link href={`/groups/${group.id}`} className="text-blue hover:underline">
-                        {group.group_name}
-                      </Link>
-                    </td>
-                    <td className="p-2">{formatGroupType(group.group_type)}</td>
-                    <td className="p-2">{group.description || '-'}</td>
-                    <td className="p-2">{group.group_id_external || '-'}</td>
-                    <td className="p-2">{new Date(group.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+      <style jsx global>{`
+        .text-muted {
+          color: var(--color-brew-black-40);
+        }
+      `}</style>
+    </>
   )
 }
