@@ -8,7 +8,7 @@ import type { Software } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 
 // GET /api/software/[id] - Get single software
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -103,7 +103,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 // DELETE /api/software/[id] - Delete software
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

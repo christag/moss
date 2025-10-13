@@ -10,7 +10,7 @@ import { query } from '@/lib/db'
  * Remove a room association from a document
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ id: string; room_id: string }> }
 ) {
   try {

@@ -8,22 +8,18 @@ import type { ObjectPermission } from '@/types'
 import { requireRole } from '@/lib/auth'
 import { invalidateUserCache } from '@/lib/rbac'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
 /**
  * DELETE /api/object-permissions/:id
  * Revoke an object-level permission
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
     // Require admin role
     await requireRole('admin')
-
-    const { id } = params
 
     // Get permission details before deleting
     const permissionResult = await query<ObjectPermission>(

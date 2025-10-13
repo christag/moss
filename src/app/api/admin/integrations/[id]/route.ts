@@ -13,7 +13,7 @@ import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 import { parseRequestBody } from '@/lib/api'
 import type { Integration } from '@/types'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await auth()
     if (!session?.user) {
@@ -73,19 +73,17 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const result = await pool.query<Integration>(
       `UPDATE integrations SET
-        integration_type = COALESCE($1, integration_type),
-        name = COALESCE($2, name),
-        provider = COALESCE($3, provider),
-        config = COALESCE($4, config),
-        sync_enabled = COALESCE($5, sync_enabled),
-        sync_frequency = COALESCE($6, sync_frequency),
-        is_active = COALESCE($7, is_active),
-        notes = COALESCE($8, notes),
+        name = COALESCE($1, name),
+        provider = COALESCE($2, provider),
+        config = COALESCE($3, config),
+        sync_enabled = COALESCE($4, sync_enabled),
+        sync_frequency = COALESCE($5, sync_frequency),
+        is_active = COALESCE($6, is_active),
+        notes = COALESCE($7, notes),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $9
+      WHERE id = $8
       RETURNING *`,
       [
-        data.integration_type,
         data.name,
         data.provider,
         data.config ? JSON.stringify(data.config) : null,
@@ -159,7 +157,7 @@ export async function DELETE(
       action: 'delete_integration',
       category: 'integrations',
       target_type: 'integration',
-      target_id: params.id,
+      target_id: id,
       details: {
         integration_type: integration.integration_type,
         name: integration.name,

@@ -13,14 +13,15 @@ import type { DownloadUrlResponse } from '@/types'
  * GET /api/attachments/:id/download
  * Download an attachment or get presigned URL
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const attachmentId = params.id
+    const attachmentId = id
     const pool = getPool()
 
     // Get attachment details
@@ -65,8 +66,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     // For local storage, stream the file directly
     const fileBuffer = await adapter.download(attachment.storage_path)
 
-    // Return file as response
-    return new NextResponse(fileBuffer, {
+    // Return file as response (convert Buffer to Uint8Array for NextResponse)
+    return new NextResponse(new Uint8Array(fileBuffer), {
       status: 200,
       headers: {
         'Content-Type': attachment.mime_type,

@@ -18,15 +18,15 @@ interface LicenseAssignments {
  * GET /api/software-licenses/[id]/assignments
  * Retrieve all assignments for a software license (people and groups)
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 
     // Verify license exists and get seat info
-    const licenseCheck = await query(
-      'SELECT seats_purchased, seats_assigned FROM software_licenses WHERE id = $1',
-      [id]
-    )
+    const licenseCheck = await query<{
+      seats_purchased: number | null
+      seats_assigned: number | null
+    }>('SELECT seats_purchased, seats_assigned FROM software_licenses WHERE id = $1', [id])
 
     if (licenseCheck.rows.length === 0) {
       return NextResponse.json(
@@ -67,9 +67,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const assignments: LicenseAssignments = {
       people: peopleResult.rows,
       groups: groupsResult.rows,
-      seats_total: license.seats_purchased || 0,
-      seats_assigned: license.seats_assigned || 0,
-      seats_available: (license.seats_purchased || 0) - (license.seats_assigned || 0),
+      seats_total: license.seats_purchased ?? 0,
+      seats_assigned: license.seats_assigned ?? 0,
+      seats_available: (license.seats_purchased ?? 0) - (license.seats_assigned ?? 0),
     }
 
     return NextResponse.json({

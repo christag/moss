@@ -12,7 +12,7 @@ import { parseRequestBody } from '@/lib/api'
  * GET /api/networks/:id
  * Get a single network by ID
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 
@@ -171,7 +171,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
  * DELETE /api/networks/:id
  * Delete a network
  */
-export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 

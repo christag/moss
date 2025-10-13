@@ -13,7 +13,7 @@ import type { Device } from '@/types'
  * GET /api/devices/:id
  * Get a single device by ID
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -264,7 +264,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // Handle database constraint violations
     if (error && typeof error === 'object' && 'code' in error) {
       // Unique constraint violation (duplicate hostname)
-      if (error.code === '23505' && error.constraint === 'devices_hostname_unique') {
+      if (
+        error.code === '23505' &&
+        'constraint' in error &&
+        error.constraint === 'devices_hostname_unique'
+      ) {
         return errorResponse(
           'A device with this hostname already exists. Hostnames must be unique.',
           undefined,
@@ -291,15 +295,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * Delete a device
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
 
     // Check if device exists and has child devices
-    const childCheck = await query('SELECT COUNT(*) FROM devices WHERE parent_device_id = $1', [id])
-    const childCount = parseInt(childCheck.rows[0].count)
+    const childCheck = await query<{ count: string }>(
+      'SELECT COUNT(*) as count FROM devices WHERE parent_device_id = $1',
+      [id]
+    )
+    const childCount = parseInt(childCheck.rows[0].count, 10)
 
     if (childCount > 0) {
       return errorResponse(

@@ -36,10 +36,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const person_id = body.person_id
 
     // Verify license exists and check seat availability
-    const licenseCheck = await query(
-      'SELECT seats_purchased, seats_assigned FROM software_licenses WHERE id = $1',
-      [license_id]
-    )
+    const licenseCheck = await query<{
+      seats_purchased: number | null
+      seats_assigned: number | null
+    }>('SELECT seats_purchased, seats_assigned FROM software_licenses WHERE id = $1', [license_id])
 
     if (licenseCheck.rows.length === 0) {
       return NextResponse.json(
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     }
 
     const license = licenseCheck.rows[0]
-    const seatsAvailable = (license.seats_purchased || 0) - (license.seats_assigned || 0)
+    const seatsAvailable = (license.seats_purchased ?? 0) - (license.seats_assigned ?? 0)
 
     if (seatsAvailable <= 0) {
       return NextResponse.json(

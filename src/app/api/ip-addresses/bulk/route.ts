@@ -128,7 +128,7 @@ export async function POST(
 
         // Build CASE statement for bulk update
         const caseStatements = operation.updates
-          .map((update, index) => `WHEN id = $${index * 2 + 2} THEN $${index * 2 + 3}`)
+          .map((_update, index) => `WHEN id = $${index * 2 + 2} THEN $${index * 2 + 3}`)
           .join(' ')
 
         const values = operation.updates.flatMap((update) => [update.ip_id, update.dns_name])

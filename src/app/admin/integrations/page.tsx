@@ -357,13 +357,30 @@ interface AddIntegrationModalProps {
 }
 
 function AddIntegrationModal({ onClose, onSuccess }: AddIntegrationModalProps) {
-  const [formData, setFormData] = useState({
-    integration_type: 'idp' as const,
+  const [formData, setFormData] = useState<{
+    integration_type:
+      | 'idp'
+      | 'mdm'
+      | 'rmm'
+      | 'cloud_provider'
+      | 'ticketing'
+      | 'monitoring'
+      | 'backup'
+      | 'other'
+    name: string
+    provider: string
+    config: Record<string, unknown>
+    sync_enabled: boolean
+    sync_frequency: 'hourly' | 'daily' | 'weekly' | 'manual'
+    is_active: boolean
+    notes: string
+  }>({
+    integration_type: 'idp',
     name: '',
     provider: '',
     config: {},
     sync_enabled: false,
-    sync_frequency: 'daily' as const,
+    sync_frequency: 'daily',
     is_active: true,
     notes: '',
   })

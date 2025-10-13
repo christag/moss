@@ -13,7 +13,7 @@ import { checkRoleHierarchyCycle, invalidateRoleCache } from '@/lib/rbac'
  * GET /api/roles/:id
  * Get a single role by ID
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -148,7 +148,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * Note: role_permissions and role_assignments will be automatically deleted due to CASCADE constraint
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -167,11 +167,11 @@ export async function DELETE(
     }
 
     // Check assignments count
-    const assignmentCheck = await query(
+    const assignmentCheck = await query<{ count: string }>(
       'SELECT COUNT(*) FROM role_assignments WHERE role_id = $1',
       [id]
     )
-    const assignmentCount = parseInt(assignmentCheck.rows[0].count)
+    const assignmentCount = parseInt(assignmentCheck.rows[0].count, 10)
 
     // Delete the role (CASCADE will remove role_permissions and role_assignments entries)
     const result = await query('DELETE FROM roles WHERE id = $1 RETURNING id', [id])

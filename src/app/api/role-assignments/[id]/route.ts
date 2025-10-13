@@ -10,22 +10,15 @@ import { parseRequestBody } from '@/lib/api'
 import { requireRole } from '@/lib/auth'
 import { invalidateUserCache } from '@/lib/rbac'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
 /**
  * GET /api/role-assignments/:id
  * Get a single role assignment with all related data
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // Require admin role
     await requireRole('admin')
-
-    const { id } = params
 
     // Query with JOINs to get all related data
     const sql = `
@@ -86,12 +79,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  * PATCH /api/role-assignments/:id
  * Update a role assignment's scope or locations
  */
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     // Require admin role
     await requireRole('admin')
-
-    const { id } = await params
 
     // Parse request body
     const parseResult = await parseRequestBody(request)
@@ -255,12 +247,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
  * DELETE /api/role-assignments/:id
  * Revoke a role assignment
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
     // Require admin role
     await requireRole('admin')
-
-    const { id } = params
 
     const pool = getPool()
     const client = await pool.connect()

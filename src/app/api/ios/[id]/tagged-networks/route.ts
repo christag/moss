@@ -11,7 +11,7 @@ import type { Network } from '@/types'
  * GET /api/ios/[id]/tagged-networks
  * Retrieve all tagged VLANs for an IO (trunk port configuration)
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 

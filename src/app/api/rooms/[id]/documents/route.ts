@@ -11,11 +11,12 @@ import { successResponse, errorResponse } from '@/lib/api'
  * Get all documents associated with a specific room
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse> {
   try {
-    const roomId = params.id
+    const { id } = await params
+    const roomId = id
 
     // Validate room exists
     const roomCheck = await query('SELECT id FROM rooms WHERE id = $1', [roomId])

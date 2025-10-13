@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getPool } from '@/lib/db'
-import { TokenRequestSchema } from '@/lib/schemas/oauth'
+import { TokenRequestSchema, type TokenRequest } from '@/lib/schemas/oauth'
 import {
   verifyClientSecret,
   verifyPKCE,
@@ -117,7 +117,7 @@ async function handleTokenRequest(request: NextRequest) {
 async function handleAuthorizationCodeGrant(
   pool: ReturnType<typeof import('@/lib/db').getPool>,
   client: OAuthClient,
-  request: Extract<{ grant_type: 'authorization_code' }, { grant_type: string }>
+  request: Extract<TokenRequest, { grant_type: 'authorization_code' }>
 ) {
   // Retrieve authorization code
   const codeResult = await pool.query<OAuthAuthorizationCode>(
@@ -188,7 +188,7 @@ async function handleAuthorizationCodeGrant(
 async function handleRefreshTokenGrant(
   pool: ReturnType<typeof import('@/lib/db').getPool>,
   client: OAuthClient,
-  request: Extract<{ grant_type: 'refresh_token' }, { grant_type: string }>
+  request: Extract<TokenRequest, { grant_type: 'refresh_token' }>
 ) {
   // Verify refresh token
   const payload = await verifyRefreshToken(request.refresh_token)
@@ -273,7 +273,7 @@ async function handleRefreshTokenGrant(
 async function handleClientCredentialsGrant(
   pool: ReturnType<typeof import('@/lib/db').getPool>,
   client: OAuthClient,
-  request: Extract<{ grant_type: 'client_credentials' }, { grant_type: string }>
+  request: Extract<TokenRequest, { grant_type: 'client_credentials' }>
 ) {
   // Parse and validate scopes
   const requestedScopes = request.scope ? parseScopes(request.scope) : client.allowed_scopes

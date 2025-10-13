@@ -11,19 +11,26 @@ import type { StorageSettings } from '@/types'
 export default function StorageSettingsPage() {
   const [settings, setSettings] = useState<StorageSettings>({
     backend: 'local',
-    local_path: '/var/moss/uploads',
-    s3_bucket: null,
-    s3_region: null,
-    s3_access_key: null,
-    s3_secret_key: null,
-    s3_endpoint: null,
-    nfs_host: null,
-    nfs_path: null,
-    nfs_options: null,
-    smb_host: null,
-    smb_share: null,
-    smb_username: null,
-    smb_password: null,
+    local: {
+      path: '/var/moss/uploads',
+    },
+    s3: {
+      endpoint: null,
+      bucket: null,
+      region: 'us-east-1',
+      access_key: null,
+      secret_key: null,
+    },
+    nfs: {
+      server: null,
+      path: null,
+    },
+    smb: {
+      server: null,
+      share: null,
+      username: null,
+      password: null,
+    },
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -183,8 +190,10 @@ export default function StorageSettingsPage() {
               </label>
               <input
                 type="text"
-                value={settings.local_path || ''}
-                onChange={(e) => setSettings({ ...settings, local_path: e.target.value })}
+                value={settings.local?.path || ''}
+                onChange={(e) =>
+                  setSettings({ ...settings, local: { ...settings.local, path: e.target.value } })
+                }
                 placeholder="/var/moss/uploads"
                 style={{
                   width: '100%',
@@ -229,9 +238,16 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.s3_bucket || ''}
+                    value={settings.s3?.bucket || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, s3_bucket: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        s3: {
+                          ...settings.s3,
+                          bucket: e.target.value || null,
+                          region: settings.s3?.region || 'us-east-1',
+                        },
+                      })
                     }
                     placeholder="my-bucket"
                     style={{
@@ -254,9 +270,12 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.s3_region || ''}
+                    value={settings.s3?.region || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, s3_region: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        s3: { ...settings.s3, region: e.target.value || 'us-east-1' },
+                      })
                     }
                     placeholder="us-east-1"
                     style={{
@@ -288,9 +307,16 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.s3_access_key || ''}
+                    value={settings.s3?.access_key || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, s3_access_key: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        s3: {
+                          ...settings.s3,
+                          access_key: e.target.value || null,
+                          region: settings.s3?.region || 'us-east-1',
+                        },
+                      })
                     }
                     style={{
                       width: '100%',
@@ -312,9 +338,16 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="password"
-                    value={settings.s3_secret_key || ''}
+                    value={settings.s3?.secret_key || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, s3_secret_key: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        s3: {
+                          ...settings.s3,
+                          secret_key: e.target.value || null,
+                          region: settings.s3?.region || 'us-east-1',
+                        },
+                      })
                     }
                     style={{
                       width: '100%',
@@ -346,8 +379,13 @@ export default function StorageSettingsPage() {
                 </label>
                 <input
                   type="text"
-                  value={settings.nfs_host || ''}
-                  onChange={(e) => setSettings({ ...settings, nfs_host: e.target.value || null })}
+                  value={settings.nfs?.server || ''}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      nfs: { ...settings.nfs, server: e.target.value || null },
+                    })
+                  }
                   placeholder="192.168.1.100"
                   style={{
                     width: '100%',
@@ -365,8 +403,13 @@ export default function StorageSettingsPage() {
                 </label>
                 <input
                   type="text"
-                  value={settings.nfs_path || ''}
-                  onChange={(e) => setSettings({ ...settings, nfs_path: e.target.value || null })}
+                  value={settings.nfs?.path || ''}
+                  onChange={(e) =>
+                    setSettings({
+                      ...settings,
+                      nfs: { ...settings.nfs, path: e.target.value || null },
+                    })
+                  }
                   placeholder="/exports/moss"
                   style={{
                     width: '100%',
@@ -402,8 +445,13 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.smb_host || ''}
-                    onChange={(e) => setSettings({ ...settings, smb_host: e.target.value || null })}
+                    value={settings.smb?.server || ''}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        smb: { ...settings.smb, server: e.target.value || null },
+                      })
+                    }
                     placeholder="fileserver.local"
                     style={{
                       width: '100%',
@@ -425,9 +473,12 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.smb_share || ''}
+                    value={settings.smb?.share || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, smb_share: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        smb: { ...settings.smb, share: e.target.value || null },
+                      })
                     }
                     placeholder="moss"
                     style={{
@@ -458,9 +509,12 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="text"
-                    value={settings.smb_username || ''}
+                    value={settings.smb?.username || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, smb_username: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        smb: { ...settings.smb, username: e.target.value || null },
+                      })
                     }
                     style={{
                       width: '100%',
@@ -482,9 +536,12 @@ export default function StorageSettingsPage() {
                   </label>
                   <input
                     type="password"
-                    value={settings.smb_password || ''}
+                    value={settings.smb?.password || ''}
                     onChange={(e) =>
-                      setSettings({ ...settings, smb_password: e.target.value || null })
+                      setSettings({
+                        ...settings,
+                        smb: { ...settings.smb, password: e.target.value || null },
+                      })
                     }
                     style={{
                       width: '100%',

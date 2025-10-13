@@ -25,8 +25,6 @@ const GeneralSettingsSchema = z.object({
   backup_retention_days: z.number().int().min(1).max(365).optional(),
 })
 
-type GeneralSettings = z.infer<typeof GeneralSettingsSchema>
-
 /**
  * GET /api/admin/settings/general
  * Retrieve current general settings
@@ -55,7 +53,7 @@ export async function GET(_request: NextRequest) {
     )
 
     // Transform database rows into GeneralSettings object
-    const generalSettings: Partial<GeneralSettings> = {}
+    const generalSettings: Record<string, unknown> = {}
 
     for (const row of result.rows) {
       const key = row.key.replace('general.', '')
@@ -63,11 +61,11 @@ export async function GET(_request: NextRequest) {
 
       // Handle different value types
       if (key === 'items_per_page' || key === 'backup_retention_days') {
-        generalSettings[key as keyof GeneralSettings] = Number(value)
+        generalSettings[key] = Number(value)
       } else if (key === 'backup_enabled') {
-        generalSettings[key as keyof GeneralSettings] = value === true || value === 'true'
+        generalSettings[key] = value === true || value === 'true'
       } else {
-        generalSettings[key as keyof GeneralSettings] = value as string
+        generalSettings[key] = value as string
       }
     }
 

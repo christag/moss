@@ -14,7 +14,7 @@ import { clearPermissionCache } from '@/lib/rbac'
  * GET /api/permissions/:id
  * Get a single permission by ID
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Require authentication
     await requireRole('user')
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * Checks for usage in role_permissions before deletion
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

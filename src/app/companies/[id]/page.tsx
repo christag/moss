@@ -48,6 +48,10 @@ export default function CompanyDetailPage() {
     router.push(`/companies/${id}/edit`)
   }
 
+  const handleBack = () => {
+    router.push('/companies')
+  }
+
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
       return

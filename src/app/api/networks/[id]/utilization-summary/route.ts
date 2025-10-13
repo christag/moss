@@ -23,11 +23,12 @@ interface UtilizationSummaryResponse {
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<UtilizationSummaryResponse | { success: false; message: string }>> {
   try {
-    const networkId = params.id
+    const { id } = await params
+    const networkId = id
 
     // Fetch network details
     const networkResult = await query<Network>('SELECT * FROM networks WHERE id = $1', [networkId])

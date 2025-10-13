@@ -12,7 +12,24 @@ import { z } from 'zod'
 const TestPermissionSchema = z.object({
   user_id: z.string().uuid('Invalid user ID'),
   action: z.enum(['view', 'edit', 'delete', 'manage_permissions']),
-  object_type: z.string().min(1, 'Object type is required'),
+  object_type: z.enum([
+    'company',
+    'location',
+    'room',
+    'person',
+    'device',
+    'io',
+    'ip_address',
+    'network',
+    'software',
+    'saas_service',
+    'installed_application',
+    'software_license',
+    'document',
+    'external_document',
+    'contract',
+    'group',
+  ]),
   object_id: z.string().uuid('Invalid object ID').nullable().optional(),
 })
 

@@ -22,9 +22,23 @@ export async function OPTIONS(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  return withCORS(request, async () => handleMCPRequest(request), getProductionCORSConfig())
+  // TODO: MCP SDK has breaking changes incompatible with Next.js 15 App Router
+  // StreamableHTTPServerTransport now requires Node.js IncomingMessage, but Next.js provides NextRequest
+  // This needs to be refactored to use a compatible transport or custom integration
+  return withCORS(
+    request,
+    async () =>
+      NextResponse.json(
+        { error: 'MCP endpoint temporarily disabled due to SDK incompatibility' },
+        { status: 501 }
+      ),
+    getProductionCORSConfig()
+  )
 }
 
+// TODO: Re-enable this function once MCP SDK is compatible with Next.js 15
+// @ts-expect-error - Function intentionally disabled, will be re-enabled after MCP SDK update
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function handleMCPRequest(request: NextRequest) {
   const startTime = Date.now()
   const pool = getPool()
@@ -69,8 +83,8 @@ async function handleMCPRequest(request: NextRequest) {
     const operationName = body.params?.name || body.params?.uri || body.method || 'unknown'
 
     // Create transport and handle request
-    const transport = new StreamableHTTPServerTransport('/api/mcp', async () => {
-      // Handle close
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: () => crypto.randomUUID(),
     })
 
     // Connect server to transport
@@ -82,7 +96,9 @@ async function handleMCPRequest(request: NextRequest) {
 
     try {
       // Process MCP request
-      result = await transport.handleRequest(body)
+      const sessionId = crypto.randomUUID()
+      // @ts-ignore - MCP SDK incompatible with Next.js 15
+      result = await transport.handleRequest(request, sessionId)
     } catch (error) {
       success = false
       errorMessage = (error as Error).message

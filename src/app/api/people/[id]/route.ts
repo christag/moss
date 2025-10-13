@@ -96,7 +96,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const validation = UpdatePersonSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Invalid request body', errors: validation.error.errors },
+        { success: false, message: validation.error.errors[0]?.message || 'Invalid request body' },
         { status: 400 }
       )
     }

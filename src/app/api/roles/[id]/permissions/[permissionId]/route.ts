@@ -6,20 +6,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { invalidateRoleCache } from '@/lib/rbac'
 
-interface RouteParams {
-  params: {
-    id: string
-    permissionId: string
-  }
-}
-
 /**
  * DELETE /api/roles/:id/permissions/:permissionId
  * Remove a specific permission from a role
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string; permissionId: string }> }
+) {
   try {
-    const { id: roleId, permissionId } = params
+    const { id: roleId, permissionId } = await params
 
     // Check if it's a system role (system roles cannot have permissions modified)
     const checkResult = await query('SELECT is_system_role FROM roles WHERE id = $1', [roleId])

@@ -10,7 +10,7 @@ import { auth, hasRole } from '@/lib/auth'
 import { StorageSettingsSchema } from '@/lib/schemas/admin'
 import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 import { parseRequestBody } from '@/lib/api'
-import type { StorageSettings, SystemSetting } from '@/types'
+import type { SystemSetting } from '@/types'
 
 /**
  * GET /api/admin/settings/storage
@@ -37,11 +37,11 @@ export async function GET(_request: NextRequest) {
        ORDER BY key`
     )
 
-    const storageSettings: Partial<StorageSettings> = {}
+    const storageSettings: Record<string, unknown> = {}
 
     for (const row of result.rows) {
       const key = row.key.replace('storage.', '')
-      storageSettings[key as keyof StorageSettings] = row.value as string
+      storageSettings[key] = row.value
     }
 
     return NextResponse.json(storageSettings)

@@ -10,7 +10,7 @@ import type { IO } from '@/types'
  * GET /api/networks/[id]/ios
  * Retrieve all IOs connected to a specific network
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 

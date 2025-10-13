@@ -13,14 +13,15 @@ import type { FileAttachment } from '@/types'
  * GET /api/attachments/:id
  * Get attachment details
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const attachmentId = params.id
+    const attachmentId = id
     const pool = getPool()
 
     // Get attachment with uploader details
@@ -83,14 +84,18 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
  * DELETE /api/attachments/:id
  * Delete attachment (soft delete)
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id } = await params
     const session = await auth()
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const attachmentId = params.id
+    const attachmentId = id
     const pool = getPool()
 
     // Get attachment details

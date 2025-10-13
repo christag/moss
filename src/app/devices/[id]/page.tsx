@@ -112,6 +112,10 @@ export default function DeviceDetailPage() {
     router.push(`/devices/${id}/edit`)
   }
 
+  const handleBack = () => {
+    router.push('/devices')
+  }
+
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this device? This action cannot be undone.')) {
       return
@@ -189,9 +193,6 @@ export default function DeviceDetailPage() {
         { label: 'Manufacturer', value: device.manufacturer || '—' },
         { label: 'Model', value: device.model || '—' },
         { label: 'Serial Number', value: device.serial_number || '—' },
-        { label: 'CPU', value: device.cpu || '—' },
-        { label: 'RAM', value: device.ram ? `${device.ram} GB` : '—' },
-        { label: 'Storage', value: device.storage || '—' },
       ],
     },
     {
@@ -262,7 +263,6 @@ export default function DeviceDetailPage() {
             '—'
           ),
         },
-        { label: 'Rack Position', value: device.rack_position || '—' },
       ],
     },
     {
@@ -351,13 +351,7 @@ export default function DeviceDetailPage() {
       render: (d) => (
         <Badge
           variant={
-            d.status === 'active'
-              ? 'success'
-              : d.status === 'repair'
-                ? 'warning'
-                : d.status === 'inactive'
-                  ? 'secondary'
-                  : 'default'
+            d.status === 'active' ? 'success' : d.status === 'repair' ? 'warning' : 'default'
           }
         >
           {d.status.charAt(0).toUpperCase() + d.status.slice(1)}

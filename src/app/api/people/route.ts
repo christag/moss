@@ -26,7 +26,10 @@ export async function GET(request: NextRequest) {
     const validation = ListPeopleQuerySchema.safeParse(params)
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Invalid query parameters', errors: validation.error.errors },
+        {
+          success: false,
+          message: validation.error.errors[0]?.message || 'Invalid query parameters',
+        },
         { status: 400 }
       )
     }
@@ -177,7 +180,7 @@ export async function POST(request: NextRequest) {
     const validation = CreatePersonSchema.safeParse(body)
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Invalid request body', errors: validation.error.errors },
+        { success: false, message: validation.error.errors[0]?.message || 'Invalid request body' },
         { status: 400 }
       )
     }

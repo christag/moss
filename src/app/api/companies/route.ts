@@ -157,8 +157,8 @@ export async function GET(request: NextRequest) {
     const totalCount = parseInt(countResult.rows[0].count, 10)
 
     // Calculate pagination
-    const offset = (page - 1) * limit
-    const totalPages = Math.ceil(totalCount / limit)
+    const offset = ((page ?? 1) - 1) * (limit ?? 50)
+    const totalPages = Math.ceil(totalCount / (limit ?? 50))
 
     // Build ORDER BY clause
     const orderBy = sort_by || 'created_at'
@@ -171,18 +171,18 @@ export async function GET(request: NextRequest) {
        ${whereClause}
        ${orderClause}
        LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
-      [...values, limit, offset]
+      [...values, limit ?? 50, offset]
     )
 
     const responseData = {
       companies: result.rows,
       pagination: {
-        page,
-        limit,
+        page: page ?? 1,
+        limit: limit ?? 50,
         total_count: totalCount,
         total_pages: totalPages,
-        has_next: page < totalPages,
-        has_prev: page > 1,
+        has_next: (page ?? 1) < totalPages,
+        has_prev: (page ?? 1) > 1,
       },
     }
 

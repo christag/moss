@@ -12,7 +12,7 @@ import { parseRequestBody } from '@/lib/api'
  * GET /api/ios/[id]
  * Retrieve a single IO by ID
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 
@@ -250,7 +250,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
  * Delete an IO by ID
  * Checks for dependent io_tagged_networks and connected IOs before deleting
  */
-export async function DELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 

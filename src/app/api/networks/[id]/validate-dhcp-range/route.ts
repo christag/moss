@@ -29,10 +29,11 @@ interface ValidationResponse {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ValidationResponse>> {
   try {
-    const networkId = params.id
+    const { id } = await params
+    const networkId = id
     const body = await request.json()
 
     // Validate input
@@ -42,7 +43,7 @@ export async function POST(
         {
           success: false,
           valid: false,
-          errors: validation.error.errors.map((e) => e.message),
+          errors: [validation.error.errors[0]?.message || 'Invalid request body'],
         },
         { status: 400 }
       )
@@ -112,7 +113,11 @@ export async function POST(
       dhcp_range_end,
     ])
 
-    const conflicts = conflictResult.rows
+    const conflicts = conflictResult.rows.map((row) => ({
+      ip_address: row.ip_address,
+      type: row.type || 'unknown',
+      device_name: row.device_name,
+    }))
 
     if (conflicts.length > 0) {
       warnings.push(

@@ -11,7 +11,7 @@ import type { Document } from '@/types'
  * GET /api/documents/:id
  * Get a single document by ID
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -50,7 +50,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Validation failed', errors: validation.error.errors },
+        { success: false, message: validation.error.errors[0]?.message || 'Validation failed' },
         { status: 400 }
       )
     }
@@ -132,7 +132,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * Delete a document
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

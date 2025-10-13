@@ -91,28 +91,28 @@ export async function GET(request: NextRequest) {
     const totalCount = parseInt(countResult.rows[0].count, 10)
 
     // Get paginated results
-    const offset = (page - 1) * limit
+    const offset = ((page ?? 1) - 1) * (limit ?? 50)
     const locationsResult = await query<Location>(
       `SELECT * FROM locations
        WHERE ${whereClause}
        ORDER BY ${sort_by} ${sort_order}
        LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
-      [...values, limit, offset]
+      [...values, limit ?? 50, offset]
     )
 
     const locations = locationsResult.rows
 
     // Calculate pagination metadata
-    const totalPages = Math.ceil(totalCount / limit)
-    const hasNext = page < totalPages
-    const hasPrev = page > 1
+    const totalPages = Math.ceil(totalCount / (limit ?? 50))
+    const hasNext = (page ?? 1) < totalPages
+    const hasPrev = (page ?? 1) > 1
 
     return successResponse(
       {
         locations,
         pagination: {
-          page,
-          limit,
+          page: page ?? 1,
+          limit: limit ?? 50,
           total_count: totalCount,
           total_pages: totalPages,
           has_next: hasNext,

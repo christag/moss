@@ -8,7 +8,7 @@ import type { SaaSService } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 
 // GET /api/saas-services/[id] - Get single SaaS service
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -109,7 +109,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
 // DELETE /api/saas-services/[id] - Delete SaaS service
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

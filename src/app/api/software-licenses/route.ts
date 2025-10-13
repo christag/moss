@@ -22,7 +22,10 @@ export async function GET(request: NextRequest) {
     const validation = SoftwareLicenseQuerySchema.safeParse(params)
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Invalid query parameters', errors: validation.error.errors },
+        {
+          success: false,
+          message: validation.error.errors[0]?.message || 'Invalid query parameters',
+        },
         { status: 400 }
       )
     }
@@ -129,7 +132,7 @@ export async function POST(request: NextRequest) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, message: 'Validation failed', errors: validation.error.errors },
+        { success: false, message: validation.error.errors[0]?.message || 'Validation failed' },
         { status: 400 }
       )
     }

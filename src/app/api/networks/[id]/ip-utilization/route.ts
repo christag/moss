@@ -50,11 +50,12 @@ interface IPUtilizationResponse {
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<IPUtilizationResponse | { success: false; message: string }>> {
   try {
-    const networkId = params.id
+    const { id } = await params
+    const networkId = id
 
     // Fetch network details
     const networkResult = await query<Network>('SELECT * FROM networks WHERE id = $1', [networkId])
@@ -101,7 +102,9 @@ export async function GET(
     const calculation = calculateCIDR(parsed.ip, parsed.cidr)
 
     // Fetch all IP addresses assigned to this network
-    const ipResult = await query<IPAddress & { device_name: string | null }>(
+    const ipResult = await query<
+      IPAddress & { device_id: string | null; device_name: string | null }
+    >(
       `
       SELECT
         ip.id,
@@ -134,7 +137,10 @@ export async function GET(
     }
 
     // Create a map of allocated IPs for quick lookup
-    const allocatedIPMap = new Map<string, IPAddress & { device_name: string | null }>()
+    const allocatedIPMap = new Map<
+      string,
+      IPAddress & { device_id: string | null; device_name: string | null }
+    >()
     ipResult.rows.forEach((ip) => {
       allocatedIPMap.set(ip.ip_address, ip)
     })
@@ -166,7 +172,9 @@ export async function GET(
           device_name: allocated.device_name || undefined,
           dns_name: allocated.dns_name || undefined,
           type: allocated.type || undefined,
-          assignment_date: allocated.assignment_date || undefined,
+          assignment_date: allocated.assignment_date
+            ? new Date(allocated.assignment_date).toISOString()
+            : undefined,
         }
       }
 

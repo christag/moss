@@ -12,7 +12,7 @@ import { parseRequestBody } from '@/lib/api'
  * GET /api/groups/:id
  * Get a single group by ID
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
@@ -128,15 +128,18 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
  * Note: group_members will be automatically deleted due to CASCADE constraint
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params
 
     // Check if group exists and has members (optional - could just let CASCADE handle it)
-    const memberCheck = await query('SELECT COUNT(*) FROM group_members WHERE group_id = $1', [id])
-    const memberCount = parseInt(memberCheck.rows[0].count)
+    const memberCheck = await query<{ count: string }>(
+      'SELECT COUNT(*) as count FROM group_members WHERE group_id = $1',
+      [id]
+    )
+    const memberCount = parseInt(memberCheck.rows[0].count, 10)
 
     // Delete the group (CASCADE will remove group_members entries)
     const result = await query('DELETE FROM groups WHERE id = $1 RETURNING id', [id])

@@ -106,8 +106,11 @@ export async function GET(request: NextRequest) {
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
     // Get total count
-    const countResult = await query(`SELECT COUNT(*) FROM devices ${whereClause}`, values)
-    const total = parseInt(countResult.rows[0].count)
+    const countResult = await query<{ count: string }>(
+      `SELECT COUNT(*) as count FROM devices ${whereClause}`,
+      values
+    )
+    const total = parseInt(countResult.rows[0].count, 10)
 
     // Get paginated results
     const offset = (page - 1) * limit
@@ -283,7 +286,11 @@ export async function POST(request: NextRequest) {
     // Handle database constraint violations
     if (error && typeof error === 'object' && 'code' in error) {
       // Unique constraint violation (duplicate hostname)
-      if (error.code === '23505' && error.constraint === 'devices_hostname_unique') {
+      if (
+        error.code === '23505' &&
+        'constraint' in error &&
+        error.constraint === 'devices_hostname_unique'
+      ) {
         return errorResponse(
           'A device with this hostname already exists. Hostnames must be unique.',
           undefined,

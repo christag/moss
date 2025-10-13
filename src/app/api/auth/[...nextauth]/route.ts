@@ -74,7 +74,7 @@ export async function POST(
     }
 
     // Add rate limit headers to successful response
-    const response = await handlers.POST(request, context)
+    const response = await handlers.POST(request)
 
     // Check if login was successful (2xx status) to reset rate limit
     if (response.status >= 200 && response.status < 300) {
@@ -98,5 +98,5 @@ export async function POST(
   }
 
   // For all other requests (non-login), pass through without rate limiting
-  return handlers.POST(request, context)
+  return handlers.POST(request)
 }

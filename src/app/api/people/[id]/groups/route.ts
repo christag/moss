@@ -10,7 +10,7 @@ import type { Group } from '@/types'
  * GET /api/people/:id/groups
  * Get all groups that a person belongs to
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 

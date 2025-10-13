@@ -10,7 +10,7 @@ import { query } from '@/lib/db'
  * Remove a VLAN tag from a trunk port
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ id: string; network_id: string }> }
 ) {
   try {

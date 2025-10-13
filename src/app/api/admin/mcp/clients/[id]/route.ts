@@ -9,10 +9,11 @@ import { requireRole } from '@/lib/auth'
 import { UpdateOAuthClientSchema } from '@/lib/schemas/oauth'
 import type { OAuthClient } from '@/types/oauth'
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireRole('admin')
 
+    const { id } = await params
     const pool = getPool()
 
     const result = await pool.query<OAuthClient>(
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
               client_type, is_active, created_by, created_at, updated_at
        FROM oauth_clients
        WHERE id = $1`,
-      [params.id]
+      [id]
     )
 
     if (result.rows.length === 0) {
@@ -37,10 +38,11 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     await requireRole('admin')
 
+    const { id } = await params
     const body = await request.json()
     const validationResult = UpdateOAuthClientSchema.safeParse(body)
 
@@ -60,7 +62,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
     // Build dynamic UPDATE query
     const updates: string[] = []
-    const values: (string | string[] | boolean)[] = [params.id]
+    const values: (string | string[] | boolean)[] = [id]
     let paramCount = 1
 
     if (data.client_name !== undefined) {
@@ -116,19 +118,21 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await requireRole('admin')
 
+    const { id } = await params
     const pool = getPool()
 
     // Revoke all tokens for this client first
-    await pool.query('UPDATE oauth_tokens SET revoked = true WHERE client_id = $1', [params.id])
+    await pool.query('UPDATE oauth_tokens SET revoked = true WHERE client_id = $1', [id])
 
     // Delete the client
-    const result = await pool.query('DELETE FROM oauth_clients WHERE id = $1 RETURNING id', [
-      params.id,
-    ])
+    const result = await pool.query('DELETE FROM oauth_clients WHERE id = $1 RETURNING id', [id])
 
     if (result.rows.length === 0) {
       return NextResponse.json({ success: false, message: 'Client not found' }, { status: 404 })

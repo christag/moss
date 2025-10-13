@@ -5,19 +5,20 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, use } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CompanyForm } from '@/components/forms/CompanyForm'
 import type { Company } from '@/types'
 
 interface EditCompanyPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function EditCompanyPage({ params }: EditCompanyPageProps) {
+  const { id } = use(params)
   const router = useRouter()
   const [company, setCompany] = useState<Company | null>(null)
   const [loading, setLoading] = useState(true)
@@ -27,7 +28,7 @@ export default function EditCompanyPage({ params }: EditCompanyPageProps) {
   useEffect(() => {
     const fetchCompany = async () => {
       try {
-        const response = await fetch(`/api/companies/${params.id}`)
+        const response = await fetch(`/api/companies/${id}`)
         if (!response.ok) {
           throw new Error('Failed to fetch company')
         }
@@ -41,7 +42,7 @@ export default function EditCompanyPage({ params }: EditCompanyPageProps) {
     }
 
     fetchCompany()
-  }, [params.id])
+  }, [id])
 
   const handleSuccess = (updatedCompany: Company) => {
     // Navigate back to the company's detail page
@@ -50,7 +51,7 @@ export default function EditCompanyPage({ params }: EditCompanyPageProps) {
 
   const handleCancel = () => {
     // Navigate back to the company's detail page
-    router.push(`/companies/${params.id}`)
+    router.push(`/companies/${id}`)
   }
 
   if (loading) {
@@ -83,7 +84,7 @@ export default function EditCompanyPage({ params }: EditCompanyPageProps) {
           </Link>
           <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
           <Link
-            href={`/companies/${params.id}`}
+            href={`/companies/${id}`}
             style={{ color: 'var(--color-blue)', textDecoration: 'none' }}
           >
             {company.company_name}

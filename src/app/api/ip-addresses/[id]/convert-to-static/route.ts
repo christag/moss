@@ -15,11 +15,12 @@ interface ConvertResponse {
 }
 
 export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ConvertResponse>> {
   try {
-    const ipId = params.id
+    const { id } = await params
+    const ipId = id
 
     // Fetch current IP address
     const ipResult = await query<IPAddress>('SELECT * FROM ip_addresses WHERE id = $1', [ipId])

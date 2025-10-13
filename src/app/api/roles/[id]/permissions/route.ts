@@ -5,7 +5,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db'
 import { AssignPermissionsToRoleSchema } from '@/lib/schemas/rbac'
-/*import type { Permission } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 import { getRolePermissions, invalidateRoleCache } from '@/lib/rbac'
 

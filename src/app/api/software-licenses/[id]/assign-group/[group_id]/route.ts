@@ -10,7 +10,7 @@ import { query } from '@/lib/db'
  * Remove a software license assignment from a group
  */
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ id: string; group_id: string }> }
 ) {
   try {

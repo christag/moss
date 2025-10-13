@@ -32,10 +32,11 @@ interface AvailableIPsResponse {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<AvailableIPsResponse | { success: false; message: string }>> {
   try {
-    const networkId = params.id
+    const { id } = await params
+    const networkId = id
     const searchParams = request.nextUrl.searchParams
     const limit = parseInt(searchParams.get('limit') || '50', 10)
 

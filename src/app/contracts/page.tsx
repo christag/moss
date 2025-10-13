@@ -260,7 +260,12 @@ export default function ContractsPage() {
   const [searchValue, setSearchValue] = useState('')
   const [filterValues, setFilterValues] = useState<Record<string, string>>({})
   const [sortBy, setSortBy] = useState('contract_name')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [sortOrder] = useState<'asc' | 'desc'>('asc')
+
+  // Handler for filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }))
+  }
 
   // Fetch contracts from API
   const fetchContracts = async () => {
@@ -304,53 +309,24 @@ export default function ContractsPage() {
     router.push('/contracts/new')
   }
 
-  const handleRowClick = (contract: Contract) => {
-    router.push(`/contracts/${contract.id}`)
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this contract?')) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/contracts/${id}`, {
-        method: 'DELETE',
-      })
-      const result = await response.json()
-
-      if (result.success) {
-        await fetchContracts()
-      } else {
-        alert(`Failed to delete: ${result.message}`)
-      }
-    } catch (error) {
-      console.error('Error deleting contract:', error)
-      alert('An error occurred while deleting the contract')
-    }
-  }
-
   return (
     <GenericListView<Contract>
       title="Contracts"
-      description="Vendor agreements, licenses, support contracts, and service agreements"
       data={contracts}
       columns={ALL_COLUMNS}
       pagination={pagination}
       loading={loading}
       searchValue={searchValue}
-      onSearchChange={setSearchValue}
+      onSearch={setSearchValue}
       filterValues={filterValues}
-      onFilterChange={setFilterValues}
+      onFilterChange={handleFilterChange}
       sortBy={sortBy}
-      onSortChange={setSortBy}
       sortOrder={sortOrder}
-      onSortOrderChange={setSortOrder}
+      onSort={setSortBy}
       onAdd={handleAdd}
-      onRowClick={handleRowClick}
-      onDelete={handleDelete}
       searchPlaceholder="Search contracts by name or contract number..."
       emptyMessage="No contracts found. Add your first contract to get started."
+      rowLink={(contract) => `/contracts/${contract.id}`}
     />
   )
 }

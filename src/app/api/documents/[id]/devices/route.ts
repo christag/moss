@@ -11,7 +11,7 @@ import type { Device } from '@/types'
  * GET /api/documents/[id]/devices
  * Get all devices associated with a document
  */
-export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params
 

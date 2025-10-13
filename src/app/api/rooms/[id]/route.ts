@@ -22,7 +22,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     // Validate UUID
     const validation = safeValidate(UUIDSchema, id)
     if (!validation.success) {
-      return NextResponse.json({ success: false, message: validation.error }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: validation.errors.errors[0]?.message || 'Invalid UUID' },
+        { status: 400 }
+      )
     }
 
     const result = await query<Room>('SELECT * FROM rooms WHERE id = $1', [validation.data])
@@ -58,13 +61,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     // Validate UUID
     const idValidation = safeValidate(UUIDSchema, id)
     if (!idValidation.success) {
-      return NextResponse.json({ success: false, message: idValidation.error }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: idValidation.errors.errors[0]?.message || 'Invalid UUID' },
+        { status: 400 }
+      )
     }
 
     // Validate request body
     const validation = safeValidate(UpdateRoomSchema, body)
     if (!validation.success) {
-      return NextResponse.json({ success: false, message: validation.error }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: validation.errors.errors[0]?.message || 'Invalid request body' },
+        { status: 400 }
+      )
     }
 
     // Check if room exists
@@ -142,7 +151,10 @@ export async function DELETE(
     // Validate UUID
     const validation = safeValidate(UUIDSchema, id)
     if (!validation.success) {
-      return NextResponse.json({ success: false, message: validation.error }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: validation.errors.errors[0]?.message || 'Invalid UUID' },
+        { status: 400 }
+      )
     }
 
     // Check if room exists

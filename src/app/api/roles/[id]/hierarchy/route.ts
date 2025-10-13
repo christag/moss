@@ -5,19 +5,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getRoleHierarchy } from '@/lib/rbac'
 
-interface RouteParams {
-  params: {
-    id: string
-  }
-}
-
 /**
  * GET /api/roles/:id/hierarchy
  * Get the complete role hierarchy tree starting from this role
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const hierarchy = await getRoleHierarchy(id)
 

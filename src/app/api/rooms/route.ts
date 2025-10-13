@@ -22,7 +22,13 @@ export async function GET(request: NextRequest) {
     // Validate query parameters
     const validation = safeValidate(ListRoomsQuerySchema, params)
     if (!validation.success) {
-      return NextResponse.json({ success: false, message: validation.error }, { status: 400 })
+      return NextResponse.json(
+        {
+          success: false,
+          message: validation.errors.errors[0]?.message || 'Invalid query parameters',
+        },
+        { status: 400 }
+      )
     }
 
     const { page, limit, location_id, room_type, floor, search, sort_by, sort_order } =
@@ -67,11 +73,11 @@ export async function GET(request: NextRequest) {
     const totalCount = parseInt(countResult.rows[0].count, 10)
 
     // Get paginated results
-    const offset = (page - 1) * limit
+    const offset = ((page ?? 1) - 1) * (limit ?? 50)
     const sortColumn = sort_by || 'room_name'
     const sortDirection = sort_order === 'desc' ? 'DESC' : 'ASC'
 
-    values.push(limit, offset)
+    values.push(limit ?? 50, offset)
     const roomsResult = await query<Room>(
       `SELECT * FROM rooms
        ${whereClause}
@@ -85,10 +91,10 @@ export async function GET(request: NextRequest) {
       data: {
         rooms: roomsResult.rows,
         pagination: {
-          page,
-          limit,
+          page: page ?? 1,
+          limit: limit ?? 50,
           total_count: totalCount,
-          total_pages: Math.ceil(totalCount / limit),
+          total_pages: Math.ceil(totalCount / (limit ?? 50)),
         },
       },
     })
@@ -117,7 +123,10 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const validation = safeValidate(CreateRoomSchema, body)
     if (!validation.success) {
-      return NextResponse.json({ success: false, message: validation.error }, { status: 400 })
+      return NextResponse.json(
+        { success: false, message: validation.errors.errors[0]?.message || 'Invalid request body' },
+        { status: 400 }
+      )
     }
 
     const {
