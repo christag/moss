@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getPool } from '@/lib/db'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { checkTablesExist } from '@/lib/initDatabase'
 
 // ============================================================================
 // Validation Schema
@@ -75,6 +76,18 @@ export async function GET() {
 // ============================================================================
 
 export async function POST(request: NextRequest) {
+  // First, check if database tables exist
+  const tablesExist = await checkTablesExist()
+  if (!tablesExist) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Database not initialized. Please initialize the database first.',
+      },
+      { status: 400 }
+    )
+  }
+
   const pool = getPool()
   const client = await pool.connect()
 

@@ -58,10 +58,12 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch('/api/companies?limit=200&sort_by=company_name&sort_order=asc')
+        const response = await fetch('/api/companies?sort_by=company_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
-          setCompanies(result.data?.companies || [])
+          if (result.success && result.data?.companies) {
+            setCompanies(result.data.companies)
+          }
         }
       } catch (error) {
         console.error('Error fetching companies:', error)
@@ -74,12 +76,12 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch(
-          '/api/locations?limit=100&sort_by=location_name&sort_order=asc'
-        )
+        const response = await fetch('/api/locations?sort_by=location_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
-          setLocations(result.data?.locations || [])
+          if (result.success && result.data?.locations) {
+            setLocations(result.data.locations)
+          }
         }
       } catch (error) {
         console.error('Error fetching locations:', error)
@@ -92,10 +94,12 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const response = await fetch('/api/rooms?limit=200&sort_by=room_name&sort_order=asc')
+        const response = await fetch('/api/rooms?sort_by=room_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
-          setRooms(result.data?.rooms || [])
+          if (result.success && result.data?.rooms) {
+            setRooms(result.data.rooms)
+          }
         }
       } catch (error) {
         console.error('Error fetching rooms:', error)
@@ -108,10 +112,12 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
   useEffect(() => {
     const fetchPeople = async () => {
       try {
-        const response = await fetch('/api/people?limit=200&sort_by=full_name&sort_order=asc')
+        const response = await fetch('/api/people?sort_by=full_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
-          setPeople(result.data?.people || [])
+          if (result.success && result.data?.people) {
+            setPeople(result.data.people)
+          }
         }
       } catch (error) {
         console.error('Error fetching people:', error)
@@ -125,11 +131,13 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
     const fetchParentDevices = async () => {
       try {
         const response = await fetch(
-          '/api/devices?device_type=chassis&limit=100&sort_by=hostname&sort_order=asc'
+          '/api/devices?device_type=chassis&sort_by=hostname&sort_order=asc'
         )
         if (response.ok) {
           const result = await response.json()
-          setParentDevices(result.data?.devices || [])
+          if (result.success && result.data?.devices) {
+            setParentDevices(result.data.devices)
+          }
         }
       } catch (error) {
         console.error('Error fetching parent devices:', error)

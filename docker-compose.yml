@@ -77,12 +77,16 @@ services:
   # ==========================================================================
   # M.O.S.S. Application
   # ==========================================================================
+  # NOTE: This configuration builds locally. For production deployment using
+  # pre-built images from GitHub Container Registry, use docker-compose.prod.yml
   app:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         NODE_ENV: production
+    # Alternative: Use pre-built image from GHCR (comment out 'build' above and uncomment below)
+    # image: ghcr.io/${GITHUB_REPOSITORY:-your-username/moss}:${IMAGE_TAG:-latest}
     container_name: moss_app
     restart: unless-stopped
     depends_on:

@@ -47,16 +47,26 @@ export default function ExpiringItemsWidget({
 
   useEffect(() => {
     fetchItems()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days, limit])
 
   async function fetchItems() {
     try {
       setLoading(true)
+      setError(null)
       const response = await fetch(`${apiEndpoint}?days=${days}&limit=${limit}`)
-      if (!response.ok) throw new Error('Failed to fetch items')
-      const data = await response.json()
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `HTTP ${response.status}: Failed to fetch items`)
+      }
+
+      const result = await response.json()
+      // Handle both direct array and { success, data } response formats
+      const data = Array.isArray(result) ? result : result.data || []
       setItems(data)
     } catch (err) {
+      console.error('Error fetching expiring items:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)

@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
-import { Navigation } from '@/components/Navigation'
 import { Providers } from '@/components/Providers'
+import { ConditionalNavigation } from '@/components/ConditionalNavigation'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={inter.variable}>
       <body>
         <Providers>
-          <Navigation />
+          <ConditionalNavigation />
           {children}
         </Providers>
       </body>

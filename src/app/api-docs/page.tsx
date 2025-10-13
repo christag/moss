@@ -41,6 +41,62 @@ export default function ApiDocsPage() {
         </p>
       </header>
 
+      {/* Security Warning - API is currently public */}
+      <ApiDocSection id="security-notice" title="⚠️ Security Notice" variant="warning">
+        <div
+          style={{
+            padding: 'var(--spacing-md)',
+            backgroundColor: 'rgba(253, 106, 61, 0.1)',
+            border: '2px solid var(--color-orange)',
+            borderRadius: 'var(--border-radius-md)',
+            marginBottom: 'var(--spacing-md)',
+          }}
+        >
+          <p style={{ marginBottom: 'var(--spacing-md)', fontSize: 'var(--font-size-md)' }}>
+            <strong style={{ color: 'var(--color-orange)' }}>
+              The M.O.S.S. API is currently publicly accessible without authentication.
+            </strong>
+          </p>
+          <p style={{ marginBottom: 'var(--spacing-md)' }}>
+            This configuration is suitable for <strong>development and internal use only</strong>.
+            All API routes are excluded from the authentication middleware and do not require bearer
+            tokens or other authentication headers.
+          </p>
+          <p style={{ marginBottom: 'var(--spacing-sm)' }}>
+            <strong>Important considerations:</strong>
+          </p>
+          <ul style={{ marginBottom: 'var(--spacing-md)', paddingLeft: 'var(--spacing-lg)' }}>
+            <li>
+              Do not expose this API to the public internet without implementing authentication
+            </li>
+            <li>For production deployments, configure API authentication via the Admin panel</li>
+            <li>
+              See the{' '}
+              <a
+                href="/docs/API-AUTHENTICATION-POLICY.md"
+                style={{
+                  color: 'var(--color-morning-blue)',
+                  textDecoration: 'underline',
+                }}
+              >
+                Authentication Policy
+              </a>{' '}
+              for production deployment recommendations
+            </li>
+          </ul>
+          <p
+            style={{
+              fontSize: 'var(--font-size-sm)',
+              color: 'var(--color-brew-black-60)',
+              margin: 0,
+            }}
+          >
+            The example code shown in this documentation includes authentication headers for
+            demonstration purposes, but they are not currently enforced by the API.
+          </p>
+        </div>
+      </ApiDocSection>
+
       {/* Quick Start */}
       <ApiDocSection id="quick-start" title="Quick Start" variant="info">
         <p style={{ marginBottom: 'var(--spacing-md)' }}>

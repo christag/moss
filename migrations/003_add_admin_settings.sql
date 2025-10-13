@@ -152,18 +152,21 @@ END;
 $$ language 'plpgsql';
 
 -- System settings
+DROP TRIGGER IF EXISTS update_system_settings_updated_at ON system_settings;
 CREATE TRIGGER update_system_settings_updated_at
     BEFORE UPDATE ON system_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Integrations
+DROP TRIGGER IF EXISTS update_integrations_updated_at ON integrations;
 CREATE TRIGGER update_integrations_updated_at
     BEFORE UPDATE ON integrations
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
 -- Custom fields
+DROP TRIGGER IF EXISTS update_custom_fields_updated_at ON custom_fields;
 CREATE TRIGGER update_custom_fields_updated_at
     BEFORE UPDATE ON custom_fields
     FOR EACH ROW

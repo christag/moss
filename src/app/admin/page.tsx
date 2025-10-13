@@ -22,6 +22,13 @@ export default async function AdminDashboardPage() {
     requiresSuperAdmin?: boolean
   }> = [
     {
+      title: 'General',
+      description: 'Configure site URL, timezone, and defaults',
+      icon: 'settings',
+      href: '/admin/general',
+      color: 'var(--color-morning-blue)',
+    },
+    {
       title: 'Branding',
       description: 'Customize site appearance, colors, and logo',
       icon: 'palette_paint_creative',

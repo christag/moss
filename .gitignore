@@ -97,6 +97,74 @@ SCHEMA-ALIGNMENT-PLAN.md
 UAT-*.md
 ENHANCED-*.md
 RELATIONSHIP-UI-IMPLEMENTATION-SUMMARY.md
+*-IMPLEMENTATION-SUMMARY.md
+*-DOCUMENTATION-STATUS.md
 
 # Testing directory with UAT results
 testing/
+
+# Screenshot and media files from testing/debugging
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.webm
+!public/**/*.png
+!public/**/*.jpg
+!public/**/*.jpeg
+!public/**/*.gif
+
+# Database dumps and backups
+*.sql.gz
+*.sql.zip
+dump-*.sql
+backup-*.sql
+db-backup-*
+
+# API documentation generated files
+api-docs-generated/
+openapi-generated.json
+
+# Performance and profiling
+*.cpuprofile
+*.heapprofile
+*.heapsnapshot
+
+# Lock files (keep package-lock.json ignored, use pnpm or yarn if needed)
+yarn.lock
+pnpm-lock.yaml
+
+# Local development overrides
+.env.development
+.env.local.backup
+config.local.js
+
+# MacOS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux specific
+.directory
+.Trash-*
+
+# Playwright browser binaries
+.cache/ms-playwright/
+
+# Next.js cache and telemetry
+.next/cache/
+.next/trace
+
+# npm/yarn/pnpm cache
+.npm
+.yarn/cache
+.yarn/unplugged
+.pnpm-store/

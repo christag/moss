@@ -35,10 +35,12 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch('/api/companies?limit=200&sort_by=company_name&sort_order=asc')
+        const response = await fetch('/api/companies?sort_by=company_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
-          setCompanies(result.data?.companies || [])
+          if (result.success && result.data?.companies) {
+            setCompanies(result.data.companies)
+          }
         }
       } catch (error) {
         console.error('Error fetching companies:', error)

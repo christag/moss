@@ -76,10 +76,20 @@ VALUES (
   true
 );
 
--- Insert test admin
+-- Insert test admin (primary test account)
 INSERT INTO users (id, email, password_hash, role, is_active)
 VALUES (
   '00000000-0000-0000-0000-000000000002',
+  'testadmin@moss.local',
+  '$2a$10$EixZaYVK9Y1FjQqQhqQJUOuSL8.dh7E3Xx6J7J7J7J7J7J7J7J7J7e', -- password: 'password'
+  'admin',
+  true
+);
+
+-- Insert test admin (legacy)
+INSERT INTO users (id, email, password_hash, role, is_active)
+VALUES (
+  '00000000-0000-0000-0000-000000000005',
   'testadmin@test.com',
   '$2a$10$K9YQkXZ7RqQqP5vK7X5J0eZDjH4FdFtZv4zP8Y2X7Z5J0eZDjH4FdF', -- password: 'admin123'
   'admin',
@@ -117,11 +127,14 @@ UPDATE system_settings SET value = true WHERE key = 'setup.completed';
 | Email | Password | Role | Purpose |
 |-------|----------|------|---------|
 | admin@test.com | admin123 | super_admin | Full system access, RBAC management |
-| testadmin@test.com | admin123 | admin | Admin panel access, no RBAC |
+| testadmin@moss.local | password | admin | Admin panel access, no RBAC |
+| testadmin@test.com | admin123 | admin | Admin panel access, no RBAC (legacy) |
 | user@test.com | user123 | user | Standard user access |
 | viewer@test.com | viewer123 | viewer | Read-only access |
 
 **Note**: These are bcrypt-hashed test passwords. In production, use strong passwords and never commit credentials to version control.
+
+**Primary Test Account**: Use `testadmin@moss.local` with password `password` for standard admin testing.
 
 ### Regenerating Password Hashes
 

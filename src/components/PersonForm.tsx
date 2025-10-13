@@ -46,26 +46,34 @@ export function PersonForm({ person, onSuccess, onCancel }: PersonFormProps) {
     const fetchData = async () => {
       try {
         const [companiesRes, locationsRes, managersRes] = await Promise.all([
-          fetch('/api/companies?limit=200&sort_by=company_name&sort_order=asc'),
-          fetch('/api/locations?limit=200&sort_by=location_name&sort_order=asc'),
-          fetch('/api/people?limit=200&sort_by=full_name&sort_order=asc'),
+          fetch('/api/companies?sort_by=company_name&sort_order=asc'),
+          fetch('/api/locations?sort_by=location_name&sort_order=asc'),
+          fetch('/api/people?sort_by=full_name&sort_order=asc'),
         ])
 
         if (companiesRes.ok) {
           const result = await companiesRes.json()
-          setCompanies(result.data?.companies || [])
+          if (result.success && result.data?.companies) {
+            setCompanies(result.data.companies)
+          }
         }
 
         if (locationsRes.ok) {
           const result = await locationsRes.json()
-          setLocations(result.data?.locations || [])
+          if (result.success && result.data?.locations) {
+            setLocations(result.data.locations)
+          }
         }
 
         if (managersRes.ok) {
           const result = await managersRes.json()
-          // Filter out current person from managers list if editing
-          const allPeople = result.data?.people || []
-          setManagers(isEditMode ? allPeople.filter((p: Person) => p.id !== person?.id) : allPeople)
+          if (result.success && result.data?.people) {
+            // Filter out current person from managers list if editing
+            const allPeople = result.data.people
+            setManagers(
+              isEditMode ? allPeople.filter((p: Person) => p.id !== person?.id) : allPeople
+            )
+          }
         }
       } catch (err) {
         console.error('Error fetching form data:', err)

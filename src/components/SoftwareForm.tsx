@@ -29,13 +29,11 @@ export function SoftwareForm({ software, onSuccess, onCancel }: SoftwareFormProp
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/companies?limit=100&sort_by=company_name&sort_order=asc')
+    fetch('/api/companies?sort_by=company_name&sort_order=asc')
       .then((res) => res.json())
       .then((result) => {
         if (result.success && result.data?.companies) {
           setCompanies(result.data.companies)
-        } else {
-          setCompanies([])
         }
       })
       .catch(() => setCompanies([]))

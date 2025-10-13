@@ -78,7 +78,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/companies',
         method: 'GET',
         description: 'List all companies with optional filtering, searching, and pagination.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -241,7 +241,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/companies',
         method: 'POST',
         description: 'Create a new company.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'user',
         requestBody: {
           contentType: 'application/json',
@@ -351,7 +351,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/companies/[id]',
         method: 'GET',
         description: 'Get a specific company by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -379,7 +379,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/companies/[id]',
         method: 'PUT',
         description: 'Update an existing company.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -402,7 +402,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/companies/[id]',
         method: 'DELETE',
         description: 'Delete a company.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -433,7 +433,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/devices',
         method: 'GET',
         description: 'List all devices with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -549,7 +549,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/devices',
         method: 'POST',
         description: 'Create a new device.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           schema: {
@@ -620,7 +620,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/people',
         method: 'GET',
         description: 'List all people with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -761,7 +761,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/people',
         method: 'POST',
         description: 'Create a new person.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           schema: {
@@ -819,7 +819,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/people/[id]',
         method: 'GET',
         description: 'Get a specific person by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -840,7 +840,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/people/[id]',
         method: 'PUT',
         description: 'Update an existing person.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -857,7 +857,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/people/[id]',
         method: 'DELETE',
         description: 'Delete a person.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -882,7 +882,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/locations',
         method: 'GET',
         description: 'List all locations with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -1013,7 +1013,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/locations',
         method: 'POST',
         description: 'Create a new location.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           schema: {
@@ -1074,7 +1074,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/locations/[id]',
         method: 'GET',
         description: 'Get a specific location by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -1095,7 +1095,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/locations/[id]',
         method: 'PUT',
         description: 'Update an existing location.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -1112,7 +1112,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/locations/[id]',
         method: 'DELETE',
         description: 'Delete a location.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -1137,7 +1137,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/networks',
         method: 'GET',
         description: 'List all networks with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -1251,7 +1251,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/networks',
         method: 'POST',
         description: 'Create a new network.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           schema: {
@@ -1313,7 +1313,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/networks/[id]',
         method: 'GET',
         description: 'Get a specific network by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -1334,7 +1334,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/networks/[id]',
         method: 'PUT',
         description: 'Update an existing network.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -1351,7 +1351,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/networks/[id]',
         method: 'DELETE',
         description: 'Delete a network.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -1377,7 +1377,7 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description:
           'Search across devices, people, locations, networks, software, SaaS services, documents, and contracts.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'q',
@@ -1431,7 +1431,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/rooms',
         method: 'GET',
         description: 'List all rooms with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -1556,7 +1556,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/rooms',
         method: 'POST',
         description: 'Create a new room.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           description: 'Room creation data',
@@ -1648,7 +1648,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/rooms/[id]',
         method: 'GET',
         description: 'Retrieve a specific room by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -1688,7 +1688,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/rooms/[id]',
         method: 'PUT',
         description: 'Update an existing room.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -1758,7 +1758,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/rooms/[id]',
         method: 'DELETE',
         description: 'Delete a room. Requires admin role.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -1795,7 +1795,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ios',
         method: 'GET',
         description: 'List all interfaces/ports with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -1964,7 +1964,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ios',
         method: 'POST',
         description: 'Create a new interface/port.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           description: 'IO creation data',
@@ -2142,7 +2142,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ios/[id]',
         method: 'GET',
         description: 'Retrieve a specific interface/port by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -2181,7 +2181,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ios/[id]',
         method: 'PUT',
         description: 'Update an existing interface/port.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -2237,7 +2237,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ios/[id]',
         method: 'DELETE',
         description: 'Delete an interface/port. Requires admin role.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -2273,7 +2273,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ip-addresses',
         method: 'GET',
         description: 'List all IP addresses with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -2407,7 +2407,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ip-addresses',
         method: 'POST',
         description: 'Create a new IP address assignment.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           description: 'IP address creation data',
@@ -2494,7 +2494,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ip-addresses/[id]',
         method: 'GET',
         description: 'Retrieve a specific IP address by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -2531,7 +2531,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ip-addresses/[id]',
         method: 'PUT',
         description: 'Update an existing IP address assignment.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -2588,7 +2588,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/ip-addresses/[id]',
         method: 'DELETE',
         description: 'Delete an IP address assignment. Requires admin role.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -2626,7 +2626,7 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description:
           'List all software products with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -2741,7 +2741,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/software',
         method: 'POST',
         description: 'Create a new software product in the catalog.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           description: 'Software creation data',
@@ -2813,7 +2813,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/software/[id]',
         method: 'GET',
         description: 'Retrieve a specific software product by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -2849,7 +2849,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/software/[id]',
         method: 'PUT',
         description: 'Update an existing software product.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -2902,7 +2902,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/software/[id]',
         method: 'DELETE',
         description: 'Delete a software product. Requires admin role.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -2939,7 +2939,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/saas-services',
         method: 'GET',
         description: 'List all SaaS services with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -3104,7 +3104,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/saas-services',
         method: 'POST',
         description: 'Create a new SaaS service instance.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           description: 'SaaS service creation data',
@@ -3278,7 +3278,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/saas-services/[id]',
         method: 'GET',
         description: 'Retrieve a specific SaaS service by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -3314,7 +3314,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/saas-services/[id]',
         method: 'PUT',
         description: 'Update an existing SaaS service.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -3369,7 +3369,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/saas-services/[id]',
         method: 'DELETE',
         description: 'Delete a SaaS service. Requires admin role.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -3407,7 +3407,7 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description:
           'List all installed applications with filtering, searching, and pagination support.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'search',
@@ -3552,7 +3552,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/installed-applications',
         method: 'POST',
         description: 'Create a new installed application record.',
-        authentication: 'required',
+        authentication: 'none',
         requestBody: {
           contentType: 'application/json',
           description: 'Installed application creation data',
@@ -3646,7 +3646,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/installed-applications/[id]',
         method: 'GET',
         description: 'Retrieve a specific installed application by ID.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -3681,7 +3681,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/installed-applications/[id]',
         method: 'PUT',
         description: 'Update an existing installed application.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'id',
@@ -3735,7 +3735,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/installed-applications/[id]',
         method: 'DELETE',
         description: 'Delete an installed application record. Requires admin role.',
-        authentication: 'required',
+        authentication: 'none',
         roleRequired: 'admin',
         parameters: [
           {
@@ -3772,7 +3772,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/roles',
         method: 'GET',
         description: 'Get all roles with optional filtering.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -3847,7 +3847,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/roles',
         method: 'POST',
         description: 'Create a new role with permissions.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['super_admin'],
         parameters: [
           {
@@ -3905,7 +3905,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/roles/[id]',
         method: 'GET',
         description: 'Get a specific role with all permissions and assignments.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -3957,7 +3957,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/roles/[id]',
         method: 'PUT',
         description: 'Update role details and permissions. System roles cannot be modified.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['super_admin'],
         parameters: [
           {
@@ -4028,7 +4028,7 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description:
           'Export data to CSV format. Supports devices, people, locations, rooms, companies, and networks. All query filters from list endpoints are supported.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [
           {
             name: 'objectType',
@@ -4086,7 +4086,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/settings',
         method: 'GET',
         description: 'Get all system settings or filter by category.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -4124,7 +4124,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/settings',
         method: 'PUT',
         description: 'Update one or more system settings. Logs changes to audit log.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -4154,7 +4154,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/settings/branding',
         method: 'GET',
         description: 'Get all branding settings (site name, logo, colors).',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [],
         responses: [
@@ -4181,7 +4181,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/settings/storage',
         method: 'PUT',
         description: 'Update storage backend configuration (local, NFS, SMB, S3).',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['super_admin'],
         parameters: [
           {
@@ -4223,7 +4223,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/integrations',
         method: 'GET',
         description: 'Get all configured integrations.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -4277,7 +4277,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/integrations',
         method: 'POST',
         description: 'Create a new integration configuration.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['super_admin'],
         parameters: [
           {
@@ -4345,7 +4345,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/integrations/[id]/sync',
         method: 'POST',
         description: 'Manually trigger a sync for an integration. Creates a sync log entry.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -4377,7 +4377,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/admin/integrations/[id]/logs',
         method: 'GET',
         description: 'Get sync logs for an integration with success/failure details.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -4437,7 +4437,7 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description:
           'Get admin action audit logs with filtering by user, action, category, and date range.',
-        authentication: 'required',
+        authentication: 'none',
         roles: ['admin', 'super_admin'],
         parameters: [
           {
@@ -4596,7 +4596,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/auth/session',
         method: 'GET',
         description: 'Get current user session information.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [],
         responses: [
           {
@@ -4627,7 +4627,7 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/auth/signout',
         method: 'POST',
         description: 'Sign out and invalidate current session.',
-        authentication: 'required',
+        authentication: 'none',
         parameters: [],
         responses: [
           {

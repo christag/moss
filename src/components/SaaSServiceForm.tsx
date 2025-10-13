@@ -51,7 +51,7 @@ export function SaaSServiceForm({ service, onSuccess, onCancel }: SaaSServiceFor
   useEffect(() => {
     // Fetch dropdowns
     Promise.all([
-      fetch('/api/software?limit=100&sort_by=product_name&sort_order=asc').then((r) => r.json()),
+      fetch('/api/software?sort_by=product_name&sort_order=asc').then((r) => r.json()),
     ]).then(([swRes]) => {
       if (swRes.success && Array.isArray(swRes.data)) setSoftware(swRes.data)
     })

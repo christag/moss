@@ -44,11 +44,11 @@ export function SoftwareLicenseForm({ license, onSuccess, onCancel }: SoftwareLi
   useEffect(() => {
     // Fetch dropdowns
     Promise.all([
-      fetch('/api/software?limit=100&sort_by=product_name&sort_order=asc').then((r) => r.json()),
-      fetch('/api/companies?limit=100&sort_by=company_name&sort_order=asc').then((r) => r.json()),
+      fetch('/api/software?sort_by=product_name&sort_order=asc').then((r) => r.json()),
+      fetch('/api/companies?sort_by=company_name&sort_order=asc').then((r) => r.json()),
     ]).then(([swRes, compRes]) => {
       if (swRes.success && Array.isArray(swRes.data)) setSoftware(swRes.data)
-      if (compRes.success && Array.isArray(compRes.data)) setCompanies(compRes.data)
+      if (compRes.success && compRes.data?.companies) setCompanies(compRes.data.companies)
     })
   }, [])
 

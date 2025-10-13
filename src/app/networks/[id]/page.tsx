@@ -12,6 +12,7 @@ import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDe
 import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
 import { Badge } from '@/components/ui/Badge'
 import { AttachmentsTab } from '@/components/AttachmentsTab'
+import { SubnetVisualization } from '@/components/SubnetVisualization'
 import type { Network, IO, IPAddress, Device } from '@/types'
 
 export default function NetworkDetailPage() {
@@ -352,6 +353,11 @@ export default function NetworkDetailPage() {
           limit={50}
         />
       ),
+    },
+    {
+      id: 'subnet-visual',
+      label: 'Subnet Map',
+      content: <SubnetVisualization networkId={id} />,
     },
     {
       id: 'ip-addresses',

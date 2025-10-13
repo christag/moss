@@ -12,6 +12,8 @@ import type {
   NetworkType,
   Location,
 } from '@/types'
+import { CIDRCalculator } from '@/components/CIDRCalculator'
+import type { CIDRCalculation } from '@/lib/cidr-utils'
 
 interface NetworkFormProps {
   network?: Network
@@ -35,6 +37,7 @@ export function NetworkForm({ network, onSuccess, onCancel }: NetworkFormProps) 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [locations, setLocations] = useState<Location[]>([])
+  const [showCIDRCalculator, setShowCIDRCalculator] = useState(false)
 
   // Form state
   const [formData, setFormData] = useState<CreateNetworkInput>({
@@ -56,9 +59,7 @@ export function NetworkForm({ network, onSuccess, onCancel }: NetworkFormProps) 
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch(
-          '/api/locations?limit=100&sort_by=location_name&sort_order=asc'
-        )
+        const response = await fetch('/api/locations?sort_by=location_name&sort_order=asc')
         const result = await response.json()
         if (result.success && Array.isArray(result.data)) {
           setLocations(result.data)
@@ -123,6 +124,17 @@ export function NetworkForm({ network, onSuccess, onCancel }: NetworkFormProps) 
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const handleApplyCIDR = (calculation: CIDRCalculation) => {
+    // Apply calculated network address to form
+    setFormData((prev) => ({
+      ...prev,
+      network_address: `${calculation.networkAddress}/${calculation.cidrNotation}`,
+      gateway: calculation.firstUsableIP, // Suggest first usable IP as gateway
+    }))
+    // Optionally collapse the calculator after applying
+    setShowCIDRCalculator(false)
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="card">
@@ -173,18 +185,53 @@ export function NetworkForm({ network, onSuccess, onCancel }: NetworkFormProps) 
           </div>
 
           {/* Network Address */}
-          <div>
+          <div style={{ gridColumn: '1 / -1' }}>
             <label htmlFor="network_address" className="block mb-2 font-bold">
               Network Address (CIDR)
             </label>
-            <input
-              type="text"
-              id="network_address"
-              value={formData.network_address}
-              onChange={(e) => handleChange('network_address', e.target.value)}
-              className="w-full p-2 border rounded"
-              placeholder="e.g., 192.168.1.0/24"
-            />
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <input
+                type="text"
+                id="network_address"
+                value={formData.network_address}
+                onChange={(e) => handleChange('network_address', e.target.value)}
+                className="w-full p-2 border rounded"
+                placeholder="e.g., 192.168.1.0/24"
+                style={{ flex: 1 }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowCIDRCalculator(!showCIDRCalculator)}
+                className="btn-outline"
+                style={{
+                  padding: '0.5rem 1rem',
+                  whiteSpace: 'nowrap',
+                  backgroundColor: showCIDRCalculator ? 'var(--color-light-blue)' : 'transparent',
+                }}
+              >
+                {showCIDRCalculator ? 'Hide' : 'Show'} Calculator
+              </button>
+            </div>
+
+            {/* CIDR Calculator - Collapsible */}
+            {showCIDRCalculator && (
+              <div
+                style={{
+                  marginTop: '1rem',
+                  padding: '1.5rem',
+                  border: '2px solid var(--color-morning-blue)',
+                  borderRadius: '8px',
+                  backgroundColor: 'var(--color-off-white)',
+                }}
+              >
+                <CIDRCalculator
+                  initialValue={formData.network_address}
+                  onApply={handleApplyCIDR}
+                  showApplyButton={true}
+                  compact={false}
+                />
+              </div>
+            )}
           </div>
 
           {/* VLAN ID */}

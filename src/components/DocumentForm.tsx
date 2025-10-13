@@ -31,11 +31,11 @@ export default function DocumentForm({ initialData, isEdit = false }: DocumentFo
 
   useEffect(() => {
     // Fetch people for author dropdown
-    fetch('/api/people')
+    fetch('/api/people?sort_by=last_name&sort_order=asc')
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && Array.isArray(data.data)) {
-          setPeople(data.data)
+        if (data.success && data.data?.people) {
+          setPeople(data.data.people)
         }
       })
       .catch((err) => console.error('Error fetching people:', err))

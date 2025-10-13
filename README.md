@@ -26,32 +26,72 @@ M.O.S.S. is a modern alternative to other IT inventory products, built specifica
 
 ### Prerequisites
 
-- PostgreSQL 14+
-- Node.js 18+
-- Modern browser (Chrome, Firefox, Safari, Edge)
+- **For Docker Deployment** (Recommended):
+  - Docker 20.10+
+  - Docker Compose 2.0+
 
-### Installation
+- **For Development**:
+  - PostgreSQL 14+
+  - Node.js 18+
+  - Modern browser (Chrome, Firefox, Safari, Edge)
+
+### Docker Deployment (Production)
+
+Deploy using pre-built images from GitHub Container Registry:
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/moss.git
 cd moss
 
-# Set up the database
-psql -U postgres -f dbsetup.sql
+# Create production environment file
+cp .env.production.example .env.production
+# Edit .env.production with your settings (see Docker Deployment Guide)
+
+# Pull and start services
+docker compose -f docker-compose.prod.yml --env-file .env.production pull
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d
+
+# View logs
+docker compose -f docker-compose.prod.yml logs -f app
+```
+
+The application will be available at `http://localhost:3000` (or your configured domain).
+
+📚 **Full Docker Deployment Guide**: See [docs/docker-deployment.md](docs/docker-deployment.md) for complete instructions including:
+- Using pre-built images from GHCR
+- Environment configuration
+- Reverse proxy setup
+- Backup and restore
+- Upgrading and monitoring
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/moss.git
+cd moss
 
 # Install dependencies
 npm install
 
-# Configure environment
+# Configure environment (optional - defaults work for local PostgreSQL)
 cp .env.example .env
-# Edit .env with your database credentials
+# Edit .env with your database credentials if needed
 
 # Start development server
 npm run dev
 ```
 
-The application will be available at `http://localhost:3000`
+The application will be available at `http://localhost:3001`
+
+On first launch, visit `/setup` to complete the initialization wizard. The setup will:
+1. Automatically create the database
+2. Create all tables and schema
+3. Guide you through creating your admin account
+4. Set up your primary organization
+
+**No manual database setup required!** The setup wizard handles everything automatically.
 
 ---
 

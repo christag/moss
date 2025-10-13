@@ -40,7 +40,7 @@ export function InstalledApplicationForm({
 
   useEffect(() => {
     // Fetch software catalog
-    fetch('/api/software?limit=100&sort_by=product_name&sort_order=asc')
+    fetch('/api/software?sort_by=product_name&sort_order=asc')
       .then((r) => r.json())
       .then((result) => {
         if (result.success && Array.isArray(result.data)) setSoftware(result.data)

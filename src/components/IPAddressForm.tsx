@@ -70,7 +70,7 @@ export function IPAddressForm({ ipAddress, onSuccess, onCancel }: IPAddressFormP
 
   useEffect(() => {
     // Fetch IOs
-    fetch('/api/ios?limit=100&sort_by=interface_name&sort_order=asc')
+    fetch('/api/ios?sort_by=interface_name&sort_order=asc')
       .then((res) => res.json())
       .then((result) => {
         if (result.success && Array.isArray(result.data)) {
@@ -82,7 +82,7 @@ export function IPAddressForm({ ipAddress, onSuccess, onCancel }: IPAddressFormP
       .catch(() => setIos([]))
 
     // Fetch Networks
-    fetch('/api/networks?limit=100&sort_by=network_name&sort_order=asc')
+    fetch('/api/networks?sort_by=network_name&sort_order=asc')
       .then((res) => res.json())
       .then((result) => {
         if (result.success && Array.isArray(result.data)) {

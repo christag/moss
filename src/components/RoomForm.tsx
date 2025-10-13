@@ -38,12 +38,12 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await fetch(
-          '/api/locations?limit=100&sort_by=location_name&sort_order=asc'
-        )
+        const response = await fetch('/api/locations?sort_by=location_name&sort_order=asc')
         if (response.ok) {
           const result = await response.json()
-          setLocations(result.data?.locations || [])
+          if (result.success && result.data?.locations) {
+            setLocations(result.data.locations)
+          }
         }
       } catch (error) {
         console.error('Error fetching locations:', error)

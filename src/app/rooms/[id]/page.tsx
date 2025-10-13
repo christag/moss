@@ -10,7 +10,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
 import { AttachmentsTab } from '@/components/AttachmentsTab'
-import type { Room, Location } from '@/types'
+import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
+import type { Room, Location, Device, Document } from '@/types'
 
 export default function RoomDetailPage() {
   const router = useRouter()
@@ -159,6 +160,56 @@ export default function RoomDetailPage() {
     },
   ]
 
+  // Define column configurations for related items
+  const deviceColumns: RelatedColumn<Device>[] = [
+    { key: 'hostname', label: 'Hostname' },
+    {
+      key: 'device_type',
+      label: 'Type',
+      render: (device) => {
+        const type = device.device_type || ''
+        return type
+          .split('_')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+      },
+    },
+    { key: 'model', label: 'Model' },
+    { key: 'serial_number', label: 'Serial Number' },
+    { key: 'status', label: 'Status' },
+  ]
+
+  const patchPanelColumns: RelatedColumn<Device>[] = [
+    { key: 'hostname', label: 'Name' },
+    { key: 'model', label: 'Model' },
+    { key: 'serial_number', label: 'Serial Number' },
+    { key: 'status', label: 'Status' },
+  ]
+
+  const documentColumns: RelatedColumn<Document>[] = [
+    { key: 'title', label: 'Title' },
+    {
+      key: 'document_type',
+      label: 'Type',
+      render: (doc) => {
+        const type = doc.document_type || ''
+        return type
+          .split('_')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ')
+      },
+    },
+    { key: 'status', label: 'Status' },
+    { key: 'version', label: 'Version' },
+    {
+      key: 'updated_at',
+      label: 'Last Updated',
+      render: (doc) => {
+        return doc.updated_at ? new Date(doc.updated_at).toLocaleDateString() : '—'
+      },
+    },
+  ]
+
   // Define tabs
   const tabs: TabConfig[] = [
     {
@@ -170,36 +221,45 @@ export default function RoomDetailPage() {
       id: 'devices',
       label: 'Devices',
       content: (
-        <div className="tab-content">
-          <p className="text-muted">Devices in this room will appear here.</p>
-          <p className="text-muted">
-            <em>Device functionality coming soon...</em>
-          </p>
-        </div>
+        <RelatedItemsList<Device>
+          apiEndpoint={`/api/devices?room_id=${id}`}
+          columns={deviceColumns}
+          linkPattern="/devices/:id"
+          addButtonLabel="Add Device"
+          onAdd={() => router.push(`/devices/new?room_id=${id}`)}
+          emptyMessage="No devices found in this room"
+          limit={50}
+        />
       ),
     },
     {
       id: 'patch-panels',
       label: 'Patch Panels',
       content: (
-        <div className="tab-content">
-          <p className="text-muted">Patch panels in this room will appear here.</p>
-          <p className="text-muted">
-            <em>Patch panel functionality coming soon...</em>
-          </p>
-        </div>
+        <RelatedItemsList<Device>
+          apiEndpoint={`/api/devices?room_id=${id}&device_type=patch_panel`}
+          columns={patchPanelColumns}
+          linkPattern="/devices/:id"
+          addButtonLabel="Add Patch Panel"
+          onAdd={() => router.push(`/devices/new?room_id=${id}&device_type=patch_panel`)}
+          emptyMessage="No patch panels found in this room"
+          limit={50}
+        />
       ),
     },
     {
       id: 'documentation',
       label: 'Documentation',
       content: (
-        <div className="tab-content">
-          <p className="text-muted">Documentation for this room will appear here.</p>
-          <p className="text-muted">
-            <em>Documentation functionality coming soon...</em>
-          </p>
-        </div>
+        <RelatedItemsList<Document>
+          apiEndpoint={`/api/rooms/${id}/documents`}
+          columns={documentColumns}
+          linkPattern="/documents/:id"
+          addButtonLabel="Link Document"
+          onAdd={() => router.push(`/documents?room_id=${id}`)}
+          emptyMessage="No documentation linked to this room"
+          limit={50}
+        />
       ),
     },
     {

@@ -371,7 +371,9 @@ export function Navigation() {
                       e.currentTarget.style.backgroundColor = 'transparent'
                     }}
                     onClick={() => {
-                      signOut({ callbackUrl: '/login' })
+                      // Use window.location.origin to ensure we redirect to the current FQDN
+                      const callbackUrl = `${window.location.origin}/login`
+                      signOut({ callbackUrl })
                       setUserMenuOpen(false)
                     }}
                   >

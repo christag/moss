@@ -391,6 +391,7 @@ export type NetworkType =
 export interface Network {
   id: UUID
   location_id?: UUID | null
+  parent_network_id?: UUID | null
   network_name: string
   network_address?: string | null
   vlan_id?: number | null
@@ -408,6 +409,7 @@ export interface Network {
 
 export interface CreateNetworkInput {
   location_id?: UUID
+  parent_network_id?: UUID
   network_name: string
   network_address?: string
   vlan_id?: number
@@ -423,6 +425,7 @@ export interface CreateNetworkInput {
 
 export interface UpdateNetworkInput {
   location_id?: UUID | null
+  parent_network_id?: UUID | null
   network_name?: string
   network_address?: string | null
   vlan_id?: number | null

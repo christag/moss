@@ -127,30 +127,28 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
     const fetchDropdownData = async () => {
       try {
         // Fetch devices
-        const devicesRes = await fetch('/api/devices?limit=100&sort_by=hostname&sort_order=asc')
+        const devicesRes = await fetch('/api/devices?sort_by=hostname&sort_order=asc')
         const devicesData = await devicesRes.json()
-        if (devicesData.success && Array.isArray(devicesData.data)) {
-          setDevices(devicesData.data)
+        if (devicesData.success && devicesData.data?.devices) {
+          setDevices(devicesData.data.devices)
         }
 
         // Fetch rooms
-        const roomsRes = await fetch('/api/rooms?limit=100&sort_by=room_name&sort_order=asc')
+        const roomsRes = await fetch('/api/rooms?sort_by=room_name&sort_order=asc')
         const roomsData = await roomsRes.json()
-        if (roomsData.success && Array.isArray(roomsData.data)) {
-          setRooms(roomsData.data)
+        if (roomsData.success && roomsData.data?.rooms) {
+          setRooms(roomsData.data.rooms)
         }
 
         // Fetch networks
-        const networksRes = await fetch(
-          '/api/networks?limit=100&sort_by=network_name&sort_order=asc'
-        )
+        const networksRes = await fetch('/api/networks?sort_by=network_name&sort_order=asc')
         const networksData = await networksRes.json()
         if (networksData.success && Array.isArray(networksData.data)) {
           setNetworks(networksData.data)
         }
 
         // Fetch IOs (for connected_to_io_id)
-        const iosRes = await fetch('/api/ios?limit=100&sort_by=interface_name&sort_order=asc')
+        const iosRes = await fetch('/api/ios?sort_by=interface_name&sort_order=asc')
         const iosData = await iosRes.json()
         if (iosData.success && Array.isArray(iosData.data)) {
           // Filter out current IO if editing
@@ -529,7 +527,7 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
                   <h4 className="text-h5 mb-3">Tagged VLANs (Trunk Configuration)</h4>
                   <JunctionTableManager<Network>
                     currentItems={taggedNetworks}
-                    availableItemsEndpoint="/api/networks?limit=100&sort_by=network_name&sort_order=asc"
+                    availableItemsEndpoint="/api/networks?sort_by=network_name&sort_order=asc"
                     getItemLabel={(network) =>
                       `${network.network_name}${network.vlan_id ? ` (VLAN ${network.vlan_id})` : ''}`
                     }
