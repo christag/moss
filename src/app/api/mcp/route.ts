@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamable-http.js'
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { validateMCPAuth } from '@/lib/mcp/auth'
 import { initializeMCPServer } from '@/lib/mcp/server'
 import { getPool } from '@/lib/db'
