@@ -5,19 +5,33 @@
 
 # Stage 1: Dependencies
 FROM node:22-alpine AS deps
-RUN apk add --no-cache libc6-compat
+# Install system dependencies needed for native npm packages
+RUN apk add --no-cache \
+    libc6-compat \
+    python3 \
+    make \
+    g++ \
+    postgresql-dev
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
 # Install ALL dependencies (including devDependencies needed for build)
-RUN npm ci && \
+# Set HUSKY=0 to skip git hooks installation in Docker
+RUN HUSKY=0 npm ci && \
     npm cache clean --force
 
 # ============================================================================
 # Stage 2: Builder
 FROM node:22-alpine AS builder
+# Install system dependencies for build stage
+RUN apk add --no-cache \
+    libc6-compat \
+    python3 \
+    make \
+    g++ \
+    postgresql-dev
 WORKDIR /app
 
 # Copy dependencies from deps stage
@@ -36,6 +50,10 @@ RUN npm run build
 # ============================================================================
 # Stage 3: Runner (Production)
 FROM node:22-alpine AS runner
+# Install runtime dependencies
+RUN apk add --no-cache \
+    libc6-compat \
+    libpq
 WORKDIR /app
 
 # Set production environment
