@@ -24,7 +24,7 @@ const SetupSchema = z
 
     // Primary Company
     companyName: z.string().min(1),
-    companyWebsite: z.string().url().optional().or(z.literal('')),
+    companyWebsite: z.union([z.string().url(), z.literal('')]).optional(),
     companyAddress: z.string().optional(),
     companyCity: z.string().optional(),
     companyState: z.string().optional(),
