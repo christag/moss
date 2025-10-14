@@ -14,9 +14,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false, // Keep TypeScript checks enabled
   },
-  env: {
-    DATABASE_URL: process.env.DATABASE_URL || 'postgresql://moss:moss_dev_password@192.168.64.2:5432/moss',
-  },
+  // Note: DATABASE_URL and other sensitive runtime variables should NOT be in the 'env' config
+  // They should be passed as environment variables at runtime (docker-compose, etc.)
 }
 
 export default nextConfig
