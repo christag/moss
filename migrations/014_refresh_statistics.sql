@@ -31,6 +31,7 @@ ANALYZE ip_addresses;
 -- ============================================================================
 ANALYZE software;
 ANALYZE saas_services;
+ANALYZE saas_service_integrations;
 ANALYZE installed_applications;
 ANALYZE software_licenses;
 
@@ -41,7 +42,7 @@ ANALYZE groups;
 ANALYZE group_members;
 ANALYZE group_saas_services;
 ANALYZE group_installed_applications;
-ANALYZE group_software_licenses;
+-- ANALYZE group_software_licenses; -- Table does not exist
 
 -- ============================================================================
 -- Documentation Tables
@@ -54,47 +55,69 @@ ANALYZE contracts;
 -- Document Association Tables
 -- ============================================================================
 ANALYZE document_devices;
-ANALYZE document_ios;
+-- ANALYZE document_ios; -- Table does not exist
 ANALYZE document_networks;
 ANALYZE document_locations;
 ANALYZE document_rooms;
 ANALYZE document_saas_services;
+ANALYZE document_installed_applications;
+ANALYZE external_document_devices;
+ANALYZE external_document_networks;
+ANALYZE external_document_people;
+ANALYZE external_document_rooms;
+ANALYZE external_document_saas_services;
+ANALYZE external_document_companies;
+ANALYZE external_document_installed_applications;
+ANALYZE contract_devices;
+ANALYZE contract_software;
+ANALYZE contract_saas_services;
 
 -- ============================================================================
 -- Assignment Junction Tables
 -- ============================================================================
 ANALYZE person_saas_services;
-ANALYZE person_installed_applications;
-ANALYZE person_software_licenses;
+-- ANALYZE person_installed_applications; -- Table does not exist
+-- ANALYZE person_software_licenses; -- Table does not exist
+ANALYZE license_saas_services;
+ANALYZE license_installed_applications;
+ANALYZE license_people;
+ANALYZE installed_application_devices;
 
 -- ============================================================================
 -- Authentication & RBAC Tables
 -- ============================================================================
 ANALYZE users;
+ANALYZE sessions;
+ANALYZE verification_tokens;
 ANALYZE roles;
 ANALYZE permissions;
+ANALYZE role_permissions;
 ANALYZE role_assignments;
+ANALYZE role_assignment_locations;
 ANALYZE object_permissions;
 
 -- ============================================================================
--- File Attachment Tables
+-- File Attachment Tables (Not yet implemented)
 -- ============================================================================
-ANALYZE company_attachments;
-ANALYZE contract_attachments;
-ANALYZE device_attachments;
-ANALYZE document_attachments;
-ANALYZE location_attachments;
-ANALYZE network_attachments;
-ANALYZE person_attachments;
-ANALYZE room_attachments;
-ANALYZE saas_service_attachments;
-ANALYZE software_attachments;
+-- ANALYZE company_attachments; -- Table does not exist
+-- ANALYZE contract_attachments; -- Table does not exist
+-- ANALYZE device_attachments; -- Table does not exist
+-- ANALYZE document_attachments; -- Table does not exist
+-- ANALYZE location_attachments; -- Table does not exist
+-- ANALYZE network_attachments; -- Table does not exist
+-- ANALYZE person_attachments; -- Table does not exist
+-- ANALYZE room_attachments; -- Table does not exist
+-- ANALYZE saas_service_attachments; -- Table does not exist
+-- ANALYZE software_attachments; -- Table does not exist
 
 -- ============================================================================
 -- System Tables
 -- ============================================================================
 ANALYZE system_settings;
-ANALYZE admin_audit_log;
+ANALYZE integrations;
+ANALYZE integration_sync_logs;
+ANALYZE custom_fields;
+-- ANALYZE admin_audit_log; -- Table does not exist
 
 -- ============================================================================
 -- Summary Report
