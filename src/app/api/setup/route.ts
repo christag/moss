@@ -27,7 +27,16 @@ const SetupSchema = z
     companyWebsite: z
       .string()
       .optional()
-      .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), {
+      .transform((val) => {
+        if (!val || val.trim() === '') return ''
+        const trimmed = val.trim()
+        // Auto-add https:// if missing
+        if (trimmed && !trimmed.match(/^https?:\/\//i)) {
+          return `https://${trimmed}`
+        }
+        return trimmed
+      })
+      .refine((val) => !val || val === '' || /^https?:\/\/.+\..+/i.test(val), {
         message: 'Must be a valid URL or empty',
       }),
 

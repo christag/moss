@@ -162,9 +162,31 @@ export default function SetupWizardPage() {
   // Handlers
   // ============================================================================
 
+  const normalizeUrl = (url: string): string => {
+    if (!url || url.trim() === '') return ''
+    const trimmed = url.trim()
+    // If it looks like a domain but has no protocol, add https://
+    if (trimmed && !trimmed.match(/^https?:\/\//i)) {
+      return `https://${trimmed}`
+    }
+    return trimmed
+  }
+
   const handleInputChange = (field: keyof SetupData, value: string) => {
-    setData((prev) => ({ ...prev, [field]: value }))
+    // Auto-fix URL if user leaves the field
+    if (field === 'companyWebsite') {
+      setData((prev) => ({ ...prev, [field]: value }))
+    } else {
+      setData((prev) => ({ ...prev, [field]: value }))
+    }
     setError(null)
+  }
+
+  const handleUrlBlur = () => {
+    if (data.companyWebsite) {
+      const normalized = normalizeUrl(data.companyWebsite)
+      setData((prev) => ({ ...prev, companyWebsite: normalized }))
+    }
   }
 
   const validateStep = (currentStep: SetupStep): boolean => {
@@ -202,6 +224,14 @@ export default function SetupWizardPage() {
       if (!data.locationName) {
         setError('Location name is required')
         return false
+      }
+      // Validate URL format if provided
+      if (data.companyWebsite && data.companyWebsite.trim() !== '') {
+        const urlPattern = /^https?:\/\/.+\..+/i
+        if (!urlPattern.test(data.companyWebsite)) {
+          setError('Please enter a valid website URL (e.g., https://example.com)')
+          return false
+        }
       }
     }
 
@@ -294,7 +324,9 @@ export default function SetupWizardPage() {
             )}
             {step === 1 && <Step1Welcome />}
             {step === 2 && <Step2AdminUser data={data} onChange={handleInputChange} />}
-            {step === 3 && <Step3Company data={data} onChange={handleInputChange} />}
+            {step === 3 && (
+              <Step3Company data={data} onChange={handleInputChange} onUrlBlur={handleUrlBlur} />
+            )}
             {step === 4 && <Step4Preferences data={data} onChange={handleInputChange} />}
             {step === 5 && <Step5Complete />}
           </div>
@@ -846,6 +878,7 @@ function Step1Welcome() {
 interface StepProps {
   data: SetupData
   onChange: (field: keyof SetupData, value: string) => void
+  onUrlBlur?: () => void
 }
 
 function Step2AdminUser({ data, onChange }: StepProps) {
@@ -920,7 +953,7 @@ function Step2AdminUser({ data, onChange }: StepProps) {
   )
 }
 
-function Step3Company({ data, onChange }: StepProps) {
+function Step3Company({ data, onChange, onUrlBlur }: StepProps) {
   return (
     <>
       <div className="form-step">
@@ -940,7 +973,8 @@ function Step3Company({ data, onChange }: StepProps) {
           type="url"
           value={data.companyWebsite}
           onChange={(e) => onChange('companyWebsite', e.target.value)}
-          placeholder="https://www.example.com"
+          onBlur={onUrlBlur}
+          placeholder="example.com (https:// will be added automatically)"
         />
 
         <div className="section-divider">
