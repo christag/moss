@@ -192,7 +192,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(
     if (typeof value === 'string') {
       sanitized[key] = sanitizeString(value, options)
     } else if (typeof value === 'object' && value !== null) {
-      sanitized[key] = sanitizeObject(value, options)
+      sanitized[key] = sanitizeObject(value as Record<string, unknown>, options)
     } else {
       sanitized[key] = value
     }
@@ -289,9 +289,11 @@ export function sanitizeRequestBody<T extends Record<string, unknown>>(
   })
 
   // Sanitize rich text fields with HTML allowed
+  // Use type assertion for modification
+  const mutableSanitized = sanitized as Record<string, unknown>
   for (const field of richTextFields) {
-    if (field in sanitized && typeof sanitized[field] === 'string') {
-      sanitized[field] = sanitizeString(sanitized[field], {
+    if (field in mutableSanitized && typeof mutableSanitized[field] === 'string') {
+      mutableSanitized[field] = sanitizeString(mutableSanitized[field] as string, {
         allowHTML,
         allowLinks,
       })
