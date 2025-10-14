@@ -193,7 +193,6 @@ services:
 
     volumes:
       - uploads_data:/app/uploads
-      - ./migrations:/app/migrations:ro
     ports:
       - "${APP_PORT:-3000}:${PORT:-3000}"
     networks:
