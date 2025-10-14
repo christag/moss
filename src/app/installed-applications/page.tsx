@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { InstalledApplication, DeploymentStatus } from '@/types'
@@ -248,29 +248,30 @@ export default function InstalledApplicationsPage() {
 
   return (
     <>
-      <GenericListView
-        title="Installed Applications"
-        columns={ALL_COLUMNS}
-        data={applications}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search applications..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Application"
-        emptyMessage="No installed applications found. Add your first application to get started."
-        rowLink={(app) => `/installed-applications/${app.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Installed Applications"
+          columns={ALL_COLUMNS}
+          data={applications}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search applications..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Application"
+          emptyMessage="No installed applications found. Add your first application to get started."
+          rowLink={(app) => `/installed-applications/${app.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
       <style jsx global>{`
         .text-muted {
           color: var(--color-brew-black-40);

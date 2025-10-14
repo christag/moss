@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { SaaSService, SaaSStatus, SaaSEnvironment, SaaSCriticality } from '@/types'
@@ -424,28 +424,30 @@ export default function SaaSServicesPage() {
 
   return (
     <>
-      <GenericListView
-        title="SaaS Services"
-        columns={ALL_COLUMNS}
-        data={services}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search SaaS services..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Service"
-        emptyMessage="No SaaS services found. Add your first service to get started."
-        rowLink={(service) => `/saas-services/${service.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="SaaS Services"
+          columns={ALL_COLUMNS}
+          data={services}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search SaaS services..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Service"
+          emptyMessage="No SaaS services found. Add your first service to get started."
+          rowLink={(service) => `/saas-services/${service.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
 
       <style jsx global>{`
         .text-muted {

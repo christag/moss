@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Device, DeviceType, DeviceStatus } from '@/types'
@@ -305,32 +305,33 @@ export default function DevicesPage() {
 
   return (
     <>
-      <GenericListView
-        title="Devices"
-        columns={ALL_COLUMNS}
-        data={devices}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search by hostname, serial number, model, or asset tag..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Device"
-        emptyMessage="No devices found. Add your first device to get started."
-        rowLink={(device) => `/devices/${device.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-        enableExport={true}
-        exportObjectType="devices"
-        exportObjectTypeName="Devices"
-      />
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Devices"
+          columns={ALL_COLUMNS}
+          data={devices}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search by hostname, serial number, model, or asset tag..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Device"
+          emptyMessage="No devices found. Add your first device to get started."
+          rowLink={(device) => `/devices/${device.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+          enableExport={true}
+          exportObjectType="devices"
+          exportObjectTypeName="Devices"
+        />
+      </Suspense>
       <style jsx global>{`
         .text-muted {
           color: var(--color-brew-black-40);

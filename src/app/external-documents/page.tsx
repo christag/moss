@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import { Icon } from '@/components/ui'
@@ -287,23 +287,25 @@ export default function ExternalDocumentsPage() {
   }
 
   return (
-    <GenericListView<ExternalDocument>
-      title="External Documents"
-      data={documents}
-      columns={ALL_COLUMNS}
-      pagination={pagination}
-      loading={loading}
-      searchValue={searchValue}
-      onSearch={setSearchValue}
-      filterValues={filterValues}
-      onFilterChange={handleFilterChange}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      onSort={setSortBy}
-      onAdd={handleAdd}
-      searchPlaceholder="Search external documents by title or description..."
-      emptyMessage="No external documents found. Add your first external document to get started."
-      rowLink={(doc) => `/external-documents/${doc.id}`}
-    />
+    <Suspense fallback={<div>Loading...</div>}>
+      <GenericListView<ExternalDocument>
+        title="External Documents"
+        data={documents}
+        columns={ALL_COLUMNS}
+        pagination={pagination}
+        loading={loading}
+        searchValue={searchValue}
+        onSearch={setSearchValue}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={setSortBy}
+        onAdd={handleAdd}
+        searchPlaceholder="Search external documents by title or description..."
+        emptyMessage="No external documents found. Add your first external document to get started."
+        rowLink={(doc) => `/external-documents/${doc.id}`}
+      />
+    </Suspense>
   )
 }

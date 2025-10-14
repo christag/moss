@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Contract, ContractType } from '@/types'
@@ -311,23 +311,25 @@ export default function ContractsPage() {
   }
 
   return (
-    <GenericListView<Contract>
-      title="Contracts"
-      data={contracts}
-      columns={ALL_COLUMNS}
-      pagination={pagination}
-      loading={loading}
-      searchValue={searchValue}
-      onSearch={setSearchValue}
-      filterValues={filterValues}
-      onFilterChange={handleFilterChange}
-      sortBy={sortBy}
-      sortOrder={sortOrder}
-      onSort={setSortBy}
-      onAdd={handleAdd}
-      searchPlaceholder="Search contracts by name or contract number..."
-      emptyMessage="No contracts found. Add your first contract to get started."
-      rowLink={(contract) => `/contracts/${contract.id}`}
-    />
+    <Suspense fallback={<div>Loading...</div>}>
+      <GenericListView<Contract>
+        title="Contracts"
+        data={contracts}
+        columns={ALL_COLUMNS}
+        pagination={pagination}
+        loading={loading}
+        searchValue={searchValue}
+        onSearch={setSearchValue}
+        filterValues={filterValues}
+        onFilterChange={handleFilterChange}
+        sortBy={sortBy}
+        sortOrder={sortOrder}
+        onSort={setSortBy}
+        onAdd={handleAdd}
+        searchPlaceholder="Search contracts by name or contract number..."
+        emptyMessage="No contracts found. Add your first contract to get started."
+        rowLink={(contract) => `/contracts/${contract.id}`}
+      />
+    </Suspense>
   )
 }

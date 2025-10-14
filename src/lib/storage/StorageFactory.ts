@@ -23,10 +23,10 @@ async function getStorageSettings(): Promise<StorageSettings> {
     `SELECT key, value FROM system_settings WHERE category = 'storage'`
   )
 
-  const settings: Partial<StorageSettings> = {}
+  const settings: Record<string, unknown> = {}
 
   for (const row of result.rows) {
-    const key = row.key.replace('storage.', '') as keyof StorageSettings
+    const key = row.key.replace('storage.', '')
     // Parse JSON values
     try {
       settings[key] = JSON.parse(row.value as string)
@@ -38,19 +38,26 @@ async function getStorageSettings(): Promise<StorageSettings> {
   // Set defaults if not configured
   return {
     backend: (settings.backend as 'local' | 's3' | 'nfs' | 'smb') || 'local',
-    local_path: settings.local_path || '/var/moss/uploads',
-    s3_bucket: settings.s3_bucket || null,
-    s3_region: settings.s3_region || null,
-    s3_access_key: settings.s3_access_key || null,
-    s3_secret_key: settings.s3_secret_key || null,
-    s3_endpoint: settings.s3_endpoint || null,
-    nfs_host: settings.nfs_host || null,
-    nfs_path: settings.nfs_path || null,
-    nfs_options: settings.nfs_options || null,
-    smb_host: settings.smb_host || null,
-    smb_share: settings.smb_share || null,
-    smb_username: settings.smb_username || null,
-    smb_password: settings.smb_password || null,
+    local: {
+      path: (settings.local_path as string) || '/var/moss/uploads',
+    },
+    s3: {
+      bucket: (settings.s3_bucket as string) || null,
+      region: (settings.s3_region as string) || '',
+      access_key: (settings.s3_access_key as string) || null,
+      secret_key: (settings.s3_secret_key as string) || null,
+      endpoint: (settings.s3_endpoint as string) || null,
+    },
+    nfs: {
+      server: (settings.nfs_host as string) || null,
+      path: (settings.nfs_path as string) || null,
+    },
+    smb: {
+      server: (settings.smb_host as string) || null,
+      share: (settings.smb_share as string) || null,
+      username: (settings.smb_username as string) || null,
+      password: (settings.smb_password as string) || null,
+    },
   }
 }
 
@@ -70,27 +77,27 @@ export async function getStorageAdapter(): Promise<StorageAdapter> {
   switch (settings.backend) {
     case 'local': {
       cachedAdapter = new LocalStorageAdapter({
-        basePath: settings.local_path || '/var/moss/uploads',
+        basePath: settings.local?.path || '/var/moss/uploads',
       })
       break
     }
 
     case 's3': {
       if (
-        !settings.s3_bucket ||
-        !settings.s3_region ||
-        !settings.s3_access_key ||
-        !settings.s3_secret_key
+        !settings.s3?.bucket ||
+        !settings.s3?.region ||
+        !settings.s3?.access_key ||
+        !settings.s3?.secret_key
       ) {
         throw new Error('S3 storage is not properly configured')
       }
 
       cachedAdapter = new S3StorageAdapter({
-        bucket: settings.s3_bucket,
-        region: settings.s3_region,
-        accessKeyId: settings.s3_access_key,
-        secretAccessKey: settings.s3_secret_key,
-        endpoint: settings.s3_endpoint || undefined,
+        bucket: settings.s3.bucket,
+        region: settings.s3.region,
+        accessKeyId: settings.s3.access_key,
+        secretAccessKey: settings.s3.secret_key,
+        endpoint: settings.s3.endpoint || undefined,
       })
       break
     }

@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { IPAddress, IPAddressType } from '@/types'
@@ -256,26 +256,28 @@ export default function IPAddressesPage() {
           </button>
         </div>
       </div>
-      <GenericListView
-        title="IP Addresses"
-        columns={ALL_COLUMNS}
-        data={ipAddresses}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search IP addresses..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        emptyMessage="No IP addresses found. Add your first IP address to get started."
-        rowLink={(ip) => `/ip-addresses/${ip.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="IP Addresses"
+          columns={ALL_COLUMNS}
+          data={ipAddresses}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search IP addresses..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          emptyMessage="No IP addresses found. Add your first IP address to get started."
+          rowLink={(ip) => `/ip-addresses/${ip.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
 
       <style jsx global>{`
         .text-muted {

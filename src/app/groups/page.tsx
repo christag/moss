@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Group, GroupType } from '@/types'
@@ -191,28 +191,30 @@ export default function GroupsPage() {
 
   return (
     <>
-      <GenericListView
-        title="Groups"
-        columns={ALL_COLUMNS}
-        data={groups}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search groups..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Group"
-        emptyMessage="No groups found. Create your first group to get started."
-        rowLink={(group) => `/groups/${group.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Groups"
+          columns={ALL_COLUMNS}
+          data={groups}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search groups..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Group"
+          emptyMessage="No groups found. Create your first group to get started."
+          rowLink={(group) => `/groups/${group.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
 
       <style jsx global>{`
         .text-muted {

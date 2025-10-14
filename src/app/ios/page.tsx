@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { IO, InterfaceType, IOStatus, MediaType } from '@/types'
@@ -364,29 +364,30 @@ export default function IOsPage() {
 
   return (
     <>
-      <GenericListView
-        title="Interfaces & Ports"
-        columns={ALL_COLUMNS}
-        data={ios}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search interfaces..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Interface"
-        emptyMessage="No interfaces found. Add your first interface to get started."
-        rowLink={(io) => `/ios/${io.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Interfaces & Ports"
+          columns={ALL_COLUMNS}
+          data={ios}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search interfaces..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Interface"
+          emptyMessage="No interfaces found. Add your first interface to get started."
+          rowLink={(io) => `/ios/${io.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
       <style jsx global>{`
         .text-muted {
           color: var(--color-brew-black-40);

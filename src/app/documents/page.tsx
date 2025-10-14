@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Document, DocumentType, DocumentStatus } from '@/types'
@@ -278,29 +278,30 @@ export default function DocumentsPage() {
 
   return (
     <>
-      <GenericListView
-        title="Documents"
-        columns={ALL_COLUMNS}
-        data={documents}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search documents..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Document"
-        emptyMessage="No documents found. Create your first document to get started."
-        rowLink={(doc) => `/documents/${doc.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Documents"
+          columns={ALL_COLUMNS}
+          data={documents}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search documents..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Document"
+          emptyMessage="No documents found. Create your first document to get started."
+          rowLink={(doc) => `/documents/${doc.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
       <style jsx global>{`
         .text-muted {
           color: var(--color-brew-black-40);

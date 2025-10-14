@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Company } from '@/types'
@@ -252,29 +252,30 @@ export default function CompaniesPage() {
 
   return (
     <>
-      <GenericListView
-        title="Companies"
-        columns={ALL_COLUMNS}
-        data={companies}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search companies..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Company"
-        emptyMessage="No companies found. Create your first company to get started."
-        rowLink={(company) => `/companies/${company.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Companies"
+          columns={ALL_COLUMNS}
+          data={companies}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search companies..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Company"
+          emptyMessage="No companies found. Create your first company to get started."
+          rowLink={(company) => `/companies/${company.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
       <style jsx global>{`
         .link {
           color: var(--color-morning-blue);

@@ -5,7 +5,7 @@
  */
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
 import type { Software, SoftwareCategory } from '@/types'
@@ -199,29 +199,30 @@ export default function SoftwarePage() {
 
   return (
     <>
-      <GenericListView
-        title="Software Catalog"
-        columns={ALL_COLUMNS}
-        data={software}
-        pagination={pagination}
-        filterValues={filterValues}
-        searchPlaceholder="Search software..."
-        searchValue={searchValue}
-        sortBy={sortBy}
-        sortOrder={sortOrder}
-        loading={loading}
-        onSearch={handleSearch}
-        onFilterChange={handleFilterChange}
-        onSort={handleSort}
-        onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add Software"
-        emptyMessage="No software found. Add your first software to get started."
-        rowLink={(sw) => `/software/${sw.id}`}
-        enableColumnManagement={true}
-        enablePerColumnFiltering={true}
-      />
-
+      <Suspense fallback={<div>Loading...</div>}>
+        <GenericListView
+          title="Software Catalog"
+          columns={ALL_COLUMNS}
+          data={software}
+          pagination={pagination}
+          filterValues={filterValues}
+          searchPlaceholder="Search software..."
+          searchValue={searchValue}
+          sortBy={sortBy}
+          sortOrder={sortOrder}
+          loading={loading}
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          onSort={handleSort}
+          onPageChange={handlePageChange}
+          onAdd={handleAdd}
+          addButtonLabel="Add Software"
+          emptyMessage="No software found. Add your first software to get started."
+          rowLink={(sw) => `/software/${sw.id}`}
+          enableColumnManagement={true}
+          enablePerColumnFiltering={true}
+        />
+      </Suspense>
       <style jsx global>{`
         .text-muted {
           color: var(--color-brew-black-40);
