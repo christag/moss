@@ -42,7 +42,7 @@ const adminRoutes = ['/admin']
 const authRoutes = ['/login']
 
 // Routes that should always be accessible (even during setup)
-const publicRoutes = ['/setup', '/api/setup', '/api/health']
+const publicRoutes = ['/setup', '/api/setup', '/api/health', '/login', '/api/auth']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl

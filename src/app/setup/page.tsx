@@ -80,8 +80,28 @@ export default function SetupWizardPage() {
   // ============================================================================
 
   React.useEffect(() => {
-    checkDatabaseStatus()
+    checkSetupStatus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const checkSetupStatus = async () => {
+    // First check if setup is already completed
+    try {
+      const setupResponse = await fetch('/api/setup')
+      const setupResult = await setupResponse.json()
+
+      if (setupResult.success && setupResult.setupCompleted) {
+        // Setup is already complete, redirect to login
+        router.push('/login')
+        return
+      }
+    } catch {
+      // If setup check fails, continue to database check
+    }
+
+    // If setup is not complete, check database status
+    checkDatabaseStatus()
+  }
 
   const checkDatabaseStatus = async () => {
     setCheckingStatus(true)
@@ -216,10 +236,10 @@ export default function SetupWizardPage() {
       // Move to completion step
       setStep(5)
 
-      // Redirect to login after 3 seconds
+      // Redirect to login after 1.5 seconds
       setTimeout(() => {
-        router.push('/login')
-      }, 3000)
+        window.location.href = '/login'
+      }, 1500)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Setup failed')
       setLoading(false)
