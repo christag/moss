@@ -253,9 +253,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Set cookie to indicate setup is complete (for middleware)
+    // Only use secure flag if actually using HTTPS
+    const isSecure =
+      request.headers.get('x-forwarded-proto') === 'https' || request.url.startsWith('https://')
+
     response.cookies.set('moss-setup-completed', 'true', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: isSecure,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 365 * 10, // 10 years
       path: '/',
