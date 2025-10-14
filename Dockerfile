@@ -71,6 +71,10 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Copy database setup files
+COPY --from=builder /app/dbsetup.sql ./dbsetup.sql
+COPY --from=builder /app/migrations ./migrations
+
 # Create uploads directory for local storage
 RUN mkdir -p /app/uploads && \
     chown -R nextjs:nodejs /app/uploads
