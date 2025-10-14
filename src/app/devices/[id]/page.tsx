@@ -12,6 +12,7 @@ import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDe
 import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
 import { Badge } from '@/components/ui/Badge'
 import { AttachmentsTab } from '@/components/AttachmentsTab'
+import { DeviceDuplicates } from '@/components/DeviceDuplicates'
 import type { Device, Company, Location, Room, Person, IO, InstalledApplication } from '@/types'
 
 export default function DeviceDetailPage() {
@@ -437,6 +438,11 @@ export default function DeviceDetailPage() {
           limit={50}
         />
       ),
+    },
+    {
+      id: 'duplicates',
+      label: 'Potential Duplicates',
+      content: <DeviceDuplicates deviceId={id} onDelete={() => setDevice(null)} />,
     },
     {
       id: 'attachments',
