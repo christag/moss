@@ -2,17 +2,8 @@
 -- Purpose: Improve JOIN performance on foreign key columns
 -- Addresses: DEF-ROUND2-MASTER-009 - Missing Foreign Key Indexes
 
--- Attachment tables - attached_by indexes (8 indexes)
-CREATE INDEX IF NOT EXISTS idx_company_attachments_attached_by ON company_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_contract_attachments_attached_by ON contract_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_device_attachments_attached_by ON device_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_document_attachments_attached_by ON document_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_location_attachments_attached_by ON location_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_network_attachments_attached_by ON network_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_person_attachments_attached_by ON person_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_room_attachments_attached_by ON room_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_saas_service_attachments_attached_by ON saas_service_attachments(attached_by);
-CREATE INDEX IF NOT EXISTS idx_software_attachments_attached_by ON software_attachments(attached_by);
+-- Note: Attachment tables will be created in migration 007 when implemented
+-- For now, we skip attachment table indexes to avoid errors
 
 -- Device relationships (2 indexes)
 CREATE INDEX IF NOT EXISTS idx_devices_company_id ON devices(company_id);
@@ -33,5 +24,5 @@ ANALYZE;
 -- Log completion
 DO $$
 BEGIN
-  RAISE NOTICE 'Migration 010 complete: Added 15 foreign key indexes';
+  RAISE NOTICE 'Migration 010 complete: Added 5 foreign key indexes';
 END $$;
