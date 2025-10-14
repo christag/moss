@@ -69,6 +69,7 @@ export function FileUpload({
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [uploadingFiles, maxFiles, objectType, objectId, onUploadComplete]
   )
 

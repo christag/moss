@@ -1,5 +1,4 @@
 import React from 'react'
-/* import Image from 'next/image'
 
 export type IconName =
   | 'magnifying-glass-search'
@@ -29,6 +28,14 @@ export type IconName =
   | 'pencil-edit'
   | 'chevron-down'
   | 'chevron-up'
+  | 'settings'
+  | 'arrow_back'
+  | 'arrow_forward'
+  | 'download'
+  | 'description'
+  | 'warning'
+  | 'check_circle'
+  | 'upload'
 
 export interface IconProps extends Omit<React.HTMLAttributes<HTMLImageElement>, 'src'> {
   name: IconName
@@ -59,6 +66,7 @@ export function Icon({
   const numericSize = typeof size === 'number' ? size : parseInt(size as string, 10)
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element
     <img
       src={iconPath}
       alt={ariaLabel || ''}

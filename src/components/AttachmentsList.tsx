@@ -30,6 +30,7 @@ export function AttachmentsList({
   // Fetch attachments
   useEffect(() => {
     fetchAttachments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [objectType, objectId])
 
   const fetchAttachments = async () => {

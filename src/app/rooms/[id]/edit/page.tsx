@@ -39,8 +39,8 @@ export default function EditRoomPage() {
     fetchRoom()
   }, [id])
 
-  const handleSuccess = (room: Room) => {
-    router.push(`/rooms/${room.id}`)
+  const handleSuccess = () => {
+    router.push(`/rooms/${id}`)
   }
 
   const handleCancel = () => {

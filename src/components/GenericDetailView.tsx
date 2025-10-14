@@ -150,7 +150,7 @@ export function GenericDetailView({
   const currentTab = tabs?.find((tab) => tab.id === activeTab)
 
   // Keyboard navigation for tabs
-  const handleTabKeyDown = (e: React.KeyboardEvent, tabId: string, index: number) => {
+  const handleTabKeyDown = (e: React.KeyboardEvent, _tabId: string, index: number) => {
     if (!tabs) return
 
     switch (e.key) {

@@ -19,6 +19,15 @@ export type CompanyType =
   | 'customer'
   | 'other'
 
+export type LocationType =
+  | 'office'
+  | 'datacenter'
+  | 'colo'
+  | 'remote'
+  | 'warehouse'
+  | 'studio'
+  | 'broadcast_facility'
+
 export type PersonType =
   | 'employee'
   | 'contractor'

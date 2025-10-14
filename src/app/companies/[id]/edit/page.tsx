@@ -44,9 +44,9 @@ export default function EditCompanyPage({ params }: EditCompanyPageProps) {
     fetchCompany()
   }, [id])
 
-  const handleSuccess = (updatedCompany: Company) => {
+  const handleSuccess = () => {
     // Navigate back to the company's detail page
-    router.push(`/companies/${updatedCompany.id}`)
+    router.push(`/companies/${id}`)
   }
 
   const handleCancel = () => {

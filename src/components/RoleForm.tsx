@@ -33,6 +33,7 @@ export default function RoleForm({ role, onSubmit, onCancel }: RoleFormProps) {
 
   useEffect(() => {
     fetchRoles()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const fetchRoles = async () => {

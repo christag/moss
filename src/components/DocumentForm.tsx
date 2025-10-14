@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import type { Document, Person } from '@/types'
+import type { Document, Person, DocumentStatus } from '@/types'
 
 interface DocumentFormProps {
   initialData?: Document
@@ -116,7 +116,7 @@ export default function DocumentForm({ initialData, isEdit = false }: DocumentFo
           {Array.isArray(people) &&
             people.map((person) => (
               <option key={person.id} value={person.id}>
-                {person.first_name} {person.last_name}
+                {person.full_name}
               </option>
             ))}
         </select>
@@ -152,7 +152,7 @@ export default function DocumentForm({ initialData, isEdit = false }: DocumentFo
         <select
           id="status"
           value={formData.status}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+          onChange={(e) => setFormData({ ...formData, status: e.target.value as DocumentStatus })}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         >
           <option value="draft">Draft</option>

@@ -8,13 +8,13 @@
 import React, { useState, useEffect } from 'react'
 import { GenericForm, FieldConfig } from '@/components/GenericForm'
 import { CreateDeviceSchema, UpdateDeviceSchema } from '@/lib/schemas/device'
-import type { Device, Company, Location, Room, Person } from '@/types'
+import type { Device, DeviceStatus, Company, Location, Room, Person } from '@/types'
 
 interface DeviceFormProps {
   /** Edit mode: provide existing device data */
   device?: Device
   /** Callback after successful create/update */
-  onSuccess?: (device: Device) => void
+  onSuccess?: (device: unknown) => void
   /** Callback on cancel */
   onCancel?: () => void
 }
@@ -321,7 +321,7 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
     ? {
         hostname: device.hostname || '',
         device_type: device.device_type || '',
-        status: device.status || 'active',
+        status: (device.status || 'active') as DeviceStatus,
         manufacturer: device.manufacturer || '',
         model: device.model || '',
         serial_number: device.serial_number || '',
@@ -347,7 +347,7 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
           : '',
         notes: device.notes || '',
       }
-    : { status: 'active' }
+    : { status: 'active' as DeviceStatus }
 
   return (
     <GenericForm

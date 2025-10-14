@@ -244,7 +244,7 @@ export function NetworkForm({ network, onSuccess, onCancel }: NetworkFormProps) 
               id="vlan_id"
               value={formData.vlan_id || ''}
               onChange={(e) =>
-                handleChange('vlan_id', e.target.value ? parseInt(e.target.value) : undefined)
+                handleChange('vlan_id', e.target.value ? parseInt(e.target.value) : '')
               }
               min="1"
               max="4094"

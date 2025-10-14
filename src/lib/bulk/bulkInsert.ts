@@ -3,7 +3,7 @@
  * Generic function for efficient multi-row INSERT operations
  */
 
-import { PoolClient } from 'pg'
+import { PoolClient, QueryResultRow } from 'pg'
 import { query as dbQuery } from '@/lib/db'
 
 /**
@@ -22,7 +22,7 @@ import { query as dbQuery } from '@/lib/db'
  * ]
  * const result = await bulkInsert('devices', ['hostname', 'device_type'], devices)
  */
-export async function bulkInsert<T = Record<string, unknown>>(
+export async function bulkInsert<T extends QueryResultRow = Record<string, unknown>>(
   table: string,
   columns: string[],
   rows: Record<string, unknown>[],

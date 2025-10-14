@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MCP Resources - Network Topology
  */

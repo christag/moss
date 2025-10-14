@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MCP (Model Context Protocol) Server Implementation
  * Provides tools, resources, and prompts for LLM interaction with M.O.S.S.

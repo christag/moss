@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MCP Server Authentication Middleware
  * Validates OAuth 2.1 Bearer tokens

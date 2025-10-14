@@ -127,7 +127,7 @@ function escapeHTML(value: string): string {
  */
 function sanitizeLinks(value: string): string {
   // Match anchor tags and validate href
-  return value.replace(/<a\b[^>]*href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, (match, href, text) => {
+  return value.replace(/<a\b[^>]*href=["']([^"']*)["'][^>]*>(.*?)<\/a>/gi, (_match, href, text) => {
     // Only allow http, https, and mailto protocols
     const safeProtocols = /^(https?:|mailto:)/i
     if (!safeProtocols.test(href)) {
@@ -176,7 +176,7 @@ export function sanitizeObject<T extends Record<string, unknown>>(
   }
 
   if (Array.isArray(obj)) {
-    return obj.map((item) => sanitizeObject(item, options)) as T
+    return obj.map((item) => sanitizeObject(item, options)) as unknown as T
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

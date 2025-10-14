@@ -35,6 +35,7 @@ export default function RoleDetailPage() {
   useEffect(() => {
     fetchRole()
     fetchPermissions()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleId])
 
   const fetchRole = async () => {

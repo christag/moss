@@ -7,14 +7,14 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { DeviceForm } from '@/components/DeviceForm'
-import type { Device } from '@/types'
 
 export default function NewDevicePage() {
   const router = useRouter()
 
-  const handleSuccess = (device: Device) => {
+  const handleSuccess = (device: unknown) => {
     // Navigate to the newly created device's detail page
-    router.push(`/devices/${device.id}`)
+    const deviceData = device as { id: string }
+    router.push(`/devices/${deviceData.id}`)
   }
 
   const handleCancel = () => {

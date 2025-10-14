@@ -39,9 +39,9 @@ export default function EditDevicePage() {
     fetchDevice()
   }, [id])
 
-  const handleSuccess = (updatedDevice: Device) => {
+  const handleSuccess = () => {
     // Navigate back to the device detail page
-    router.push(`/devices/${updatedDevice.id}`)
+    router.push(`/devices/${id}`)
   }
 
   const handleCancel = () => {

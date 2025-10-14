@@ -39,8 +39,8 @@ export default function EditLocationPage() {
     fetchLocation()
   }, [id])
 
-  const handleSuccess = (location: Location) => {
-    router.push(`/locations/${location.id}`)
+  const handleSuccess = () => {
+    router.push(`/locations/${id}`)
   }
 
   const handleCancel = () => {

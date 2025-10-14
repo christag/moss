@@ -8,13 +8,13 @@
 import React, { useState, useEffect } from 'react'
 import { GenericForm, FieldConfig } from '@/components/GenericForm'
 import { CreateLocationSchema, UpdateLocationSchema } from '@/lib/schemas/location'
-import type { Location, Company } from '@/types'
+import type { Location, LocationType, Company } from '@/types'
 
 interface LocationFormProps {
   /** Edit mode: provide existing location data */
   location?: Location
   /** Callback after successful create/update */
-  onSuccess?: (location: Location) => void
+  onSuccess?: (location: unknown) => void
   /** Callback on cancel */
   onCancel?: () => void
 }
@@ -158,7 +158,7 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
         state: location.state || '',
         zip: location.zip || '',
         country: location.country || '',
-        location_type: location.location_type || '',
+        location_type: (location.location_type || null) as LocationType | null,
         timezone: location.timezone || '',
         contact_phone: location.contact_phone || '',
         access_instructions: location.access_instructions || '',

@@ -7,13 +7,13 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { RoomForm } from '@/components/RoomForm'
-import type { Room } from '@/types'
 
 export default function NewRoomPage() {
   const router = useRouter()
 
-  const handleSuccess = (room: Room) => {
-    router.push(`/rooms/${room.id}`)
+  const handleSuccess = (room: unknown) => {
+    const roomData = room as { id: string }
+    router.push(`/rooms/${roomData.id}`)
   }
 
   const handleCancel = () => {

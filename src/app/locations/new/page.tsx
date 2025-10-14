@@ -7,13 +7,13 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { LocationForm } from '@/components/LocationForm'
-import type { Location } from '@/types'
 
 export default function NewLocationPage() {
   const router = useRouter()
 
-  const handleSuccess = (location: Location) => {
-    router.push(`/locations/${location.id}`)
+  const handleSuccess = (location: unknown) => {
+    const locationData = location as { id: string }
+    router.push(`/locations/${locationData.id}`)
   }
 
   const handleCancel = () => {

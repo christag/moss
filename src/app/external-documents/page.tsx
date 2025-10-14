@@ -279,6 +279,7 @@ export default function ExternalDocumentsPage() {
 
   useEffect(() => {
     fetchDocuments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue, filterValues, sortBy, sortOrder])
 
   const handleAdd = () => {

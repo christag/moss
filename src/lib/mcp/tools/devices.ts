@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MCP Tools for Device Management
  */

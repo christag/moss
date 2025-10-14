@@ -20,6 +20,7 @@ export type FieldType =
   | 'text'
   | 'email'
   | 'url'
+  | 'tel'
   | 'number'
   | 'select'
   | 'textarea'
@@ -95,7 +96,7 @@ export function GenericForm<T extends z.ZodType>({
     const initialData: Record<string, string | number | boolean | null> = {}
     fields.forEach((field) => {
       if (initialValues[field.name] !== undefined) {
-        initialData[field.name] = initialValues[field.name]
+        initialData[field.name] = initialValues[field.name] as string | number | boolean | null
       } else if (field.defaultValue !== undefined) {
         initialData[field.name] = field.defaultValue
       } else if (field.type === 'checkbox') {
@@ -163,7 +164,9 @@ export function GenericForm<T extends z.ZodType>({
     setSubmitError(null)
 
     // Clean up form data - convert empty strings to undefined for optional fields
-    const cleanedData = { ...formData }
+    const cleanedData: Record<string, string | number | boolean | null | undefined> = {
+      ...formData,
+    }
     fields.forEach((field) => {
       const value = cleanedData[field.name]
 
@@ -255,10 +258,12 @@ export function GenericForm<T extends z.ZodType>({
   const renderField = (field: FieldConfig) => {
     if (field.hidden) return null
 
+    const fieldValue = formData[field.name]
+    const stringValue = fieldValue === null || fieldValue === undefined ? '' : String(fieldValue)
     const commonProps = {
       id: field.name,
       name: field.name,
-      value: formData[field.name] ?? '',
+      value: field.type === 'checkbox' ? fieldValue : stringValue,
       disabled: field.disabled || isSubmitting,
       error: errors[field.name],
       helperText: field.helpText,
@@ -274,7 +279,14 @@ export function GenericForm<T extends z.ZodType>({
       case 'select':
         return (
           <Select
-            {...commonProps}
+            id={commonProps.id}
+            name={commonProps.name}
+            value={stringValue}
+            disabled={commonProps.disabled}
+            error={commonProps.error}
+            helperText={commonProps.helperText}
+            onChange={commonProps.onChange}
+            onBlur={commonProps.onBlur}
             label={field.label}
             required={field.required}
             options={field.options || []}
@@ -284,7 +296,14 @@ export function GenericForm<T extends z.ZodType>({
       case 'textarea':
         return (
           <Textarea
-            {...commonProps}
+            id={commonProps.id}
+            name={commonProps.name}
+            value={stringValue}
+            disabled={commonProps.disabled}
+            error={commonProps.error}
+            helperText={commonProps.helperText}
+            onChange={commonProps.onChange}
+            onBlur={commonProps.onBlur}
             label={field.label}
             required={field.required}
             placeholder={field.placeholder}
@@ -295,7 +314,11 @@ export function GenericForm<T extends z.ZodType>({
       case 'checkbox':
         return (
           <Checkbox
-            {...commonProps}
+            id={commonProps.id}
+            name={commonProps.name}
+            disabled={commonProps.disabled}
+            error={commonProps.error}
+            onBlur={commonProps.onBlur}
             label={field.label}
             checked={!!formData[field.name]}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
@@ -307,12 +330,20 @@ export function GenericForm<T extends z.ZodType>({
       case 'text':
       case 'email':
       case 'url':
+      case 'tel':
       case 'number':
       case 'date':
       case 'datetime-local':
         return (
           <Input
-            {...commonProps}
+            id={commonProps.id}
+            name={commonProps.name}
+            value={stringValue}
+            disabled={commonProps.disabled}
+            error={commonProps.error}
+            helperText={commonProps.helperText}
+            onChange={commonProps.onChange}
+            onBlur={commonProps.onBlur}
             type={field.type}
             label={field.label}
             required={field.required}

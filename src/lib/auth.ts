@@ -3,7 +3,7 @@
  * Authentication setup with credentials provider
  */
 
-import NextAuth, { DefaultSession, User as NextAuthUser } from 'next-auth'
+import NextAuth, { DefaultSession } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { getPool } from './db'
@@ -23,7 +23,9 @@ declare module 'next-auth' {
     } & DefaultSession['user']
   }
 
-  interface User extends NextAuthUser {
+  interface User {
+    id?: string
+    email?: string | null
     person_id: string
     full_name: string
     role: UserRole

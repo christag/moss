@@ -3772,26 +3772,26 @@ export const API_RESOURCES: ApiResource[] = [
         path: '/api/roles',
         method: 'GET',
         description: 'Get all roles with optional filtering.',
-        authentication: 'none',
-        roles: ['admin', 'super_admin'],
+        authentication: 'required',
+        roleRequired: 'admin',
         parameters: [
           {
             name: 'search',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Search roles by name or description',
           },
           {
             name: 'is_system',
-            location: 'query',
+            in: 'query',
             type: 'boolean',
             required: false,
             description: 'Filter by system roles (true) or custom roles (false)',
           },
           {
             name: 'page',
-            location: 'query',
+            in: 'query',
             type: 'integer',
             required: false,
             description: 'Page number for pagination (default: 1)',
@@ -3799,7 +3799,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'limit',
-            location: 'query',
+            in: 'query',
             type: 'integer',
             required: false,
             description: 'Number of results per page (default: 50, max: 100)',
@@ -3848,11 +3848,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'POST',
         description: 'Create a new role with permissions.',
         authentication: 'none',
-        roles: ['super_admin'],
         parameters: [
           {
             name: 'role_name',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'Unique role name',
@@ -3860,21 +3859,21 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'description',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: false,
             description: 'Role description',
           },
           {
             name: 'parent_role_id',
-            location: 'body',
+            in: 'header',
             type: 'uuid',
             required: false,
             description: 'Parent role ID for hierarchical roles',
           },
           {
             name: 'permissions',
-            location: 'body',
+            in: 'header',
             type: 'array',
             required: false,
             description: 'Array of permission objects',
@@ -3906,11 +3905,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description: 'Get a specific role with all permissions and assignments.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'id',
-            location: 'path',
+            in: 'path',
             type: 'uuid',
             required: true,
             description: 'Role UUID',
@@ -3958,18 +3956,17 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'PUT',
         description: 'Update role details and permissions. System roles cannot be modified.',
         authentication: 'none',
-        roles: ['super_admin'],
         parameters: [
           {
             name: 'id',
-            location: 'path',
+            in: 'path',
             type: 'uuid',
             required: true,
             description: 'Role UUID',
           },
           {
             name: 'role_name',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: false,
             description: 'Role name',
@@ -3977,14 +3974,14 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'description',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: false,
             description: 'Role description',
           },
           {
             name: 'permissions',
-            location: 'body',
+            in: 'header',
             type: 'array',
             required: false,
             description: 'Updated permissions array',
@@ -4032,7 +4029,7 @@ export const API_RESOURCES: ApiResource[] = [
         parameters: [
           {
             name: 'objectType',
-            location: 'path',
+            in: 'path',
             type: 'string',
             required: true,
             description: 'Object type to export',
@@ -4040,21 +4037,21 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'search',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Search filter (varies by object type)',
           },
           {
             name: 'location_id',
-            location: 'query',
+            in: 'query',
             type: 'uuid',
             required: false,
             description: 'Filter by location (for devices, rooms, people)',
           },
           {
             name: 'status',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by status (varies by object type)',
@@ -4087,11 +4084,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description: 'Get all system settings or filter by category.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'category',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by settings category',
@@ -4125,11 +4121,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'PUT',
         description: 'Update one or more system settings. Logs changes to audit log.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'settings',
-            location: 'body',
+            in: 'header',
             type: 'object',
             required: true,
             description: 'Key-value pairs of settings to update',
@@ -4155,7 +4150,6 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description: 'Get all branding settings (site name, logo, colors).',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [],
         responses: [
           {
@@ -4182,11 +4176,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'PUT',
         description: 'Update storage backend configuration (local, NFS, SMB, S3).',
         authentication: 'none',
-        roles: ['super_admin'],
         parameters: [
           {
             name: 'backend',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'Storage backend type',
@@ -4194,7 +4187,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'config',
-            location: 'body',
+            in: 'header',
             type: 'object',
             required: true,
             description: 'Backend-specific configuration (varies by backend)',
@@ -4224,11 +4217,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description: 'Get all configured integrations.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'type',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by integration type',
@@ -4237,7 +4229,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'enabled',
-            location: 'query',
+            in: 'query',
             type: 'boolean',
             required: false,
             description: 'Filter by enabled status',
@@ -4278,11 +4270,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'POST',
         description: 'Create a new integration configuration.',
         authentication: 'none',
-        roles: ['super_admin'],
         parameters: [
           {
             name: 'integration_name',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'Integration name',
@@ -4290,7 +4281,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'integration_type',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'Integration type',
@@ -4299,7 +4290,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'provider',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'Provider name',
@@ -4307,14 +4298,14 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'config',
-            location: 'body',
+            in: 'header',
             type: 'object',
             required: true,
             description: 'Provider-specific configuration (JSONB)',
           },
           {
             name: 'sync_frequency',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: false,
             description: 'Sync frequency',
@@ -4346,11 +4337,10 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'POST',
         description: 'Manually trigger a sync for an integration. Creates a sync log entry.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'id',
-            location: 'path',
+            in: 'path',
             type: 'uuid',
             required: true,
             description: 'Integration UUID',
@@ -4378,18 +4368,17 @@ export const API_RESOURCES: ApiResource[] = [
         method: 'GET',
         description: 'Get sync logs for an integration with success/failure details.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'id',
-            location: 'path',
+            in: 'path',
             type: 'uuid',
             required: true,
             description: 'Integration UUID',
           },
           {
             name: 'limit',
-            location: 'query',
+            in: 'query',
             type: 'integer',
             required: false,
             description: 'Number of logs to return (default: 50, max: 100)',
@@ -4438,18 +4427,17 @@ export const API_RESOURCES: ApiResource[] = [
         description:
           'Get admin action audit logs with filtering by user, action, category, and date range.',
         authentication: 'none',
-        roles: ['admin', 'super_admin'],
         parameters: [
           {
             name: 'user_id',
-            location: 'query',
+            in: 'query',
             type: 'uuid',
             required: false,
             description: 'Filter by user who performed the action',
           },
           {
             name: 'action',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by action type',
@@ -4458,7 +4446,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'category',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by category',
@@ -4467,28 +4455,28 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'start_date',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by start date (ISO 8601)',
           },
           {
             name: 'end_date',
-            location: 'query',
+            in: 'query',
             type: 'string',
             required: false,
             description: 'Filter by end date (ISO 8601)',
           },
           {
             name: 'page',
-            location: 'query',
+            in: 'query',
             type: 'integer',
             required: false,
             description: 'Page number (default: 1)',
           },
           {
             name: 'limit',
-            location: 'query',
+            in: 'query',
             type: 'integer',
             required: false,
             description: 'Results per page (default: 50, max: 100)',
@@ -4547,7 +4535,7 @@ export const API_RESOURCES: ApiResource[] = [
         parameters: [
           {
             name: 'email',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'User email address',
@@ -4555,7 +4543,7 @@ export const API_RESOURCES: ApiResource[] = [
           },
           {
             name: 'password',
-            location: 'body',
+            in: 'header',
             type: 'string',
             required: true,
             description: 'User password',

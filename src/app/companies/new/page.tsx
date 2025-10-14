@@ -9,14 +9,14 @@ import React from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { CompanyForm } from '@/components/forms/CompanyForm'
-import type { Company } from '@/types'
 
 export default function CreateCompanyPage() {
   const router = useRouter()
 
-  const handleSuccess = (company: Company) => {
+  const handleSuccess = (company: unknown) => {
     // Navigate to the newly created company's detail page
-    router.push(`/companies/${company.id}`)
+    const companyData = company as { id: string }
+    router.push(`/companies/${companyData.id}`)
   }
 
   const handleCancel = () => {

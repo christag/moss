@@ -154,7 +154,7 @@ export function SubnetHierarchyTree({ locationId, onNetworkClick }: SubnetHierar
       setNetworks(result.data.root_networks || [])
 
       // Auto-expand root networks
-      const rootIds = new Set(result.data.root_networks.map((n: Network) => n.id))
+      const rootIds = new Set<string>(result.data.root_networks.map((n: Network) => n.id))
       setExpanded(rootIds)
     } catch (err) {
       console.error('Error fetching hierarchy:', err)

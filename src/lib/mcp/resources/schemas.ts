@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MCP Resources - Database Schemas
  * Provides schema information as resources

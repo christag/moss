@@ -8,13 +8,13 @@
 import React, { useState, useEffect } from 'react'
 import { GenericForm, FieldConfig } from '@/components/GenericForm'
 import { CreateRoomSchema, UpdateRoomSchema } from '@/lib/schemas/room'
-import type { Room, Location } from '@/types'
+import type { Room, RoomType, Location } from '@/types'
 
 interface RoomFormProps {
   /** Edit mode: provide existing room data */
   room?: Room
   /** Callback after successful create/update */
-  onSuccess?: (room: Room) => void
+  onSuccess?: (room: unknown) => void
   /** Callback on cancel */
   onCancel?: () => void
 }
@@ -132,7 +132,7 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
         room_name: room.room_name,
         room_number: room.room_number || '',
         location_id: room.location_id,
-        room_type: room.room_type || '',
+        room_type: (room.room_type || null) as RoomType | null,
         floor: room.floor || '',
         capacity: room.capacity ?? undefined,
         access_requirements: room.access_requirements || '',

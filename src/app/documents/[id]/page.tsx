@@ -88,6 +88,7 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
     if (activeTab === 'associations' && !associations) {
       loadAssociations()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, id])
 
   const loadAssociations = async () => {

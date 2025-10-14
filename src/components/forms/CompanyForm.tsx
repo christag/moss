@@ -8,13 +8,13 @@
 import React from 'react'
 import { GenericForm, FieldConfig } from '@/components/GenericForm'
 import { CreateCompanySchema, UpdateCompanySchema } from '@/lib/schemas/company'
-import type { Company } from '@/types'
+import type { Company, CompanyType } from '@/types'
 
 interface CompanyFormProps {
   /** Edit mode: provide existing company data */
   company?: Company
   /** Callback after successful create/update */
-  onSuccess?: (company: Company) => void
+  onSuccess?: (company: unknown) => void
   /** Callback on cancel */
   onCancel?: () => void
 }
@@ -174,7 +174,7 @@ export function CompanyForm({ company, onSuccess, onCancel }: CompanyFormProps) 
       }
     : {
         // Set default company type for create mode
-        company_type: 'vendor',
+        company_type: 'vendor' as CompanyType,
       }
 
   return (

@@ -50,6 +50,7 @@ export default function SoftwareLicenseDetailPage({ params }: { params: Promise<
     if (activeTab === 'assignments' && !assignments) {
       loadAssignments()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, id])
 
   const loadAssignments = async () => {

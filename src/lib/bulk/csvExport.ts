@@ -88,7 +88,7 @@ export function exportToCSV(data: Record<string, unknown>[], config: ExportConfi
   // Use Papa Parse to generate CSV
   const csv = Papa.unparse(
     {
-      fields: includeHeaders ? headers : undefined,
+      fields: headers,
       data: rows,
     },
     {

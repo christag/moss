@@ -303,6 +303,7 @@ export default function ContractsPage() {
 
   useEffect(() => {
     fetchContracts()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchValue, filterValues, sortBy, sortOrder])
 
   const handleAdd = () => {

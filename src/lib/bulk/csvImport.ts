@@ -80,7 +80,7 @@ export async function parseCSV<T = Record<string, unknown>>(
           errors.push({
             row: rowCount,
             field: '_file',
-            message: `Import aborted: Maximum ${maxRows} rows exceeded`,
+            error: `Import aborted: Maximum ${maxRows} rows exceeded`,
             value: null,
           })
           return
@@ -97,7 +97,7 @@ export async function parseCSV<T = Record<string, unknown>>(
             errors.push({
               row: rowCount,
               field: '_parsing',
-              message: error.message,
+              error: error.message,
               value: null,
             })
           })
@@ -111,7 +111,7 @@ export async function parseCSV<T = Record<string, unknown>>(
             errors.push({
               row: 0,
               field: '_headers',
-              message: `Missing required headers: ${missingHeaders.join(', ')}`,
+              error: `Missing required headers: ${missingHeaders.join(', ')}`,
               value: missingHeaders,
             })
           }
@@ -129,7 +129,7 @@ export async function parseCSV<T = Record<string, unknown>>(
         errors.push({
           row: 0,
           field: '_file',
-          message: `Failed to parse CSV: ${error.message}`,
+          error: `Failed to parse CSV: ${error.message}`,
           value: null,
         })
 
@@ -154,8 +154,8 @@ export async function parseCSV<T = Record<string, unknown>>(
  *
  * @example
  * const mappings = [
- *   { csvColumn: 'Host Name', dbField: 'hostname', required: true },
- *   { csvColumn: 'Type', dbField: 'device_type', required: true }
+ *   { csvColumn: 'Host Name', mossField: 'hostname', required: true },
+ *   { csvColumn: 'Type', mossField: 'device_type', required: true }
  * ]
  * const mapped = mapFields(csvData, mappings)
  */
@@ -171,17 +171,13 @@ export function mapFields<T = Record<string, unknown>>(
 
       // Apply default value if field is missing
       if (value === undefined || value === null || value === '') {
-        if (mapping.defaultValue !== undefined) {
-          mapped[mapping.dbField] = mapping.defaultValue
-        } else {
-          mapped[mapping.dbField] = null
-        }
+        mapped[mapping.mossField] = null
       } else {
         // Apply transformation if provided
         if (mapping.transform) {
-          mapped[mapping.dbField] = mapping.transform(value)
+          mapped[mapping.mossField] = mapping.transform(value)
         } else {
-          mapped[mapping.dbField] = value
+          mapped[mapping.mossField] = value
         }
       }
     })
@@ -213,7 +209,7 @@ export function validateImportData(
           errors.push({
             row: index + 1,
             field: err.path.join('.'),
-            message: err.message,
+            error: err.message,
             value: row[err.path[0]],
           })
         })
@@ -221,7 +217,7 @@ export function validateImportData(
         errors.push({
           row: index + 1,
           field: '_validation',
-          message: String(error),
+          error: String(error),
           value: null,
         })
       }
@@ -235,7 +231,7 @@ export function validateImportData(
  * Detects likely field mappings by comparing CSV headers to database fields
  *
  * @param csvHeaders - Headers from CSV file
- * @param dbFields - Available database fields
+ * @param mossFields - Available database fields
  * @returns Suggested field mappings
  *
  * @example
@@ -244,18 +240,18 @@ export function validateImportData(
  *   ['hostname', 'device_type', 'serial_number']
  * )
  */
-export function detectFieldMappings(csvHeaders: string[], dbFields: string[]): FieldMapping[] {
+export function detectFieldMappings(csvHeaders: string[], mossFields: string[]): FieldMapping[] {
   const mappings: FieldMapping[] = []
 
   csvHeaders.forEach((header) => {
     const normalized = header.toLowerCase().replace(/[^a-z0-9]/g, '_')
 
     // Try exact match first
-    let match = dbFields.find((field) => field === normalized)
+    let match = mossFields.find((field) => field === normalized)
 
     // Try fuzzy match
     if (!match) {
-      match = dbFields.find((field) => {
+      match = mossFields.find((field) => {
         const fieldNormalized = field.toLowerCase().replace(/[^a-z0-9]/g, '_')
         return fieldNormalized.includes(normalized) || normalized.includes(fieldNormalized)
       })
@@ -263,7 +259,8 @@ export function detectFieldMappings(csvHeaders: string[], dbFields: string[]): F
 
     mappings.push({
       csvColumn: header,
-      dbField: match || '',
+      mossField: match || '',
+      dataType: 'text',
       required: false,
     })
   })
@@ -310,7 +307,7 @@ export function formatValidationErrors(errors: ValidationError[]): string {
   Object.entries(errorsByRow).forEach(([row, rowErrors]) => {
     lines.push(`Row ${row}:`)
     rowErrors.forEach((error) => {
-      lines.push(`  - ${error.field}: ${error.message}`)
+      lines.push(`  - ${error.field}: ${error.error}`)
     })
   })
 

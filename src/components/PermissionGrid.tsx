@@ -51,6 +51,7 @@ export default function PermissionGrid({
     if (roleId && showInherited) {
       fetchRolePermissions()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleId, showInherited])
 
   const fetchPermissions = async () => {

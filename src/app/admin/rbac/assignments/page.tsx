@@ -35,6 +35,7 @@ export default function RoleAssignmentsPage() {
 
   useEffect(() => {
     fetchAssignments()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopeFilter])
 
   const fetchAssignments = async () => {
