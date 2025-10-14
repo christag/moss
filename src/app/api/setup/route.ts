@@ -30,6 +30,18 @@ const SetupSchema = z
       .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), {
         message: 'Must be a valid URL or empty',
       }),
+
+    // Primary Location
+    locationName: z.string().min(1),
+    locationType: z.enum([
+      'office',
+      'datacenter',
+      'colo',
+      'remote',
+      'warehouse',
+      'studio',
+      'broadcast_facility',
+    ]),
     companyAddress: z.string().optional(),
     companyCity: z.string().optional(),
     companyState: z.string().optional(),
@@ -151,7 +163,40 @@ export async function POST(request: NextRequest) {
     const companyId = companyResult.rows[0].id
 
     // ========================================================================
-    // 2. Create Admin Person Record
+    // 2. Create Primary Location
+    // ========================================================================
+    console.log('[Setup] Creating primary location...')
+
+    const locationResult = await client.query(
+      `INSERT INTO locations (
+        company_id,
+        location_name,
+        location_type,
+        address,
+        city,
+        state,
+        zip,
+        country,
+        timezone
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      RETURNING id`,
+      [
+        companyId,
+        validatedData.locationName,
+        validatedData.locationType,
+        validatedData.companyAddress || null,
+        validatedData.companyCity || null,
+        validatedData.companyState || null,
+        validatedData.companyZip || null,
+        validatedData.companyCountry || null,
+        validatedData.timezone,
+      ]
+    )
+
+    const locationId = locationResult.rows[0].id
+
+    // ========================================================================
+    // 3. Create Admin Person Record
     // ========================================================================
     console.log('[Setup] Creating admin person record...')
 
@@ -170,7 +215,7 @@ export async function POST(request: NextRequest) {
     const personId = personResult.rows[0].id
 
     // ========================================================================
-    // 3. Create Admin User Account
+    // 4. Create Admin User Account
     // ========================================================================
     console.log('[Setup] Creating admin user account...')
 
@@ -192,7 +237,7 @@ export async function POST(request: NextRequest) {
     const userId = userResult.rows[0].id
 
     // ========================================================================
-    // 4. Update System Preferences
+    // 5. Update System Preferences
     // ========================================================================
     console.log('[Setup] Updating system preferences...')
 
@@ -211,7 +256,7 @@ export async function POST(request: NextRequest) {
     )
 
     // ========================================================================
-    // 5. Mark Setup as Complete
+    // 6. Mark Setup as Complete
     // ========================================================================
     console.log('[Setup] Marking setup as complete...')
 
@@ -249,6 +294,7 @@ export async function POST(request: NextRequest) {
         userId,
         personId,
         companyId,
+        locationId,
       },
     })
 

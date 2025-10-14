@@ -22,9 +22,11 @@ interface SetupData {
   adminPasswordConfirm: string
   adminFullName: string
 
-  // Step 3: Primary Company
+  // Step 3: Primary Company & Location
   companyName: string
   companyWebsite: string
+  locationName: string
+  locationType: string
   companyAddress: string
   companyCity: string
   companyState: string
@@ -66,6 +68,8 @@ export default function SetupWizardPage() {
     adminFullName: '',
     companyName: '',
     companyWebsite: '',
+    locationName: '',
+    locationType: 'office',
     companyAddress: '',
     companyCity: '',
     companyState: '',
@@ -190,9 +194,13 @@ export default function SetupWizardPage() {
     }
 
     if (currentStep === 3) {
-      // Validate company
+      // Validate company and location
       if (!data.companyName) {
         setError('Company name is required')
+        return false
+      }
+      if (!data.locationName) {
+        setError('Location name is required')
         return false
       }
     }
@@ -916,8 +924,8 @@ function Step3Company({ data, onChange }: StepProps) {
   return (
     <>
       <div className="form-step">
-        <h2>Organization Details</h2>
-        <p className="subtitle">Set up your primary organization. Address fields are optional.</p>
+        <h2>Organization & Location</h2>
+        <p className="subtitle">Set up your primary organization and main location.</p>
 
         <Input
           label="Company Name"
@@ -934,6 +942,35 @@ function Step3Company({ data, onChange }: StepProps) {
           onChange={(e) => onChange('companyWebsite', e.target.value)}
           placeholder="https://www.example.com"
         />
+
+        <div className="section-divider">
+          <h3>Primary Location</h3>
+        </div>
+
+        <Input
+          label="Location Name"
+          value={data.locationName}
+          onChange={(e) => onChange('locationName', e.target.value)}
+          placeholder="Headquarters"
+          required
+        />
+
+        <div className="form-group">
+          <label htmlFor="locationType">Location Type</label>
+          <select
+            id="locationType"
+            value={data.locationType}
+            onChange={(e) => onChange('locationType', e.target.value)}
+          >
+            <option value="office">Office</option>
+            <option value="datacenter">Data Center</option>
+            <option value="colo">Colocation Facility</option>
+            <option value="remote">Remote</option>
+            <option value="warehouse">Warehouse</option>
+            <option value="studio">Studio</option>
+            <option value="broadcast_facility">Broadcast Facility</option>
+          </select>
+        </div>
 
         <Input
           label="Street Address"
@@ -984,6 +1021,47 @@ function Step3Company({ data, onChange }: StepProps) {
           font-size: 15px;
           color: var(--color-brew-black-60);
           margin: 0 0 1.5rem;
+        }
+
+        .section-divider {
+          border-top: 2px solid #e0e0e0;
+          margin: 1.5rem 0 1rem;
+          padding-top: 1rem;
+        }
+
+        .section-divider h3 {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--color-brew-black);
+          margin: 0 0 1rem;
+        }
+
+        .form-group {
+          margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+          display: block;
+          font-weight: 600;
+          font-size: 14px;
+          color: var(--color-brew-black);
+          margin-bottom: 0.5rem;
+        }
+
+        .form-group select {
+          width: 100%;
+          padding: 12px;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          font-size: 15px;
+          background: white;
+          transition: all 0.2s;
+        }
+
+        .form-group select:focus {
+          outline: none;
+          border-color: var(--color-morning-blue);
+          box-shadow: 0 0 0 3px rgba(28, 127, 242, 0.1);
         }
 
         .form-row {

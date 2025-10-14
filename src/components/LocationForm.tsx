@@ -22,9 +22,11 @@ interface LocationFormProps {
 const LOCATION_TYPE_OPTIONS = [
   { value: 'office', label: 'Office' },
   { value: 'datacenter', label: 'Data Center' },
-  { value: 'warehouse', label: 'Warehouse' },
+  { value: 'colo', label: 'Colocation Facility' },
   { value: 'remote', label: 'Remote' },
-  { value: 'other', label: 'Other' },
+  { value: 'warehouse', label: 'Warehouse' },
+  { value: 'studio', label: 'Studio' },
+  { value: 'broadcast_facility', label: 'Broadcast Facility' },
 ]
 
 export function LocationForm({ location, onSuccess, onCancel }: LocationFormProps) {
@@ -76,9 +78,8 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
       name: 'location_type',
       label: 'Location Type',
       type: 'select',
-      required: true,
-      options: LOCATION_TYPE_OPTIONS,
-      helpText: 'The type of location',
+      options: [{ value: '', label: 'Select a type...' }, ...LOCATION_TYPE_OPTIONS],
+      helpText: 'The type of location (optional)',
     },
     {
       name: 'address',

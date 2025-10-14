@@ -29,7 +29,10 @@ export const CreateLocationSchema = z.object({
   state: z.string().max(100, 'State too long').nullable().optional(),
   zip: z.string().max(20, 'ZIP code too long').nullable().optional(),
   country: z.string().max(100, 'Country name too long').nullable().optional(),
-  location_type: LocationTypeSchema.nullable().optional(),
+  location_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    LocationTypeSchema.nullable().optional()
+  ),
   timezone: z.string().max(50, 'Timezone too long').nullable().optional(),
   contact_phone: z.string().max(50, 'Contact phone too long').nullable().optional(),
   access_instructions: z.string().nullable().optional(),
@@ -52,7 +55,10 @@ export const UpdateLocationSchema = z.object({
   state: z.string().max(100, 'State too long').nullable().optional(),
   zip: z.string().max(20, 'ZIP code too long').nullable().optional(),
   country: z.string().max(100, 'Country name too long').nullable().optional(),
-  location_type: LocationTypeSchema.nullable().optional(),
+  location_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    LocationTypeSchema.nullable().optional()
+  ),
   timezone: z.string().max(50, 'Timezone too long').nullable().optional(),
   contact_phone: z.string().max(50, 'Contact phone too long').nullable().optional(),
   access_instructions: z.string().nullable().optional(),
