@@ -609,6 +609,156 @@ export const API_RESOURCES: ApiResource[] = [
         ],
         examples: [],
       },
+      {
+        path: '/api/devices/[id]/duplicates',
+        method: 'GET',
+        description:
+          'Find potential duplicate devices for a specific device based on serial number, asset tag, MAC address, hostname, and model matching with confidence scoring.',
+        authentication: 'none',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            type: 'string',
+            required: true,
+            description: 'Device UUID',
+            validation: 'Valid UUID',
+            example: '123e4567-e89b-12d3-a456-426614174000',
+          },
+        ],
+        responses: [
+          {
+            status: 200,
+            description: 'List of potential duplicates with confidence scores',
+            example: {
+              success: true,
+              message: 'Duplicate search completed',
+              data: {
+                device_id: '123e4567-e89b-12d3-a456-426614174000',
+                has_matches: true,
+                match_count: 2,
+                highest_confidence: 100,
+                matches: [
+                  {
+                    device_id: '456e7890-e89b-12d3-a456-426614174001',
+                    hostname: 'prod-switch-01',
+                    manufacturer: 'Cisco',
+                    model: 'Catalyst 2960',
+                    serial_number: 'ABC123',
+                    asset_tag: null,
+                    confidence: 100,
+                    confidence_level: 'definite',
+                    matching_fields: ['serial_number'],
+                    match_reason: 'Serial number matches: ABC123',
+                  },
+                ],
+              },
+            },
+          },
+          {
+            status: 404,
+            description: 'Device not found',
+          },
+        ],
+        examples: [
+          {
+            title: 'Find duplicates by serial number',
+            description:
+              'Definite match (100% confidence) - two devices with identical serial numbers',
+            request: {
+              method: 'GET',
+              url: '/api/devices/123e4567-e89b-12d3-a456-426614174000/duplicates',
+              headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' },
+            },
+            response: {
+              status: 200,
+              body: {
+                success: true,
+                data: {
+                  has_matches: true,
+                  match_count: 1,
+                  highest_confidence: 100,
+                  matches: [
+                    {
+                      device_id: '456e7890-e89b-12d3-a456-426614174001',
+                      hostname: 'MBP-2024-002',
+                      serial_number: 'C02XG0FDH7JY',
+                      confidence: 100,
+                      confidence_level: 'definite',
+                      matching_fields: ['serial_number'],
+                      match_reason: 'Serial number matches: C02XG0FDH7JY',
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+        relatedEndpoints: ['/api/devices/duplicates'],
+      },
+      {
+        path: '/api/devices/duplicates',
+        method: 'GET',
+        description:
+          'List all devices in the system that have potential duplicates (confidence ≥60%). Useful for data cleanup after imports or integrations.',
+        authentication: 'none',
+        responses: [
+          {
+            status: 200,
+            description: 'List of devices with potential duplicates',
+            example: {
+              success: true,
+              message: 'Found 5 devices with potential duplicates',
+              data: {
+                total_count: 5,
+                devices: [
+                  {
+                    device_id: '123e4567-e89b-12d3-a456-426614174000',
+                    hostname: 'prod-switch-01',
+                    match_count: 2,
+                    highest_confidence: 100,
+                  },
+                  {
+                    device_id: '456e7890-e89b-12d3-a456-426614174001',
+                    hostname: 'backup-switch-01',
+                    match_count: 1,
+                    highest_confidence: 75,
+                  },
+                ],
+              },
+            },
+          },
+        ],
+        examples: [
+          {
+            title: 'Get all devices with duplicates',
+            description: 'Returns devices with medium to definite confidence matches (≥60%)',
+            request: {
+              method: 'GET',
+              url: '/api/devices/duplicates',
+              headers: { Authorization: 'Bearer YOUR_ACCESS_TOKEN' },
+            },
+            response: {
+              status: 200,
+              body: {
+                success: true,
+                data: {
+                  total_count: 3,
+                  devices: [
+                    {
+                      device_id: '123e4567-e89b-12d3-a456-426614174000',
+                      hostname: 'server-01',
+                      match_count: 1,
+                      highest_confidence: 100,
+                    },
+                  ],
+                },
+              },
+            },
+          },
+        ],
+        relatedEndpoints: ['/api/devices/[id]/duplicates'],
+      },
     ],
   },
   {
