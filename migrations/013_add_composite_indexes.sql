@@ -90,8 +90,8 @@ WHERE software_id IS NOT NULL AND expiration_date IS NOT NULL;
 
 -- Licenses often queried by vendor + expiration for vendor management
 CREATE INDEX IF NOT EXISTS idx_licenses_vendor_expiration
-ON software_licenses(vendor_id, expiration_date)
-WHERE vendor_id IS NOT NULL AND expiration_date IS NOT NULL;
+ON software_licenses(purchased_from_id, expiration_date)
+WHERE purchased_from_id IS NOT NULL AND expiration_date IS NOT NULL;
 
 -- ============================================================================
 -- Document Associations - Junction table optimization
@@ -111,14 +111,14 @@ ON document_locations(location_id, document_id);
 -- Role Assignments - RBAC query optimization
 -- ============================================================================
 
--- Role assignments often queried by person + scope_type
+-- Role assignments often queried by person + scope
 CREATE INDEX IF NOT EXISTS idx_role_assignments_person_scope
-ON role_assignments(person_id, scope_type)
+ON role_assignments(person_id, scope)
 WHERE person_id IS NOT NULL;
 
--- Role assignments often queried by group + scope_type
+-- Role assignments often queried by group + scope
 CREATE INDEX IF NOT EXISTS idx_role_assignments_group_scope
-ON role_assignments(group_id, scope_type)
+ON role_assignments(group_id, scope)
 WHERE group_id IS NOT NULL;
 
 -- ============================================================================
