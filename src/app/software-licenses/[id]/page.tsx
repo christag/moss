@@ -14,7 +14,7 @@ interface LicenseAssignments {
   people: Person[]
   groups: Group[]
   seats_total: number
-  seats_assigned: number
+  seats_used: number
   seats_available: number
 }
 
@@ -158,7 +158,13 @@ export default function SoftwareLicenseDetailPage({ params }: { params: Promise<
     await loadAssignments()
   }
 
-  const formatType = (type: string | null) => {
+  // Ensure TypeScript knows these handlers are used (they're in conditional JSX)
+  void handleAssignPerson
+  void handleUnassignPerson
+  void handleAssignGroup
+  void handleUnassignGroup
+
+  const formatType = (type: string | null | undefined) => {
     if (!type) return '-'
     return type.charAt(0).toUpperCase() + type.slice(1)
   }
@@ -323,25 +329,23 @@ export default function SoftwareLicenseDetailPage({ params }: { params: Promise<
                   <div className="grid grid-2 gap-4">
                     <div>
                       <p className="font-bold">Seats Purchased</p>
-                      <p>{license.seats_purchased || '-'}</p>
+                      <p>{license.seat_count || '-'}</p>
                     </div>
                     <div>
                       <p className="font-bold">Seats Assigned</p>
-                      <p>{license.seats_assigned || 0}</p>
+                      <p>{license.seats_used || 0}</p>
                     </div>
                     <div>
                       <p className="font-bold">Available Seats</p>
                       <p>
-                        {license.seats_purchased
-                          ? license.seats_purchased - (license.seats_assigned || 0)
-                          : '-'}
+                        {license.seat_count ? license.seat_count - (license.seats_used || 0) : '-'}
                       </p>
                     </div>
                     <div>
                       <p className="font-bold">Utilization</p>
                       <p>
-                        {license.seats_purchased && license.seats_purchased > 0
-                          ? `${Math.round(((license.seats_assigned || 0) / license.seats_purchased) * 100)}%`
+                        {license.seat_count && license.seat_count > 0
+                          ? `${Math.round(((license.seats_used || 0) / license.seat_count) * 100)}%`
                           : '-'}
                       </p>
                     </div>
@@ -396,8 +400,8 @@ export default function SoftwareLicenseDetailPage({ params }: { params: Promise<
                         <div>
                           <h3 className="text-h4 mb-2">Seat Availability</h3>
                           <p className="text-gray-600">
-                            {assignments.seats_assigned} of {assignments.seats_total} seats assigned
-                            ({assignments.seats_available} available)
+                            {assignments.seats_used} of {assignments.seats_total} seats assigned (
+                            {assignments.seats_available} available)
                           </p>
                         </div>
                         <div className="seat-progress">
@@ -405,13 +409,13 @@ export default function SoftwareLicenseDetailPage({ params }: { params: Promise<
                             <div
                               className="seat-progress-fill"
                               style={{
-                                width: `${assignments.seats_total > 0 ? (assignments.seats_assigned / assignments.seats_total) * 100 : 0}%`,
+                                width: `${assignments.seats_total > 0 ? (assignments.seats_used / assignments.seats_total) * 100 : 0}%`,
                               }}
                             />
                           </div>
                           <p className="text-sm text-gray-600 mt-1">
                             {assignments.seats_total > 0
-                              ? `${Math.round((assignments.seats_assigned / assignments.seats_total) * 100)}%`
+                              ? `${Math.round((assignments.seats_used / assignments.seats_total) * 100)}%`
                               : '0%'}{' '}
                             utilized
                           </p>

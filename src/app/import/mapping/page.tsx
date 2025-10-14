@@ -12,6 +12,27 @@ import { getObjectTypeDef } from '@/lib/bulk/objectTypeRegistry'
 import type { ParseResult } from '@/lib/bulk/csvImport'
 import type { FieldMapping, ValidationError } from '@/types/bulk-operations'
 
+// Helper function to map ObjectFieldDef types to FieldMapping dataTypes
+function mapFieldTypeToDataType(
+  fieldType: 'string' | 'number' | 'boolean' | 'date' | 'uuid' | 'enum'
+): FieldMapping['dataType'] {
+  switch (fieldType) {
+    case 'string':
+    case 'enum':
+      return 'text'
+    case 'number':
+      return 'number'
+    case 'boolean':
+      return 'boolean'
+    case 'date':
+      return 'date'
+    case 'uuid':
+      return 'uuid'
+    default:
+      return 'text'
+  }
+}
+
 export default function ImportMappingPage() {
   const router = useRouter()
   const [fileName, setFileName] = useState<string>('')
@@ -45,14 +66,16 @@ export default function ImportMappingPage() {
       const initialMappings: FieldMapping[] = parsed.headers.map((header) => {
         // Try to find matching database field
         const normalizedHeader = header.toLowerCase().replace(/[^a-z0-9]/g, '_')
-        let dbField = ''
+        let mossField = ''
         let required = false
+        let dataType: FieldMapping['dataType'] = 'text'
 
         // Exact match
         const exactMatch = objectTypeDef.fields.find((f) => f.name === normalizedHeader)
         if (exactMatch) {
-          dbField = exactMatch.name
+          mossField = exactMatch.name
           required = exactMatch.required
+          dataType = mapFieldTypeToDataType(exactMatch.type)
         } else {
           // Fuzzy match
           const fuzzyMatch = objectTypeDef.fields.find((f) => {
@@ -63,14 +86,16 @@ export default function ImportMappingPage() {
             )
           })
           if (fuzzyMatch) {
-            dbField = fuzzyMatch.name
+            mossField = fuzzyMatch.name
             required = fuzzyMatch.required
+            dataType = mapFieldTypeToDataType(fuzzyMatch.type)
           }
         }
 
         return {
           csvColumn: header,
-          dbField,
+          mossField,
+          dataType,
           required,
         }
       })
@@ -81,14 +106,14 @@ export default function ImportMappingPage() {
 
   const objectTypeDef = getObjectTypeDef(objectType)
 
-  const handleMappingChange = (csvColumn: string, dbField: string) => {
+  const handleMappingChange = (csvColumn: string, mossField: string) => {
     setFieldMappings((prev) =>
       prev.map((mapping) => {
         if (mapping.csvColumn === csvColumn) {
-          const field = objectTypeDef?.fields.find((f) => f.name === dbField)
+          const field = objectTypeDef?.fields.find((f) => f.name === mossField)
           return {
             ...mapping,
-            dbField,
+            mossField,
             required: field?.required || false,
           }
         }
@@ -111,7 +136,9 @@ export default function ImportMappingPage() {
       const errors = validateImportData(mappedData, objectTypeDef.schema)
 
       // Check for required fields
-      const mappedDbFields = new Set(fieldMappings.filter((m) => m.dbField).map((m) => m.dbField))
+      const mappedDbFields = new Set(
+        fieldMappings.filter((m) => m.mossField).map((m) => m.mossField)
+      )
       const requiredFields = objectTypeDef.fields.filter((f) => f.required)
       const missingRequired = requiredFields.filter((f) => !mappedDbFields.has(f.name))
 
@@ -120,7 +147,7 @@ export default function ImportMappingPage() {
           errors.push({
             row: 0,
             field: field.name,
-            message: `Required field "${field.label}" is not mapped`,
+            error: `Required field "${field.label}" is not mapped`,
             value: null,
           })
         })
@@ -205,10 +232,10 @@ export default function ImportMappingPage() {
     return <div>Loading...</div>
   }
 
-  const unmappedColumns = fieldMappings.filter((m) => !m.dbField).length
+  const unmappedColumns = fieldMappings.filter((m) => !m.mossField).length
   const requiredFields = objectTypeDef.fields.filter((f) => f.required)
   const mappedRequiredFields = requiredFields.filter((f) =>
-    fieldMappings.some((m) => m.dbField === f.name)
+    fieldMappings.some((m) => m.mossField === f.name)
   )
   const canValidate = unmappedColumns === 0 && mappedRequiredFields.length === requiredFields.length
 
@@ -427,7 +454,7 @@ export default function ImportMappingPage() {
             </thead>
             <tbody>
               {fieldMappings.map((mapping, index) => {
-                const dbFieldDef = objectTypeDef.fields.find((f) => f.name === mapping.dbField)
+                const mossFieldDef = objectTypeDef.fields.find((f) => f.name === mapping.mossField)
                 return (
                   <tr key={index} style={{ borderBottom: '1px solid var(--color-brew-black-10)' }}>
                     <td style={{ padding: 'var(--spacing-sm)' }}>
@@ -450,7 +477,7 @@ export default function ImportMappingPage() {
                     </td>
                     <td style={{ padding: 'var(--spacing-sm)' }}>
                       <select
-                        value={mapping.dbField}
+                        value={mapping.mossField}
                         onChange={(e) => handleMappingChange(mapping.csvColumn, e.target.value)}
                         style={{
                           width: '100%',
@@ -467,7 +494,7 @@ export default function ImportMappingPage() {
                           </option>
                         ))}
                       </select>
-                      {dbFieldDef && (
+                      {mossFieldDef && (
                         <div
                           style={{
                             fontSize: 'var(--font-size-small)',
@@ -475,8 +502,8 @@ export default function ImportMappingPage() {
                             marginTop: '4px',
                           }}
                         >
-                          Type: {dbFieldDef.type}
-                          {dbFieldDef.example && ` • Example: ${dbFieldDef.example}`}
+                          Type: {mossFieldDef.type}
+                          {mossFieldDef.example && ` • Example: ${mossFieldDef.example}`}
                         </div>
                       )}
                     </td>
@@ -554,7 +581,7 @@ export default function ImportMappingPage() {
                       <td style={{ padding: 'var(--spacing-sm)' }}>
                         <code>{error.field}</code>
                       </td>
-                      <td style={{ padding: 'var(--spacing-sm)' }}>{error.message}</td>
+                      <td style={{ padding: 'var(--spacing-sm)' }}>{error.error}</td>
                       <td style={{ padding: 'var(--spacing-sm)' }}>
                         {error.value !== null ? String(error.value).substring(0, 30) : '—'}
                       </td>

@@ -7,7 +7,7 @@
 import { useState } from 'react'
 import type { ApiEndpoint } from '@/lib/apiDocs'
 import { CodeBlock } from '@/components/CodeBlock'
-import { SchemaViewer } from '@/components/SchemaViewer'
+import { SchemaViewer, type Schema } from '@/components/SchemaViewer'
 import { MethodBadge, StatusBadge } from '@/components/ApiDocSection'
 
 interface CollapsibleEndpointProps {
@@ -279,7 +279,11 @@ export function CollapsibleEndpoint({
                   {endpoint.requestBody.description}
                 </p>
               </div>
-              {endpoint.requestBody.schema && <SchemaViewer schema={endpoint.requestBody.schema} />}
+              {endpoint.requestBody.schema &&
+                'type' in endpoint.requestBody.schema &&
+                typeof endpoint.requestBody.schema.type === 'string' && (
+                  <SchemaViewer schema={endpoint.requestBody.schema as Schema} />
+                )}
             </div>
           )}
 

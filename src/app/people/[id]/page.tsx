@@ -92,6 +92,10 @@ export default function PersonDetailPage() {
     router.push(`/people/${id}/edit`)
   }
 
+  const handleBack = () => {
+    router.push('/people')
+  }
+
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this person? This action cannot be undone.')) {
       return
@@ -283,8 +287,8 @@ export default function PersonDetailPage() {
           variant={
             device.status === 'active'
               ? 'success'
-              : device.status === 'inactive'
-                ? 'secondary'
+              : device.status === 'repair'
+                ? 'warning'
                 : 'default'
           }
         >

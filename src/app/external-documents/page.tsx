@@ -236,7 +236,12 @@ export default function ExternalDocumentsPage() {
   const [searchValue, setSearchValue] = useState('')
   const [filterValues, setFilterValues] = useState<Record<string, string>>({})
   const [sortBy, setSortBy] = useState('title')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [sortOrder] = useState<'asc' | 'desc'>('asc')
+
+  // Handler for filter changes
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }))
+  }
 
   // Fetch external documents from API
   const fetchDocuments = async () => {
@@ -280,53 +285,24 @@ export default function ExternalDocumentsPage() {
     router.push('/external-documents/new')
   }
 
-  const handleRowClick = (doc: ExternalDocument) => {
-    router.push(`/external-documents/${doc.id}`)
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this external document?')) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/external-documents/${id}`, {
-        method: 'DELETE',
-      })
-      const result = await response.json()
-
-      if (result.success) {
-        await fetchDocuments()
-      } else {
-        alert(`Failed to delete: ${result.message}`)
-      }
-    } catch (error) {
-      console.error('Error deleting external document:', error)
-      alert('An error occurred while deleting the external document')
-    }
-  }
-
   return (
     <GenericListView<ExternalDocument>
       title="External Documents"
-      description="Links to external systems, password vaults, tickets, wikis, and contracts"
       data={documents}
       columns={ALL_COLUMNS}
       pagination={pagination}
       loading={loading}
       searchValue={searchValue}
-      onSearchChange={setSearchValue}
+      onSearch={setSearchValue}
       filterValues={filterValues}
-      onFilterChange={setFilterValues}
+      onFilterChange={handleFilterChange}
       sortBy={sortBy}
-      onSortChange={setSortBy}
       sortOrder={sortOrder}
-      onSortOrderChange={setSortOrder}
+      onSort={setSortBy}
       onAdd={handleAdd}
-      onRowClick={handleRowClick}
-      onDelete={handleDelete}
       searchPlaceholder="Search external documents by title or description..."
       emptyMessage="No external documents found. Add your first external document to get started."
+      rowLink={(doc) => `/external-documents/${doc.id}`}
     />
   )
 }

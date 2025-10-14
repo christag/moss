@@ -95,7 +95,7 @@ export default function NetworkDetailPage() {
   }
 
   // Helper to format network type
-  const formatNetworkType = (type: string | null): string => {
+  const formatNetworkType = (type: string | null | undefined): string => {
     if (!type) return '—'
     const typeMap: Record<string, string> = {
       lan: 'LAN',
@@ -125,7 +125,6 @@ export default function NetworkDetailPage() {
       title: 'Network Configuration',
       fields: [
         { label: 'Gateway', value: network.gateway || '—' },
-        { label: 'Subnet Mask', value: network.subnet_mask || '—' },
         { label: 'DNS Servers', value: network.dns_servers || '—' },
       ],
     },
@@ -248,31 +247,10 @@ export default function NetworkDetailPage() {
           dhcp: { label: 'DHCP', color: 'green' },
           reserved: { label: 'Reserved', color: 'purple' },
         }
-        const type = ip.ip_type ? typeMap[ip.ip_type] : null
+        const type = ip.type ? typeMap[ip.type] : null
         return type ? (
           <Badge variant={type.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
             {type.label}
-          </Badge>
-        ) : (
-          '—'
-        )
-      },
-      width: '100px',
-    },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (ip) => {
-        const statusMap: Record<string, { label: string; color: string }> = {
-          active: { label: 'Active', color: 'success' },
-          inactive: { label: 'Inactive', color: 'secondary' },
-          reserved: { label: 'Reserved', color: 'warning' },
-          conflict: { label: 'Conflict', color: 'error' },
-        }
-        const status = ip.status ? statusMap[ip.status] : null
-        return status ? (
-          <Badge variant={status.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
-            {status.label}
           </Badge>
         ) : (
           '—'

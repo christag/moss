@@ -6,7 +6,7 @@
 
 import { useState } from 'react'
 
-interface SchemaProperty {
+export interface SchemaProperty {
   type: string
   description?: string
   required?: boolean
@@ -20,6 +20,12 @@ interface SchemaProperty {
   default?: unknown
   properties?: Record<string, SchemaProperty>
   items?: SchemaProperty
+}
+
+export interface Schema {
+  type: string
+  required?: string[]
+  properties?: Record<string, SchemaProperty>
 }
 
 interface SchemaViewerProps {

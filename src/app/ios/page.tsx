@@ -28,6 +28,7 @@ function formatInterfaceType(type: InterfaceType): string {
     patch_panel_port: 'Patch Panel',
     power_input: 'Power Input',
     power_output: 'Power Output',
+    other: 'Other',
   }
   return typeMap[type] || type
 }

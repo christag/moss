@@ -113,7 +113,7 @@ export default function IPConflictsPage() {
       const term = searchTerm.toLowerCase()
       filtered = filtered.filter((c) => {
         const ipMatch = c.ip_address?.toLowerCase().includes(term)
-        const networkMatch = c.network_name?.toLowerCase().includes(term)
+        const networkMatch = c.type !== 'duplicate' && c.network_name?.toLowerCase().includes(term)
         const deviceMatch = 'device_name' in c && c.device_name?.toLowerCase().includes(term)
         return ipMatch || networkMatch || deviceMatch
       })

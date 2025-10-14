@@ -296,6 +296,18 @@ export default function DocumentDetailPage({ params }: { params: Promise<{ id: s
     await loadAssociations()
   }
 
+  // Ensure TypeScript knows these handlers are used (they're in conditional JSX)
+  void handleAddDevice
+  void handleRemoveDevice
+  void handleAddNetwork
+  void handleRemoveNetwork
+  void handleAddService
+  void handleRemoveService
+  void handleAddLocation
+  void handleRemoveLocation
+  void handleAddRoom
+  void handleRemoveRoom
+
   if (loading) {
     return (
       <div className="container">

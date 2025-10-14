@@ -84,7 +84,7 @@ export default function IODetailPage({ params }: { params: Promise<{ id: string 
     return typeMap[type] || type
   }
 
-  const formatMediaType = (type: string | null) => {
+  const formatMediaType = (type: string | null | undefined) => {
     if (!type) return '-'
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
   }

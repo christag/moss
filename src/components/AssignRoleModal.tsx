@@ -778,9 +778,9 @@ export default function AssignRoleModal({ isOpen, onClose, onSuccess }: AssignRo
                   />
                   <div>
                     <div style={{ fontWeight: '600' }}>{location.location_name}</div>
-                    {location.address_line1 && (
+                    {location.address && (
                       <div style={{ fontSize: '0.875rem', color: 'var(--color-brew-black-60)' }}>
-                        {location.address_line1}
+                        {location.address}
                       </div>
                     )}
                   </div>

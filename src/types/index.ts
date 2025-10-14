@@ -134,6 +134,7 @@ export interface Location {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreateLocationInput {
@@ -190,6 +191,7 @@ export interface Room {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreateRoomInput {
@@ -236,6 +238,7 @@ export interface Person {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreatePersonInput {
@@ -300,6 +303,7 @@ export interface Device {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreateDeviceInput {
@@ -358,6 +362,7 @@ export interface Group {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreateGroupInput {
@@ -405,6 +410,7 @@ export interface Network {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreateNetworkInput {
@@ -658,6 +664,7 @@ export interface SaaSService {
   notes?: string | null
   created_at: Date
   updated_at: Date
+  [key: string]: unknown
 }
 
 export interface CreateSaaSServiceInput {

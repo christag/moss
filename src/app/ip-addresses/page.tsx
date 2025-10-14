@@ -271,14 +271,10 @@ export default function IPAddressesPage() {
         onFilterChange={handleFilterChange}
         onSort={handleSort}
         onPageChange={handlePageChange}
-        onAdd={handleAdd}
-        addButtonLabel="Add IP Address"
         emptyMessage="No IP addresses found. Add your first IP address to get started."
         rowLink={(ip) => `/ip-addresses/${ip.id}`}
         enableColumnManagement={true}
         enablePerColumnFiltering={true}
-        hideTitle={true}
-        hideAddButton={true}
       />
 
       <style jsx global>{`

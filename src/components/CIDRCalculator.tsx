@@ -68,7 +68,7 @@ export function CIDRCalculator({
     setError(null)
   }
 
-  const handleKeyPress = (e: React.KeyEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleCalculate()
     }

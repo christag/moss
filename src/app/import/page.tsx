@@ -431,7 +431,7 @@ export default function ImportPage() {
                       >
                         {parseResult.errors.slice(0, 5).map((error, i) => (
                           <li key={i}>
-                            Row {error.row}: {error.message}
+                            Row {error.row}: {error.error}
                           </li>
                         ))}
                         {parseResult.errors.length > 5 && (

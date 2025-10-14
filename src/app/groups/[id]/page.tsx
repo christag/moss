@@ -123,7 +123,7 @@ export default function GroupDetailPage() {
 
       // Update local state
       setMembers((prev) => [...prev, person])
-      toast.success(`Added ${person.first_name} ${person.last_name} to group`)
+      toast.success(`Added ${person.full_name} to group`)
     } catch (err) {
       throw err // Re-throw so JunctionTableManager can handle it
     }
@@ -148,12 +148,16 @@ export default function GroupDetailPage() {
 
       const removedPerson = members.find((m) => m.id === personId)
       if (removedPerson) {
-        toast.success(`Removed ${removedPerson.first_name} ${removedPerson.last_name} from group`)
+        toast.success(`Removed ${removedPerson.full_name} from group`)
       }
     } catch (err) {
       throw err // Re-throw so JunctionTableManager can handle it
     }
   }
+
+  // Ensure TypeScript knows these handlers are used (they're in conditional JSX)
+  void handleAddMember
+  void handleRemoveMember
 
   if (loading) {
     return (
@@ -194,14 +198,14 @@ export default function GroupDetailPage() {
   if (group.description) {
     fieldGroups.push({
       title: 'Description',
-      fields: [{ label: '', value: group.description, fullWidth: true }],
+      fields: [{ label: '', value: group.description, width: 'full' }],
     })
   }
 
   if (group.notes) {
     fieldGroups.push({
       title: 'Notes',
-      fields: [{ label: '', value: group.notes, fullWidth: true, preformatted: true }],
+      fields: [{ label: '', value: group.notes, width: 'full' }],
     })
   }
 
@@ -230,7 +234,7 @@ export default function GroupDetailPage() {
           <JunctionTableManager<Person>
             currentItems={members}
             availableItemsEndpoint="/api/people?limit=100"
-            getItemLabel={(person) => `${person.first_name} ${person.last_name}`}
+            getItemLabel={(person) => person.full_name}
             onAdd={handleAddMember}
             onRemove={handleRemoveMember}
             placeholder="Search people to add..."

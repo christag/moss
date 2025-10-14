@@ -43,7 +43,7 @@ export default function SoftwareDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
-  const formatCategory = (category: string | null) => {
+  const formatCategory = (category: string | null | undefined) => {
     if (!category) return '-'
     return category.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())
   }
