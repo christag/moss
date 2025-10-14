@@ -164,12 +164,21 @@ export async function initializeSchema(): Promise<void> {
     console.log('[InitDB] Running migrations...')
 
     const migrationsDir = path.join(process.cwd(), 'migrations')
+    console.log(`[InitDB] Looking for migrations in: ${migrationsDir}`)
+    console.log(`[InitDB] Current working directory: ${process.cwd()}`)
+    console.log(`[InitDB] Directory exists: ${fs.existsSync(migrationsDir)}`)
 
     // Get all migration files and sort them
-    const migrationFiles = fs
-      .readdirSync(migrationsDir)
-      .filter((file) => file.endsWith('.sql') && /^\d{3}_/.test(file))
-      .sort()
+    let migrationFiles: string[] = []
+    if (fs.existsSync(migrationsDir)) {
+      const allFiles = fs.readdirSync(migrationsDir)
+      console.log(`[InitDB] Files in migrations directory: ${allFiles.join(', ')}`)
+      migrationFiles = allFiles
+        .filter((file) => file.endsWith('.sql') && /^\d{3}_/.test(file))
+        .sort()
+    } else {
+      console.warn('[InitDB] Migrations directory does not exist!')
+    }
 
     console.log(`[InitDB] Found ${migrationFiles.length} migrations to run`)
 
