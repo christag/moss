@@ -160,25 +160,33 @@ export async function initializeSchema(): Promise<void> {
 
     console.log('[InitDB] ✓ Base schema created successfully')
 
-    // Run critical migrations that create users and system_settings tables
-    console.log('[InitDB] Running critical migrations...')
+    // Run all migrations to bring database to current state
+    console.log('[InitDB] Running migrations...')
 
     const migrationsDir = path.join(process.cwd(), 'migrations')
-    const criticalMigrations = ['002_add_authentication.sql', '003_add_admin_settings.sql']
 
-    for (const migrationFile of criticalMigrations) {
+    // Get all migration files and sort them
+    const migrationFiles = fs
+      .readdirSync(migrationsDir)
+      .filter((file) => file.endsWith('.sql') && /^\d{3}_/.test(file))
+      .sort()
+
+    console.log(`[InitDB] Found ${migrationFiles.length} migrations to run`)
+
+    for (const migrationFile of migrationFiles) {
       const migrationPath = path.join(migrationsDir, migrationFile)
-      if (fs.existsSync(migrationPath)) {
+      try {
         console.log(`[InitDB] Running ${migrationFile}...`)
         const migrationSql = fs.readFileSync(migrationPath, 'utf8')
         await pool.query(migrationSql)
         console.log(`[InitDB] ✓ ${migrationFile} completed`)
-      } else {
-        console.warn(`[InitDB] Migration ${migrationFile} not found, skipping`)
+      } catch (error) {
+        console.error(`[InitDB] Error running ${migrationFile}:`, error)
+        throw new Error(`Failed to run migration ${migrationFile}: ${(error as Error).message}`)
       }
     }
 
-    console.log('[InitDB] ✓ System settings initialized')
+    console.log('[InitDB] ✓ All migrations completed successfully')
   } catch (error: unknown) {
     console.error('[InitDB] Error initializing schema:', error)
     throw new Error(`Failed to initialize schema: ${(error as Error).message}`)
