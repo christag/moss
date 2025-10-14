@@ -59,7 +59,8 @@ WORKDIR /app
 # Set production environment
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    PORT=3000
+    PORT=3000 \
+    HOSTNAME=0.0.0.0
 
 # Create non-root user for security
 RUN addgroup --system --gid 1001 nodejs && \
