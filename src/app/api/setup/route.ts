@@ -122,16 +122,18 @@ export async function POST(request: NextRequest) {
     const companyResult = await client.query(
       `INSERT INTO companies (
         company_name,
+        company_type,
         website,
         address,
         city,
         state,
         zip,
         country
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id`,
       [
         validatedData.companyName,
+        'own_organization',
         validatedData.companyWebsite || null,
         validatedData.companyAddress || null,
         validatedData.companyCity || null,
