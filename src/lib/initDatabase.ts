@@ -158,7 +158,26 @@ export async function initializeSchema(): Promise<void> {
     // Execute the entire SQL file
     await pool.query(sqlContent)
 
-    console.log('[InitDB] ✓ Schema created successfully')
+    console.log('[InitDB] ✓ Base schema created successfully')
+
+    // Run critical migrations that create users and system_settings tables
+    console.log('[InitDB] Running critical migrations...')
+
+    const migrationsDir = path.join(process.cwd(), 'migrations')
+    const criticalMigrations = ['002_add_authentication.sql', '003_add_admin_settings.sql']
+
+    for (const migrationFile of criticalMigrations) {
+      const migrationPath = path.join(migrationsDir, migrationFile)
+      if (fs.existsSync(migrationPath)) {
+        console.log(`[InitDB] Running ${migrationFile}...`)
+        const migrationSql = fs.readFileSync(migrationPath, 'utf8')
+        await pool.query(migrationSql)
+        console.log(`[InitDB] ✓ ${migrationFile} completed`)
+      } else {
+        console.warn(`[InitDB] Migration ${migrationFile} not found, skipping`)
+      }
+    }
+
     console.log('[InitDB] ✓ System settings initialized')
   } catch (error: unknown) {
     console.error('[InitDB] Error initializing schema:', error)
