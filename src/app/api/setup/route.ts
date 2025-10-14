@@ -126,7 +126,7 @@ export async function POST(request: NextRequest) {
         address,
         city,
         state,
-        zip_code,
+        zip,
         country
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING id`,
