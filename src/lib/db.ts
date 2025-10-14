@@ -13,10 +13,14 @@ let pool: Pool | null = null
  */
 export function getPool(): Pool {
   if (!pool) {
-    // TEMPORARY: Hardcoded connection for development testing
-    // TODO: Fix environment variable loading in Next.js
-    const dbUrl = 'postgresql://moss:moss_dev_password@192.168.64.2:5432/moss'
-    console.log('[DB] Creating new pool with hardcoded DATABASE_URL for testing')
+    const dbUrl = process.env.DATABASE_URL
+
+    if (!dbUrl) {
+      throw new Error('DATABASE_URL environment variable is not set')
+    }
+
+    console.log('[DB] Creating new pool with DATABASE_URL:', dbUrl.replace(/:[^:@]+@/, ':****@'))
+
     pool = new Pool({
       connectionString: dbUrl,
       max: 20, // Maximum number of clients in the pool
