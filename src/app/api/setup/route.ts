@@ -24,7 +24,12 @@ const SetupSchema = z
 
     // Primary Company
     companyName: z.string().min(1),
-    companyWebsite: z.union([z.string().url(), z.literal('')]).optional(),
+    companyWebsite: z
+      .string()
+      .optional()
+      .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), {
+        message: 'Must be a valid URL or empty',
+      }),
     companyAddress: z.string().optional(),
     companyCity: z.string().optional(),
     companyState: z.string().optional(),
