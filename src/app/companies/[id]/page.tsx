@@ -245,21 +245,33 @@ export default function CompanyDetailPage() {
       width: '120px',
     },
     {
-      key: 'status',
+      key: 'end_date',
       label: 'Status',
-      render: (contract) => (
-        <Badge
-          variant={
-            contract.status === 'active'
-              ? 'success'
-              : contract.status === 'expired'
-                ? 'error'
-                : 'default'
-          }
-        >
-          {contract.status?.charAt(0).toUpperCase() + contract.status?.slice(1)}
-        </Badge>
-      ),
+      render: (contract) => {
+        // Compute status based on dates
+        const now = new Date()
+        const startDate = contract.start_date ? new Date(contract.start_date) : null
+        const endDate = contract.end_date ? new Date(contract.end_date) : null
+
+        let status = 'unknown'
+        let variant: 'default' | 'success' | 'warning' | 'error' | 'info' = 'default'
+
+        if (!startDate && !endDate) {
+          status = 'no dates'
+          variant = 'default'
+        } else if (endDate && endDate < now) {
+          status = 'expired'
+          variant = 'error'
+        } else if (startDate && startDate > now) {
+          status = 'upcoming'
+          variant = 'info'
+        } else {
+          status = 'active'
+          variant = 'success'
+        }
+
+        return <Badge variant={variant}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
+      },
       width: '100px',
     },
   ]
