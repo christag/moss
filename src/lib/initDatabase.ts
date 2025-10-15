@@ -137,30 +137,11 @@ export async function checkTablesExist(): Promise<boolean> {
 }
 
 /**
- * Execute SQL from dbsetup.sql to create all tables and initial data
+ * Execute SQL from migrations to create all tables and initial data
  */
 export async function initializeSchema(): Promise<void> {
   const pool = getMossPool()
   try {
-    console.log('[InitDB] Reading dbsetup.sql...')
-
-    // Read dbsetup.sql from project root
-    const dbsetupPath = path.join(process.cwd(), 'dbsetup.sql')
-
-    if (!fs.existsSync(dbsetupPath)) {
-      throw new Error('dbsetup.sql not found in project root')
-    }
-
-    const sqlContent = fs.readFileSync(dbsetupPath, 'utf8')
-
-    console.log('[InitDB] Executing schema creation...')
-
-    // Execute the entire SQL file
-    await pool.query(sqlContent)
-
-    console.log('[InitDB] ✓ Base schema created successfully')
-
-    // Run all migrations to bring database to current state
     console.log('[InitDB] Running migrations...')
 
     const migrationsDir = path.join(process.cwd(), 'migrations')
@@ -185,8 +166,14 @@ export async function initializeSchema(): Promise<void> {
     for (const migrationFile of migrationFiles) {
       const migrationPath = path.join(migrationsDir, migrationFile)
       try {
+        // Check if file is empty (skip it)
+        const migrationSql = fs.readFileSync(migrationPath, 'utf8').trim()
+        if (migrationSql.length === 0) {
+          console.log(`[InitDB] ⚠ Skipping ${migrationFile} (empty file)`)
+          continue
+        }
+
         console.log(`[InitDB] Running ${migrationFile}...`)
-        const migrationSql = fs.readFileSync(migrationPath, 'utf8')
         await pool.query(migrationSql)
         console.log(`[InitDB] ✓ ${migrationFile} completed`)
       } catch (error) {

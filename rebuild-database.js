@@ -1,6 +1,6 @@
 /**
  * Rebuild Database Script
- * Drops and recreates the moss database from dbsetup.sql
+ * Drops and recreates the moss database from migrations
  */
 const { Pool } = require('pg')
 const fs = require('fs')
@@ -53,18 +53,30 @@ async function rebuildDatabase() {
     await adminPool.end()
     console.log('')
 
-    // Step 2: Run dbsetup.sql
-    console.log('Step 2: Creating schema from dbsetup.sql...')
-    console.log('--------------------------------------------')
+    // Step 2: Run migrations
+    console.log('Step 2: Running migrations...')
+    console.log('------------------------------')
 
-    const dbsetupPath = path.join(__dirname, 'dbsetup.sql')
-    if (!fs.existsSync(dbsetupPath)) {
-      throw new Error('dbsetup.sql not found')
+    const migrationsDir = path.join(__dirname, 'migrations')
+    const migrationFiles = fs.readdirSync(migrationsDir)
+      .filter(file => file.endsWith('.sql') && /^\d{3}_/.test(file))
+      .sort()
+
+    for (const migrationFile of migrationFiles) {
+      const migrationPath = path.join(migrationsDir, migrationFile)
+      const migrationSQL = fs.readFileSync(migrationPath, 'utf8').trim()
+      
+      // Skip empty files
+      if (migrationSQL.length === 0) {
+        console.log(`⚠ Skipped ${migrationFile} (empty file)`)
+        continue
+      }
+      
+      await mossPool.query(migrationSQL)
+      console.log(`✓ Applied ${migrationFile}`)
     }
 
-    const dbsetupSQL = fs.readFileSync(dbsetupPath, 'utf8')
-    await mossPool.query(dbsetupSQL)
-    console.log('✓ Schema created successfully')
+    console.log('✓ All migrations completed successfully')
     console.log('')
 
     // Step 3: Run seed data
@@ -94,13 +106,13 @@ async function rebuildDatabase() {
     console.log('=================================')
     console.log('Database rebuild complete!')
     console.log('=================================\n')
-    console.log('✓ Database recreated from dbsetup.sql')
+    console.log('✓ Database recreated from migrations')
     console.log('✓ Seed data loaded: companies, locations, rooms')
     console.log('')
     console.log('Next steps:')
     console.log('  1. Restart Next.js dev server')
-    console.log('  2. Update People types/schemas to match dbsetup.sql schema')
-    console.log('  3. Rewrite People seed data')
+    console.log('  2. Test application functionality')
+    console.log('  3. Check database connections')
 
   } catch (error) {
     console.error('❌ Error rebuilding database:', error.message)

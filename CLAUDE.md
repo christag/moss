@@ -148,7 +148,7 @@ The project enforces these rules (max-warnings=20):
 
 ## Database Architecture
 
-The system uses PostgreSQL with UUID primary keys throughout. The database schema is defined in [dbsetup.sql](dbsetup.sql).
+The system uses PostgreSQL with UUID primary keys throughout. The database schema is defined in [migrations/001_initial_schema.sql](migrations/001_initial_schema.sql).
 
 **For detailed database documentation, see [planning/database-architecture.md](planning/database-architecture.md).**
 

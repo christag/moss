@@ -4,7 +4,7 @@ This document provides detailed database schema information for M.O.S.S. For hig
 
 ## Database Overview
 
-The system uses PostgreSQL with UUID primary keys throughout. The complete database schema is defined in [dbsetup.sql](../dbsetup.sql).
+The system uses PostgreSQL with UUID primary keys throughout. The complete database schema is defined in [migrations/001_initial_schema.sql](../migrations/001_initial_schema.sql).
 
 ## Core Object Hierarchy
 

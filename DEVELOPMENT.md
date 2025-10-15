@@ -33,7 +33,11 @@
 3. **Set up the database:**
 
    ```bash
-   psql -U postgres -f dbsetup.sql
+   # Run migrations in order
+   psql -U postgres -f migrations/001_initial_schema.sql
+   psql -U postgres -f migrations/002_add_authentication.sql
+   psql -U postgres -f migrations/003_add_admin_settings.sql
+   # Continue with other migrations as needed
    ```
 
 4. **Run the development server:**
@@ -79,7 +83,10 @@ moss/
 │   └── styles/                # Global styles
 │       ├── design-system.css  # Design system
 │       └── globals.css        # Global CSS imports
-├── dbsetup.sql                # Database schema
+├── migrations/                # Database migrations
+│   ├── 001_initial_schema.sql
+│   ├── 002_add_authentication.sql
+│   └── ...
 ├── package.json               # Dependencies and scripts
 ├── tsconfig.json              # TypeScript configuration
 ├── next.config.ts             # Next.js configuration
@@ -156,7 +163,7 @@ await transaction(async (client) => {
 
 ### Schema
 
-The complete database schema is in `dbsetup.sql`. Key tables:
+The complete database schema is in `migrations/001_initial_schema.sql`. Key tables:
 
 - **Core:** companies, locations, rooms, people, devices
 - **Network:** networks, ios (interfaces), ip_addresses

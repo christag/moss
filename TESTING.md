@@ -40,23 +40,14 @@ container run -d --name moss-postgres \
 
 2. **Run database migrations**:
 ```bash
-# Apply main schema
-psql -h localhost -U moss -d moss -f dbsetup.sql
-
-# Apply migration 002 (authentication)
+# Apply migrations in order
+psql -h localhost -U moss -d moss -f migrations/001_initial_schema.sql
 psql -h localhost -U moss -d moss -f migrations/002_add_authentication.sql
-
-# Apply migration 003 (admin settings)
 psql -h localhost -U moss -d moss -f migrations/003_add_admin_settings.sql
-
-# Apply migration 006 (enhanced RBAC)
 psql -h localhost -U moss -d moss -f migrations/006_enhanced_rbac.sql
-
-# Apply migration 007 (file attachments)
 psql -h localhost -U moss -d moss -f migrations/007_file_attachments.sql
-
-# Apply migration 008 (setup flag)
 psql -h localhost -U moss -d moss -f migrations/008_add_setup_flag.sql
+# Add any other numbered migrations as needed
 ```
 
 3. **Create test users**:
