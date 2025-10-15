@@ -9,9 +9,11 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
+import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
 import { Icon } from '@/components/ui'
 import { AttachmentsTab } from '@/components/AttachmentsTab'
-import type { Company } from '@/types'
+import { Badge } from '@/components/ui/Badge'
+import type { Company, Location, Person, Device, Contract } from '@/types'
 
 export default function CompanyDetailPage() {
   const router = useRouter()
@@ -98,6 +100,170 @@ export default function CompanyDetailPage() {
     )
   }
 
+  // Define columns for related items
+  const locationColumns: RelatedColumn<Location>[] = [
+    { key: 'location_name', label: 'Location Name' },
+    {
+      key: 'location_type',
+      label: 'Type',
+      render: (loc) => {
+        const typeMap: Record<string, string> = {
+          office: 'Office',
+          datacenter: 'Data Center',
+          colo: 'Colocation',
+          remote: 'Remote',
+          warehouse: 'Warehouse',
+          studio: 'Studio',
+          broadcast_facility: 'Broadcast Facility',
+        }
+        return loc.location_type ? typeMap[loc.location_type] || loc.location_type : '—'
+      },
+      width: '150px',
+    },
+    { key: 'city', label: 'City' },
+    { key: 'state', label: 'State', width: '100px' },
+    { key: 'country', label: 'Country', width: '120px' },
+  ]
+
+  const peopleColumns: RelatedColumn<Person>[] = [
+    { key: 'full_name', label: 'Name' },
+    { key: 'email', label: 'Email' },
+    {
+      key: 'person_type',
+      label: 'Type',
+      render: (person) => {
+        const typeMap: Record<string, string> = {
+          employee: 'Employee',
+          contractor: 'Contractor',
+          vendor_contact: 'Vendor Contact',
+          partner: 'Partner',
+          customer: 'Customer',
+          other: 'Other',
+        }
+        return person.person_type ? typeMap[person.person_type] || person.person_type : '—'
+      },
+      width: '150px',
+    },
+    { key: 'job_title', label: 'Job Title' },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (person) => (
+        <Badge
+          variant={
+            person.status === 'active'
+              ? 'success'
+              : person.status === 'terminated'
+                ? 'error'
+                : 'default'
+          }
+        >
+          {person.status?.charAt(0).toUpperCase() + person.status?.slice(1)}
+        </Badge>
+      ),
+      width: '100px',
+    },
+  ]
+
+  const deviceColumns: RelatedColumn<Device>[] = [
+    { key: 'hostname', label: 'Hostname' },
+    {
+      key: 'device_type',
+      label: 'Type',
+      render: (device) => {
+        const typeMap: Record<string, string> = {
+          computer: 'Computer',
+          server: 'Server',
+          switch: 'Switch',
+          router: 'Router',
+          firewall: 'Firewall',
+          printer: 'Printer',
+          mobile: 'Mobile',
+          av_equipment: 'AV Equipment',
+          broadcast_equipment: 'Broadcast Equipment',
+        }
+        return device.device_type ? typeMap[device.device_type] || device.device_type : '—'
+      },
+      width: '150px',
+    },
+    { key: 'manufacturer', label: 'Manufacturer' },
+    { key: 'model', label: 'Model' },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (device) => (
+        <Badge
+          variant={
+            device.status === 'active'
+              ? 'success'
+              : device.status === 'repair'
+                ? 'warning'
+                : 'default'
+          }
+        >
+          {device.status?.charAt(0).toUpperCase() + device.status?.slice(1)}
+        </Badge>
+      ),
+      width: '100px',
+    },
+  ]
+
+  const contractColumns: RelatedColumn<Contract>[] = [
+    { key: 'contract_name', label: 'Contract Name' },
+    {
+      key: 'contract_type',
+      label: 'Type',
+      render: (contract) => {
+        const typeMap: Record<string, string> = {
+          purchase: 'Purchase',
+          lease: 'Lease',
+          support: 'Support',
+          saas: 'SaaS',
+          maintenance: 'Maintenance',
+          service: 'Service',
+          licensing: 'Licensing',
+          other: 'Other',
+        }
+        return contract.contract_type
+          ? typeMap[contract.contract_type] || contract.contract_type
+          : '—'
+      },
+      width: '150px',
+    },
+    {
+      key: 'start_date',
+      label: 'Start Date',
+      render: (contract) =>
+        contract.start_date ? new Date(contract.start_date).toLocaleDateString() : '—',
+      width: '120px',
+    },
+    {
+      key: 'end_date',
+      label: 'End Date',
+      render: (contract) =>
+        contract.end_date ? new Date(contract.end_date).toLocaleDateString() : '—',
+      width: '120px',
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      render: (contract) => (
+        <Badge
+          variant={
+            contract.status === 'active'
+              ? 'success'
+              : contract.status === 'expired'
+                ? 'error'
+                : 'default'
+          }
+        >
+          {contract.status?.charAt(0).toUpperCase() + contract.status?.slice(1)}
+        </Badge>
+      ),
+      width: '100px',
+    },
+  ]
+
   // Define field groups for overview tab
   const fieldGroups: FieldGroup[] = [
     {
@@ -171,36 +337,60 @@ export default function CompanyDetailPage() {
       id: 'locations',
       label: 'Locations',
       content: (
-        <div className="tab-content">
-          <p className="text-muted">Locations associated with this company will appear here.</p>
-          <p className="text-muted">
-            <em>Location functionality coming soon...</em>
-          </p>
-        </div>
+        <RelatedItemsList<Location>
+          apiEndpoint={`/api/locations?company_id=${id}`}
+          columns={locationColumns}
+          linkPattern="/locations/:id"
+          addButtonLabel="Add Location"
+          onAdd={() => router.push(`/locations/new?company_id=${id}`)}
+          emptyMessage="No locations associated with this company"
+          limit={50}
+        />
       ),
     },
     {
-      id: 'contacts',
-      label: 'Contacts',
+      id: 'people',
+      label: 'People',
       content: (
-        <div className="tab-content">
-          <p className="text-muted">People associated with this company will appear here.</p>
-          <p className="text-muted">
-            <em>Contact management functionality coming soon...</em>
-          </p>
-        </div>
+        <RelatedItemsList<Person>
+          apiEndpoint={`/api/people?company_id=${id}`}
+          columns={peopleColumns}
+          linkPattern="/people/:id"
+          addButtonLabel="Add Person"
+          onAdd={() => router.push(`/people/new?company_id=${id}`)}
+          emptyMessage="No people associated with this company"
+          limit={50}
+        />
+      ),
+    },
+    {
+      id: 'devices',
+      label: 'Devices',
+      content: (
+        <RelatedItemsList<Device>
+          apiEndpoint={`/api/devices?company_id=${id}`}
+          columns={deviceColumns}
+          linkPattern="/devices/:id"
+          addButtonLabel="Add Device"
+          onAdd={() => router.push(`/devices/new?company_id=${id}`)}
+          emptyMessage="No devices associated with this company"
+          limit={50}
+        />
       ),
     },
     {
       id: 'contracts',
       label: 'Contracts',
       content: (
-        <div className="tab-content">
-          <p className="text-muted">Contracts with this company will appear here.</p>
-          <p className="text-muted">
-            <em>Contract management functionality coming soon...</em>
-          </p>
-        </div>
+        <RelatedItemsList<Contract>
+          apiEndpoint={`/api/contracts?company_id=${id}`}
+          columns={contractColumns}
+          linkPattern="/contracts/:id"
+          addButtonLabel="Add Contract"
+          onAdd={() => router.push(`/contracts/new?company_id=${id}`)}
+          emptyMessage="No contracts with this company"
+          limit={50}
+        />
       ),
     },
     {
