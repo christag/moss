@@ -7,6 +7,18 @@
 
 import { query } from './db'
 
+interface DeviceRow {
+  id: string
+  hostname: string | null
+  manufacturer: string | null
+  model: string | null
+  serial_number: string | null
+  asset_tag: string | null
+  device_type?: string | null
+  ip_address?: string | null
+  mac_address?: string | null
+}
+
 export interface DeviceMatch {
   device_id: string
   hostname: string | null
@@ -32,7 +44,7 @@ export interface MatchResult {
  */
 export async function findPotentialDuplicates(deviceId: string): Promise<MatchResult> {
   // Get the source device
-  const deviceResult = await query(
+  const deviceResult = await query<DeviceRow>(
     `SELECT 
       id, hostname, manufacturer, model, serial_number, asset_tag,
       device_type, ip_address, mac_address
@@ -57,7 +69,7 @@ export async function findPotentialDuplicates(deviceId: string): Promise<MatchRe
   // 1. DEFINITE MATCHES: Serial Number or Asset Tag
   // ============================================================================
   if (device.serial_number) {
-    const serialMatches = await query(
+    const serialMatches = await query<DeviceRow>(
       `SELECT 
         id, hostname, manufacturer, model, serial_number, asset_tag
       FROM devices 
@@ -85,7 +97,7 @@ export async function findPotentialDuplicates(deviceId: string): Promise<MatchRe
   }
 
   if (device.asset_tag) {
-    const assetMatches = await query(
+    const assetMatches = await query<DeviceRow>(
       `SELECT 
         id, hostname, manufacturer, model, serial_number, asset_tag
       FROM devices 
@@ -118,7 +130,7 @@ export async function findPotentialDuplicates(deviceId: string): Promise<MatchRe
   // ============================================================================
   // Note: Checking if device_interfaces table exists first
   try {
-    const macMatches = await query(
+    const macMatches = await query<DeviceRow & { mac_address: string }>(
       `SELECT DISTINCT
         d.id, d.hostname, d.manufacturer, d.model, d.serial_number, d.asset_tag,
         di.mac_address
@@ -155,7 +167,7 @@ export async function findPotentialDuplicates(deviceId: string): Promise<MatchRe
 
   // Also check the devices.mac_address field directly (legacy)
   if (device.mac_address) {
-    const directMacMatches = await query(
+    const directMacMatches = await query<DeviceRow>(
       `SELECT 
         id, hostname, manufacturer, model, serial_number, asset_tag, mac_address
       FROM devices 
@@ -204,7 +216,7 @@ export async function findPotentialDuplicates(deviceId: string): Promise<MatchRe
       params.push(device.model)
     }
 
-    const hostnameMatches = await query(
+    const hostnameMatches = await query<DeviceRow>(
       `SELECT 
         id, hostname, manufacturer, model, serial_number, asset_tag
       FROM devices 
@@ -243,7 +255,7 @@ export async function findPotentialDuplicates(deviceId: string): Promise<MatchRe
   // 4. LOW CONFIDENCE: Same Model + Manufacturer (potential duplicates)
   // ============================================================================
   if (device.manufacturer && device.model) {
-    const modelMatches = await query(
+    const modelMatches = await query<DeviceRow>(
       `SELECT 
         id, hostname, manufacturer, model, serial_number, asset_tag
       FROM devices 
@@ -300,7 +312,9 @@ export async function findAllDevicesWithDuplicates(): Promise<
     highest_confidence: number
   }>
 > {
-  const devicesResult = await query(`SELECT id, hostname FROM devices ORDER BY hostname`)
+  const devicesResult = await query<{ id: string; hostname: string | null }>(
+    `SELECT id, hostname FROM devices ORDER BY hostname`
+  )
 
   const devicesWithMatches = []
 
