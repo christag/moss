@@ -1,3 +1,106 @@
 @import './design-system.css';
 
 /* Additional global styles can be added here */
+
+/* Mobile Responsive Styles for ITAM App */
+@media (max-width: 768px) {
+  /* Hide desktop navigation dropdown menus on mobile */
+  .desktop-nav {
+    display: none !important;
+  }
+
+  /* Show mobile menu button */
+  .mobile-menu-button {
+    display: flex !important;
+  }
+
+  /* Show mobile menu panel when open */
+  .mobile-menu-panel {
+    display: block !important;
+  }
+
+  /* Hide desktop admin sidebar on mobile */
+  .desktop-admin-sidebar {
+    display: none !important;
+  }
+
+  /* Show mobile admin menu button */
+  .mobile-admin-menu-button {
+    display: flex !important;
+  }
+
+  /* Show mobile admin drawer */
+  .mobile-admin-drawer {
+    display: block !important;
+  }
+
+  /* Show mobile admin drawer overlay */
+  .mobile-admin-drawer-overlay {
+    display: block !important;
+  }
+
+  /* Adjust main content padding on mobile */
+  main {
+    padding: var(--spacing-md) !important;
+  }
+
+  /* Container adjustments for mobile */
+  .container {
+    padding-left: var(--spacing-sm);
+    padding-right: var(--spacing-sm);
+  }
+
+  /* List action buttons - stack vertically on mobile */
+  .list-action-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .list-action-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Make "Add" button prominent on mobile */
+  .list-add-button {
+    order: -1; /* Move to top */
+  }
+
+  /* Table responsiveness - ensure proper scrolling */
+  .table {
+    min-width: 100%;
+  }
+
+  /* Ensure table cells don't become too narrow */
+  .table th,
+  .table td {
+    min-width: 80px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* First column (usually name/hostname) should be wider */
+  .table th:first-child,
+  .table td:first-child {
+    min-width: 120px;
+    max-width: 180px;
+  }
+
+  /* Add scroll shadow indicators */
+  .table-wrapper {
+    position: relative;
+  }
+
+  /* Reduce font size in tables on mobile for better fit */
+  .table {
+    font-size: 14px;
+  }
+
+  /* Make pagination stack on mobile */
+  .flex.items-center.justify-between.mt-lg {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: stretch;
+  }
+}

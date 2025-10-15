@@ -333,11 +333,13 @@ export function GenericListView<T extends { id: string }>({
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 marginBottom:
                   onSearch || (filters && filters.length > 0) || hasActiveFilters
                     ? 'var(--spacing-md)'
                     : '0',
+                flexWrap: 'wrap',
+                gap: 'var(--spacing-sm)',
               }}
             >
               <h1
@@ -346,15 +348,25 @@ export function GenericListView<T extends { id: string }>({
                   fontWeight: '700',
                   color: 'var(--color-off-white)',
                   margin: '0',
+                  flex: '1 1 auto',
+                  minWidth: '200px',
                 }}
               >
                 {title}
               </h1>
-              <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+              <div
+                className="list-action-buttons"
+                style={{
+                  display: 'flex',
+                  gap: 'var(--spacing-sm)',
+                  flexWrap: 'wrap',
+                }}
+              >
                 {enableExport && exportObjectType && exportObjectTypeName && (
                   <button
                     onClick={() => setExportModalOpen(true)}
                     aria-label="Export to CSV"
+                    className="list-action-button"
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.2)',
                       color: 'var(--color-off-white)',
@@ -367,6 +379,7 @@ export function GenericListView<T extends { id: string }>({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 'var(--spacing-xs)',
+                      whiteSpace: 'nowrap',
                     }}
                     title="Export to CSV"
                   >
@@ -380,6 +393,7 @@ export function GenericListView<T extends { id: string }>({
                     aria-label="Manage visible columns"
                     aria-expanded={columnManagerOpen}
                     aria-haspopup="dialog"
+                    className="list-action-button"
                     style={{
                       backgroundColor: 'rgba(255, 255, 255, 0.2)',
                       color: 'var(--color-off-white)',
@@ -392,6 +406,7 @@ export function GenericListView<T extends { id: string }>({
                       display: 'flex',
                       alignItems: 'center',
                       gap: 'var(--spacing-xs)',
+                      whiteSpace: 'nowrap',
                     }}
                     title="Manage Columns"
                   >
@@ -403,6 +418,7 @@ export function GenericListView<T extends { id: string }>({
                   <button
                     onClick={onAdd}
                     aria-label={addButtonLabel}
+                    className="list-action-button list-add-button"
                     style={{
                       backgroundColor: 'var(--color-off-white)',
                       color: 'var(--color-blue)',
@@ -412,6 +428,7 @@ export function GenericListView<T extends { id: string }>({
                       cursor: 'pointer',
                       fontSize: 'var(--font-size-base)',
                       fontWeight: '600',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {addButtonLabel}

@@ -465,7 +465,7 @@ export function Navigation() {
                   {item.description && (
                     <div
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.875rem',
                         color: 'var(--color-brew-black-60)',
                         marginTop: '2px',
                       }}
@@ -510,7 +510,7 @@ export function Navigation() {
                   {item.description && (
                     <div
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.875rem',
                         color: 'var(--color-brew-black-60)',
                         marginTop: '2px',
                       }}
@@ -555,7 +555,7 @@ export function Navigation() {
                   {item.description && (
                     <div
                       style={{
-                        fontSize: '0.75rem',
+                        fontSize: '0.875rem',
                         color: 'var(--color-brew-black-60)',
                         marginTop: '2px',
                       }}
