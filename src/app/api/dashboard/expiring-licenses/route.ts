@@ -26,26 +26,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
 
     // Query licenses with expiration dates approaching
-    // Calculate seat utilization from person and group assignments
+    // Calculate seat utilization from person assignments
     const result = await query<ExpiringLicense>(
       `SELECT
         sl.*,
         (sl.expiration_date - CURRENT_DATE) as days_until_expiration,
-        COALESCE(
-          (SELECT COUNT(DISTINCT person_id) FROM person_software_licenses WHERE license_id = sl.id) +
-          (SELECT COUNT(DISTINCT group_id) FROM group_software_licenses WHERE license_id = sl.id),
-          0
-        ) as seats_used,
+        COALESCE(sl.seats_used, 0) as seats_used,
         CASE
-          WHEN sl.total_seats IS NOT NULL AND sl.total_seats > 0
+          WHEN sl.seat_count IS NOT NULL AND sl.seat_count > 0
           THEN ROUND(
-            (
-              COALESCE(
-                (SELECT COUNT(DISTINCT person_id) FROM person_software_licenses WHERE license_id = sl.id) +
-                (SELECT COUNT(DISTINCT group_id) FROM group_software_licenses WHERE license_id = sl.id),
-                0
-              )::numeric / sl.total_seats::numeric
-            ) * 100,
+            (COALESCE(sl.seats_used, 0)::numeric / sl.seat_count::numeric) * 100,
             2
           )
           ELSE 0
