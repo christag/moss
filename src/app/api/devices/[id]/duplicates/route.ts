@@ -7,7 +7,7 @@ import { NextRequest } from 'next/server'
 import { successResponse, errorResponse } from '@/lib/api'
 import { findPotentialDuplicates } from '@/lib/deviceMatching'
 
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
 
