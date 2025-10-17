@@ -3,9 +3,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
+import { useSession, signOut } from 'next-auth/react'
 import { NavDropdown, NavDropdownItem } from './NavDropdown'
 import GlobalSearch from './GlobalSearch'
+import { SiteBranding } from './SiteBranding'
 
 /**
  * Top Navigation Bar Component
@@ -13,6 +14,7 @@ import GlobalSearch from './GlobalSearch'
  */
 export function Navigation() {
   const pathname = usePathname()
+  const { data: session } = useSession()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -43,12 +45,7 @@ export function Navigation() {
   }, [userMenuOpen, mobileMenuOpen])
 
   // Standalone nav items (no dropdown)
-  const standaloneNavItems = [
-    { label: 'Dashboard', href: '/' },
-    { label: 'People', href: '/people' },
-    { label: 'Import', href: '/import' }, // CSV bulk import
-    { label: 'Admin', href: '/admin' }, // Admin panel (visible to all, protected by middleware)
-  ]
+  const standaloneNavItems = [{ label: 'People', href: '/people' }]
 
   // Dropdown menu items grouped by category
   const placesItems: NavDropdownItem[] = [
@@ -83,6 +80,21 @@ export function Navigation() {
     { label: 'Contracts', href: '/contracts', description: 'Vendor agreements' },
   ]
 
+  const adminItems: NavDropdownItem[] = [
+    { label: 'Overview', href: '/admin', description: 'Admin dashboard' },
+    { label: 'Branding', href: '/admin/branding', description: 'Site appearance & logo' },
+    { label: 'Storage', href: '/admin/storage', description: 'File storage config' },
+    { label: 'Authentication', href: '/admin/authentication', description: 'Auth settings & SSO' },
+    { label: 'Integrations', href: '/admin/integrations', description: 'External systems' },
+    { label: 'Fields', href: '/admin/fields', description: 'Custom fields' },
+    { label: 'RBAC', href: '/admin/rbac', description: 'Roles & permissions' },
+    { label: 'Import', href: '/import', description: 'Bulk CSV import' },
+    { label: 'Import/Export', href: '/admin/import-export', description: 'CSV data management' },
+    { label: 'Audit Logs', href: '/admin/audit-logs', description: 'Admin actions' },
+    { label: 'Notifications', href: '/admin/notifications', description: 'Email & alerts' },
+    { label: 'Backup', href: '/admin/backup', description: 'Backup & restore' },
+  ]
+
   const isActive = (href: string) => {
     if (href === '/') {
       return pathname === '/'
@@ -112,38 +124,8 @@ export function Navigation() {
             paddingRight: 'var(--spacing-sm)',
           }}
         >
-          {/* Logo */}
-          <Link
-            href="/"
-            aria-label="M.O.S.S. Home"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              textDecoration: 'none',
-              color: 'var(--color-black)',
-              fontWeight: '700',
-              fontSize: '1.5rem',
-            }}
-          >
-            {/* Placeholder for logo - user can add their own PNG */}
-            <div
-              style={{
-                width: '40px',
-                height: '40px',
-                backgroundColor: 'var(--color-blue)',
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'var(--color-off-white)',
-                fontWeight: 'bold',
-                marginRight: 'var(--spacing-sm)',
-              }}
-            >
-              M
-            </div>
-            <span>M.O.S.S.</span>
-          </Link>
+          {/* Logo - Dynamically loaded from branding settings */}
+          <SiteBranding />
 
           {/* Mobile Hamburger Button */}
           <button
@@ -233,6 +215,7 @@ export function Navigation() {
             <NavDropdown label="Places" items={placesItems} />
             <NavDropdown label="Assets" items={assetsItems} />
             <NavDropdown label="IT Services" items={itServicesItems} />
+            <NavDropdown label="Admin" items={adminItems} />
           </div>
 
           {/* Global Search */}
@@ -306,7 +289,7 @@ export function Navigation() {
                 </div>
 
                 <Link
-                  href="/profile"
+                  href={session?.user?.person_id ? `/people/${session.user.person_id}` : '/people'}
                   role="menuitem"
                   style={{
                     display: 'block',

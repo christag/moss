@@ -9,20 +9,27 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Input } from '@/components/ui'
+import { Input, Icon } from '@/components/ui'
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface SetupData {
-  // Step 2: Admin User
+  // Step 0: Database Configuration
+  dbHost: string
+  dbPort: number
+  dbDatabase: string
+  dbUsername: string
+  dbPassword: string
+
+  // Step 3: Admin User (was Step 2)
   adminEmail: string
   adminPassword: string
   adminPasswordConfirm: string
   adminFullName: string
 
-  // Step 3: Primary Company & Location
+  // Step 4: Primary Company & Location (was Step 3)
   companyName: string
   companyWebsite: string
   locationName: string
@@ -33,18 +40,19 @@ interface SetupData {
   companyZip: string
   companyCountry: string
 
-  // Step 4: System Preferences
+  // Step 5: System Preferences (was Step 4)
   timezone: string
   dateFormat: string
 }
 
-type SetupStep = 0 | 1 | 2 | 3 | 4 | 5
+type SetupStep = -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6
 
 interface DatabaseStatus {
   connectionOk: boolean
   databaseExists: boolean
   tablesExist: boolean
   needsInitialization: boolean
+  needsConfig?: boolean
   message: string
 }
 
@@ -54,18 +62,29 @@ interface DatabaseStatus {
 
 export default function SetupWizardPage() {
   const router = useRouter()
-  const [step, setStep] = useState<SetupStep>(0)
+  const [step, setStep] = useState<SetupStep>(-1) // Start at -1 to check if we need config
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dbStatus, setDbStatus] = useState<DatabaseStatus | null>(null)
   const [initSteps, setInitSteps] = useState<string[]>([])
   const [checkingStatus, setCheckingStatus] = useState(true)
+  const [testingConnection, setTestingConnection] = useState(false)
 
   const [data, setData] = useState<SetupData>({
+    // Database config
+    dbHost: 'localhost',
+    dbPort: 5432,
+    dbDatabase: 'moss',
+    dbUsername: 'postgres',
+    dbPassword: '',
+
+    // Admin user
     adminEmail: '',
     adminPassword: '',
     adminPasswordConfirm: '',
     adminFullName: '',
+
+    // Company/location
     companyName: '',
     companyWebsite: '',
     locationName: '',
@@ -75,6 +94,8 @@ export default function SetupWizardPage() {
     companyState: '',
     companyZip: '',
     companyCountry: 'United States',
+
+    // Preferences
     timezone: 'UTC',
     dateFormat: 'YYYY-MM-DD',
   })
@@ -116,8 +137,17 @@ export default function SetupWizardPage() {
 
       if (result.success) {
         setDbStatus(result.data)
-        // If database is already initialized, skip to Step 1
-        if (!result.data.needsInitialization) {
+
+        // If database config is needed, go to Step 0
+        if (result.data.needsConfig) {
+          setStep(0)
+        }
+        // If database is already initialized, skip to Step 2 (Welcome)
+        else if (!result.data.needsInitialization) {
+          setStep(2)
+        }
+        // Otherwise, go to Step 1 (Database Init)
+        else {
           setStep(1)
         }
       } else {
@@ -130,14 +160,66 @@ export default function SetupWizardPage() {
     }
   }
 
+  const testDatabaseConnection = async () => {
+    setTestingConnection(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/setup/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host: data.dbHost,
+          port: data.dbPort,
+          database: data.dbDatabase,
+          username: data.dbUsername,
+          password: data.dbPassword,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success && result.data.success) {
+        // Connection successful!
+        return true
+      } else {
+        const errorData = result.data || {}
+        setError(
+          `${errorData.message || 'Connection failed'}${errorData.details ? `: ${errorData.details}` : ''}`
+        )
+        return false
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to test connection')
+      return false
+    } finally {
+      setTestingConnection(false)
+    }
+  }
+
   const initializeDatabase = async () => {
     setLoading(true)
     setError(null)
     setInitSteps([])
 
     try {
+      // Build request body - include database config if we're on step 0
+      const requestBody: { dbConfig?: typeof data } = {}
+
+      if (step === 0 || !dbStatus?.connectionOk) {
+        requestBody.dbConfig = {
+          host: data.dbHost,
+          port: data.dbPort,
+          database: data.dbDatabase,
+          username: data.dbUsername,
+          password: data.dbPassword,
+        }
+      }
+
       const response = await fetch('/api/setup/init', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
       })
       const result = await response.json()
 
@@ -147,9 +229,9 @@ export default function SetupWizardPage() {
         throw new Error(result.message || 'Database initialization failed')
       }
 
-      // Success! Move to Step 1 (Welcome)
+      // Success! Move to Step 2 (Welcome)
       setTimeout(() => {
-        setStep(1)
+        setStep(2)
         setLoading(false)
       }, 1500)
     } catch (err) {
@@ -172,13 +254,8 @@ export default function SetupWizardPage() {
     return trimmed
   }
 
-  const handleInputChange = (field: keyof SetupData, value: string) => {
-    // Auto-fix URL if user leaves the field
-    if (field === 'companyWebsite') {
-      setData((prev) => ({ ...prev, [field]: value }))
-    } else {
-      setData((prev) => ({ ...prev, [field]: value }))
-    }
+  const handleInputChange = (field: keyof SetupData, value: string | number) => {
+    setData((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }
 
@@ -192,7 +269,20 @@ export default function SetupWizardPage() {
   const validateStep = (currentStep: SetupStep): boolean => {
     setError(null)
 
-    if (currentStep === 2) {
+    if (currentStep === 0) {
+      // Validate database config
+      if (!data.dbHost || !data.dbDatabase || !data.dbUsername || !data.dbPassword) {
+        setError('Please fill in all required database fields')
+        return false
+      }
+
+      if (data.dbPort < 1 || data.dbPort > 65535) {
+        setError('Please enter a valid port number (1-65535)')
+        return false
+      }
+    }
+
+    if (currentStep === 3) {
       // Validate admin user
       if (!data.adminEmail || !data.adminFullName || !data.adminPassword) {
         setError('Please fill in all required fields')
@@ -215,7 +305,7 @@ export default function SetupWizardPage() {
       }
     }
 
-    if (currentStep === 3) {
+    if (currentStep === 4) {
       // Validate company and location
       if (!data.companyName) {
         setError('Company name is required')
@@ -238,16 +328,26 @@ export default function SetupWizardPage() {
     return true
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateStep(step)) return
 
-    if (step < 5) {
+    // Special handling for Step 0 (Database Config) - test connection first
+    if (step === 0) {
+      const connectionOk = await testDatabaseConnection()
+      if (!connectionOk) return
+
+      // Connection successful, proceed to database init
+      setStep(1)
+      return
+    }
+
+    if (step < 6) {
       setStep((step + 1) as SetupStep)
     }
   }
 
   const handleBack = () => {
-    if (step > 1 && step !== 0) {
+    if (step > 2 && step !== 1 && step !== 0) {
       setStep((step - 1) as SetupStep)
     }
   }
@@ -272,7 +372,7 @@ export default function SetupWizardPage() {
       }
 
       // Move to completion step
-      setStep(5)
+      setStep(6)
 
       // Redirect to login after 1.5 seconds
       setTimeout(() => {
@@ -296,9 +396,15 @@ export default function SetupWizardPage() {
           <div className="setup-header">
             <div className="logo">M</div>
             <h1>
-              {step === 0 ? 'Database Setup' : step === 5 ? 'Setup Complete!' : 'Setup Wizard'}
+              {step === 0
+                ? 'Database Configuration'
+                : step === 1
+                  ? 'Database Setup'
+                  : step === 6
+                    ? 'Setup Complete!'
+                    : 'Setup Wizard'}
             </h1>
-            {step > 0 && step < 5 && <p className="step-indicator">Step {step} of 4</p>}
+            {step > 1 && step < 6 && <p className="step-indicator">Step {step - 1} of 4</p>}
           </div>
 
           {/* Error Message */}
@@ -314,7 +420,14 @@ export default function SetupWizardPage() {
           {/* Step Content */}
           <div className="step-content">
             {step === 0 && (
-              <Step0DatabaseInit
+              <Step0DatabaseConfig
+                data={data}
+                onChange={handleInputChange}
+                testingConnection={testingConnection}
+              />
+            )}
+            {step === 1 && (
+              <Step1DatabaseInit
                 checkingStatus={checkingStatus}
                 dbStatus={dbStatus}
                 initSteps={initSteps}
@@ -322,27 +435,39 @@ export default function SetupWizardPage() {
                 loading={loading}
               />
             )}
-            {step === 1 && <Step1Welcome />}
-            {step === 2 && <Step2AdminUser data={data} onChange={handleInputChange} />}
-            {step === 3 && (
-              <Step3Company data={data} onChange={handleInputChange} onUrlBlur={handleUrlBlur} />
+            {step === 2 && <Step2Welcome />}
+            {step === 3 && <Step3AdminUser data={data} onChange={handleInputChange} />}
+            {step === 4 && (
+              <Step4Company data={data} onChange={handleInputChange} onUrlBlur={handleUrlBlur} />
             )}
-            {step === 4 && <Step4Preferences data={data} onChange={handleInputChange} />}
-            {step === 5 && <Step5Complete />}
+            {step === 5 && <Step5Preferences data={data} onChange={handleInputChange} />}
+            {step === 6 && <Step6Complete />}
           </div>
 
           {/* Navigation Buttons */}
-          {step > 0 && step < 5 && (
+          {step === 0 && (
+            <div className="nav-buttons">
+              <button
+                onClick={handleNext}
+                disabled={testingConnection}
+                className="btn-primary"
+                style={{ width: '100%' }}
+              >
+                {testingConnection ? 'Testing Connection...' : 'Test Connection & Continue'}
+              </button>
+            </div>
+          )}
+          {step > 1 && step < 6 && (
             <div className="nav-buttons">
               <button
                 onClick={handleBack}
-                disabled={step === 1 || loading}
+                disabled={step === 2 || loading}
                 className="btn-secondary"
               >
                 Back
               </button>
 
-              {step < 4 ? (
+              {step < 5 ? (
                 <button onClick={handleNext} disabled={loading} className="btn-primary">
                   Next
                 </button>
@@ -355,7 +480,7 @@ export default function SetupWizardPage() {
           )}
 
           {/* Footer Note */}
-          {step > 0 && step < 5 && (
+          {step > 1 && step < 6 && (
             <div className="setup-footer">
               <p>
                 Need help?{' '}
@@ -539,6 +664,113 @@ export default function SetupWizardPage() {
 // ============================================================================
 
 interface Step0Props {
+  data: SetupData
+  onChange: (field: keyof SetupData, value: string | number) => void
+  testingConnection: boolean
+}
+
+function Step0DatabaseConfig({ data, onChange }: Step0Props) {
+  return (
+    <>
+      <div className="form-step">
+        <h2>Database Configuration</h2>
+        <p className="subtitle">
+          Enter your PostgreSQL connection details. These settings will be used to connect to your
+          database server.
+        </p>
+
+        <div className="form-row">
+          <Input
+            label="Host"
+            value={data.dbHost}
+            onChange={(e) => onChange('dbHost', e.target.value)}
+            placeholder="localhost"
+            required
+          />
+          <div style={{ width: '120px' }}>
+            <Input
+              label="Port"
+              type="number"
+              value={String(data.dbPort)}
+              onChange={(e) => onChange('dbPort', parseInt(e.target.value) || 5432)}
+              placeholder="5432"
+              required
+            />
+          </div>
+        </div>
+
+        <Input
+          label="Database Name"
+          value={data.dbDatabase}
+          onChange={(e) => onChange('dbDatabase', e.target.value)}
+          placeholder="moss"
+          required
+        />
+
+        <Input
+          label="Username"
+          value={data.dbUsername}
+          onChange={(e) => onChange('dbUsername', e.target.value)}
+          placeholder="postgres"
+          required
+        />
+
+        <Input
+          label="Password"
+          type="password"
+          value={data.dbPassword}
+          onChange={(e) => onChange('dbPassword', e.target.value)}
+          placeholder="Enter database password"
+          required
+        />
+
+        <div className="info-box">
+          <p>
+            <strong>Note:</strong> Make sure your PostgreSQL server is running and accessible from
+            this machine. The database will be created automatically if it doesn&apos;t exist.
+          </p>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .form-step h2 {
+          font-size: 22px;
+          margin: 0 0 0.5rem;
+          color: var(--color-brew-black);
+        }
+
+        .subtitle {
+          font-size: 15px;
+          color: var(--color-brew-black-60);
+          margin: 0 0 1.5rem;
+        }
+
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 1rem;
+          margin-bottom: 1.5rem;
+        }
+
+        .info-box {
+          background: #e3f2fd;
+          border: 1px solid #90caf9;
+          border-radius: 6px;
+          padding: 12px 16px;
+          margin-top: 1.5rem;
+        }
+
+        .info-box p {
+          font-size: 13px;
+          color: #1565c0;
+          margin: 0;
+        }
+      `}</style>
+    </>
+  )
+}
+
+interface Step1Props {
   checkingStatus: boolean
   dbStatus: DatabaseStatus | null
   initSteps: string[]
@@ -546,13 +778,13 @@ interface Step0Props {
   loading: boolean
 }
 
-function Step0DatabaseInit({
+function Step1DatabaseInit({
   checkingStatus,
   dbStatus,
   initSteps,
   onInitialize,
   loading,
-}: Step0Props) {
+}: Step1Props) {
   if (checkingStatus) {
     return (
       <>
@@ -604,7 +836,9 @@ function Step0DatabaseInit({
     return (
       <>
         <div className="status-screen">
-          <div className="icon-error">⚠</div>
+          <div className="icon-error">
+            <Icon name="alert-warning-triangle" size={40} aria-label="Error" />
+          </div>
           <h2>Connection Error</h2>
           <p>Unable to reach the database. Please verify your connection settings and try again.</p>
         </div>
@@ -679,7 +913,21 @@ function Step0DatabaseInit({
           )}
 
           <button onClick={onInitialize} disabled={loading} className="btn-init">
-            {loading ? 'Initializing...' : '🚀 Initialize Database'}
+            {loading ? (
+              'Initializing...'
+            ) : (
+              <span
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  justifyContent: 'center',
+                }}
+              >
+                <Icon name="rocket-launch" size={20} aria-label="Initialize" />
+                Initialize Database
+              </span>
+            )}
           </button>
         </div>
 
@@ -768,7 +1016,7 @@ function Step0DatabaseInit({
   return null
 }
 
-function Step1Welcome() {
+function Step2Welcome() {
   return (
     <>
       <div className="welcome">
@@ -881,7 +1129,7 @@ interface StepProps {
   onUrlBlur?: () => void
 }
 
-function Step2AdminUser({ data, onChange }: StepProps) {
+function Step3AdminUser({ data, onChange }: StepProps) {
   return (
     <>
       <div className="form-step">
@@ -953,7 +1201,7 @@ function Step2AdminUser({ data, onChange }: StepProps) {
   )
 }
 
-function Step3Company({ data, onChange, onUrlBlur }: StepProps) {
+function Step4Company({ data, onChange, onUrlBlur }: StepProps) {
   return (
     <>
       <div className="form-step">
@@ -1108,7 +1356,7 @@ function Step3Company({ data, onChange, onUrlBlur }: StepProps) {
   )
 }
 
-function Step4Preferences({ data, onChange }: StepProps) {
+function Step5Preferences({ data, onChange }: StepProps) {
   return (
     <>
       <div className="form-step">
@@ -1202,7 +1450,7 @@ function Step4Preferences({ data, onChange }: StepProps) {
   )
 }
 
-function Step5Complete() {
+function Step6Complete() {
   return (
     <>
       <div className="complete-screen">

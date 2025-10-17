@@ -31,13 +31,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       primary: 'btn-primary',
       secondary: 'btn-secondary',
       outline: 'btn-outline',
-      destructive: 'bg-orange text-off-white hover:opacity-90',
+      destructive: 'btn-destructive bg-orange text-off-white hover:opacity-90',
     }
-    // Icon-only buttons are square with equal padding
+    // Size classes - use minimal overrides since CSS handles standard sizing
     const sizeClasses = {
-      sm: iconOnly ? 'text-sm p-xs' : 'text-sm p-xs pl-md pr-md',
-      md: iconOnly ? 'text-md p-sm' : 'text-md p-sm pl-lg pr-lg',
-      lg: iconOnly ? 'text-lg p-md' : 'text-lg p-md pl-xl pr-xl',
+      sm: iconOnly ? 'text-sm px-sm py-xs h-auto' : 'text-sm px-lg py-xs h-auto',
+      md: iconOnly ? '' : '', // Default size, handled by .btn class
+      lg: iconOnly ? 'text-lg px-lg py-md h-auto' : 'text-lg px-xl py-md h-auto',
     }
 
     const classes = [

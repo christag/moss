@@ -6,11 +6,15 @@
 import React from 'react'
 import { requireAdmin } from '@/lib/adminAuth'
 import AdminDashboardContent from '@/components/AdminDashboardContent'
+import { getStatus } from '@/lib/migrate'
 import type { IconName } from '@/components/ui'
 
 export default async function AdminDashboardPage() {
   // Require admin role to access this page
   const session = await requireAdmin()
+
+  // Get migration status
+  const migrationStatus = await getStatus()
 
   // Quick action cards for admin panel sections
   const quickActions: Array<{
@@ -78,6 +82,16 @@ export default async function AdminDashboardPage() {
     { label: 'User Role', value: session.user.role.replace('_', ' ').toUpperCase() },
     { label: 'User Email', value: session.user.email },
     { label: 'User Name', value: session.user.full_name },
+    {
+      label: 'Database Version',
+      value: `${migrationStatus.currentVersion}${migrationStatus.status === 'pending' ? ` (${migrationStatus.pendingMigrations} pending)` : ' (up-to-date)'}`,
+      badge:
+        migrationStatus.status === 'up_to_date'
+          ? 'success'
+          : migrationStatus.status === 'pending'
+            ? 'warning'
+            : 'error',
+    },
   ]
 
   return <AdminDashboardContent systemInfo={systemInfo} quickActions={quickActions} />

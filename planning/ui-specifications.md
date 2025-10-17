@@ -324,6 +324,261 @@ Every object detail view includes relationship tabs using the **RelatedItemsList
 />
 ```
 
+### Core UI Components
+
+#### Pagination Component
+
+**Component**: `src/components/ui/Pagination.tsx`
+
+**Design Specs** (from Figma `pagination.svg`):
+- Button size: 32px × 32px
+- Gap between elements: 12px
+- Border radius: 4px
+- Font size: 16px, weight: 500
+
+**Colors**:
+- Active page: Black background (#231F20), white text
+- Inactive pages: Gray text (#6B7885, 70% opacity)
+- Hover: Light gray background (rgba(107, 120, 133, 0.1))
+- Disabled: 30% opacity
+
+**Props**:
+- `currentPage`: Current page number (1-indexed)
+- `totalPages`: Total number of pages
+- `onPageChange`: Callback when page changes
+- `maxVisiblePages`: Maximum page numbers to show (default 6)
+- `className`: Optional CSS class
+
+**Features**:
+- Ellipsis for large page ranges
+- Previous/Next arrow buttons
+- Disabled state when at boundaries
+- Keyboard accessible
+- ARIA labels for screen readers
+
+**Usage Pattern**:
+```typescript
+<Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={setCurrentPage}
+  maxVisiblePages={6}
+/>
+```
+
+#### Breadcrumb Component
+
+**Component**: `src/components/ui/Breadcrumb.tsx`
+
+**Design Specs** (from Figma `Breadcrumb.svg`):
+- Font size: 14px, line height: 21px
+- Gap between items: 8px
+- Separator: "/" with 4px margin
+- Padding: 12px vertical, 16px bottom margin
+
+**Colors**:
+- Links: Black (#231F20) with opacity change on hover
+- Current page: Bold (weight 600)
+- Separator: Black, weight 400
+
+**Props**:
+- `items`: Array of `{ label: string, href?: string }`
+- `className`: Optional CSS class
+
+**Features**:
+- Auto-generates separators
+- Last item is non-clickable
+- Hover states on links
+- Keyboard accessible
+- ARIA landmark navigation
+
+**Usage Pattern**:
+```typescript
+<Breadcrumb
+  items={[
+    { label: 'Home', href: '/' },
+    { label: 'People', href: '/people' },
+    { label: 'John Doe' }
+  ]}
+/>
+```
+
+#### Button Component
+
+**Component**: `src/components/ui/Button.tsx`
+
+**Design Specs** (from Figma, updated 2025-10-16):
+- Height: 44px
+- Padding: 11px vertical, 24px horizontal
+- Font size: 18px (--font-size-md)
+- Font weight: 500 (medium)
+- Border radius: 4px
+- Line height: Tight
+
+**Variants**:
+- **Primary**: Black background (#231F20), white text
+  - Hover: 85% opacity black
+- **Secondary**: White background, #6B7885 border (2px), black text
+  - Hover: Light gray background, black border
+  - Padding: 9px/22px (compensate for border)
+- **Outline**: White background, black border (2px)
+  - Hover: Black background, white text
+  - Padding: 9px/22px (compensate for border)
+- **Destructive**: Orange background (#FD6A3D), white text
+  - Hover: 90% opacity
+
+**Disabled State**:
+- Background: #CFCFCF
+- Text: Black 40% opacity
+- Border: #CFCFCF
+- Cursor: not-allowed
+
+**Props**:
+- `variant`: 'primary' | 'secondary' | 'outline' | 'destructive'
+- `size`: 'sm' | 'md' | 'lg'
+- `disabled`: boolean
+- `onClick`: Callback function
+- `children`: Button content
+
+#### Input Component
+
+**Component**: `src/components/ui/Input.tsx`
+
+**Design Specs** (from Figma `Input/` folder, updated 2025-10-16):
+- Height: 44px
+- Padding: 11px vertical, 18px horizontal
+- Font size: 18px
+- Border: 1px solid #6B7885
+- Border radius: 4px
+- Background: White
+
+**States**:
+- **Default**: Gray border (#6B7885)
+- **Focus**: Black border (#231F20), box-shadow: 0 0 0 1px black
+- **Error**: Red border (#E02D3C), light red background (rgba(224, 45, 60, 0.03))
+- **Valid**: Green border (#28C077)
+- **Disabled**: Gray background (#CFCFCF), 60% opacity
+
+**Error Display**:
+- Error text: 6px margin-top, 14px font size
+- Error color: #E02D3C
+- Error icon: Red X on right side
+
+**Label**:
+- Font size: 14px, weight: 500 (medium)
+- Margin bottom: 8px
+- Required indicator: Orange asterisk
+
+**Helper Text**:
+- Font size: 14px
+- Color: #6B7885
+- Margin top: 6px
+
+**Props**:
+- `label`: Input label text
+- `type`: HTML input type
+- `placeholder`: Placeholder text
+- `helperText`: Helper/hint text
+- `error`: Error message string
+- `required`: Shows asterisk
+- `disabled`: Disabled state
+
+#### Select Component
+
+**Component**: `src/components/ui/Select.tsx`
+
+**Design Specs**: Same as Input component
+- Height: 44px
+- Padding: 11px vertical, 18px horizontal
+- Same border, focus, and error states as Input
+
+**Props**:
+- `label`: Select label text
+- `options`: Array of `{ value: string, label: string }`
+- `helperText`: Helper text
+- `error`: Error message
+- `required`: Shows asterisk
+- `disabled`: Disabled state
+
+#### Checkbox Component
+
+**Component**: `src/components/ui/Checkbox.tsx`
+
+**Design Specs** (from Figma `Input/Checkbox.svg`, updated 2025-10-16):
+- Size: 19px × 19px
+- Border radius: 3.5px
+- Border: 1px solid #6B7885 (default)
+- Checkmark: Custom SVG (14px × 11px)
+
+**States**:
+- **Unchecked**: White background, gray border
+- **Checked**: Black background (#231F20), white checkmark
+- **Hover**: Black border
+- **Focus**: 2px outline, 2px offset
+- **Disabled**: Gray background (#CFCFCF), reduced opacity
+
+**Label Spacing**:
+- Gap between checkbox and label: 8px
+- Font size: 16px
+- Required asterisk: Orange, 1px left margin
+
+**Props**:
+- `label`: Checkbox label text
+- `helperText`: Additional information text
+- `error`: Error message
+- `required`: Shows asterisk
+- `disabled`: Disabled state
+
+#### Footer Component
+
+**Component**: `src/components/Footer.tsx`
+
+**Design Specs** (from Figma `Footer Updates.svg`):
+- Background: Black (#231F20)
+- Text color: Off-white with opacity variations
+- Padding: 48px top, 24px bottom
+
+**Layout**:
+- 4-column grid (responsive to 2-column, then 1-column)
+- Gap: 40px between sections
+- Max width: 1280px, centered
+
+**Sections**:
+1. Brand (M.O.S.S. heading + description)
+2. Quick Links (Dashboard, People, Devices, Networks)
+3. Resources (Admin, Import, Documentation)
+4. Support (Report Issue, GitHub)
+
+**Bottom Bar**:
+- Divider: 1px line, 20% opacity white, 32px margin top
+- Copyright text: 14px, 60% opacity
+- Legal links: Privacy, Terms (separated by •)
+- Flex layout: space-between
+
+**Link Styles**:
+- Default: 70% opacity white, 14px font
+- Hover: Full opacity white
+- Focus: 2px white outline, 2px offset
+
+#### Horizontal Rules
+
+**CSS Classes**: Applied to `<hr>` element
+
+**Design Specs** (from Figma `Horizontal Rule.svg`):
+- Default: 1px solid #C4C4C4
+- Margin: var(--spacing-lg) top and bottom
+- No background color
+
+**Variants**:
+- `.hr-thick`: 2px border width
+- `.hr-thin`: 1px border width (same as default)
+
+**Usage**:
+```tsx
+<hr /> {/* Standard 1px */}
+<hr className="hr-thick" /> {/* 2px thick */}
+```
+
 ### Standard Relationship Tabs by Object Type
 
 **Locations**:

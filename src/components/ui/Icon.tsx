@@ -36,6 +36,23 @@ export type IconName =
   | 'warning'
   | 'check_circle'
   | 'upload'
+  | 'lock-security'
+  | 'mobile-phone'
+  | 'desktop-computer'
+  | 'cloud'
+  | 'database-storage'
+  | 'chart-analytics'
+  | 'plugin-connection'
+  | 'person-user'
+  | 'globe-world'
+  | 'package-box'
+  | 'document-file'
+  | 'clipboard-check'
+  | 'alert-warning-triangle'
+  | 'users-group-team'
+  | 'flask-beaker-science'
+  | 'rocket-launch'
+  | 'hierarchy-network'
 
 export interface IconProps extends Omit<React.HTMLAttributes<HTMLImageElement>, 'src'> {
   name: IconName

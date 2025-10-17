@@ -9,6 +9,7 @@ import type { RoleAssignment } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 import { requireRole } from '@/lib/auth'
 import { invalidateUserCache } from '@/lib/rbac'
+import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 
 /**
  * GET /api/role-assignments/:id
@@ -224,6 +225,28 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         }
       }
 
+      // Log admin action
+      const session = await requireRole('admin')
+      await logAdminAction({
+        user_id: session.user.id,
+        action: 'role_assignment_updated',
+        category: 'rbac',
+        target_type: 'role_assignment',
+        target_id: id,
+        details: {
+          before: {
+            scope: existing.scope,
+            notes: existing.notes,
+          },
+          after: {
+            scope: updated.scope,
+            notes: updated.notes,
+          },
+        },
+        ip_address: getIPAddress(request.headers),
+        user_agent: getUserAgent(request.headers),
+      })
+
       return NextResponse.json({ success: true, data: updated })
     } catch (error) {
       await client.query('ROLLBACK')
@@ -312,6 +335,24 @@ export async function DELETE(
           invalidateUserCache(member.user_id)
         }
       }
+
+      // Log admin action
+      const session = await requireRole('admin')
+      await logAdminAction({
+        user_id: session.user.id,
+        action: 'role_assignment_revoked',
+        category: 'rbac',
+        target_type: 'role_assignment',
+        target_id: id,
+        details: {
+          role_id: assignment.role_id,
+          person_id: assignment.person_id,
+          group_id: assignment.group_id,
+          scope: assignment.scope,
+        },
+        ip_address: getIPAddress(_request.headers),
+        user_agent: getUserAgent(_request.headers),
+      })
 
       return NextResponse.json({
         success: true,

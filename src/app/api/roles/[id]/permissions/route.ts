@@ -7,6 +7,8 @@ import { query } from '@/lib/db'
 import { AssignPermissionsToRoleSchema } from '@/lib/schemas/rbac'
 import { parseRequestBody } from '@/lib/api'
 import { getRolePermissions, invalidateRoleCache } from '@/lib/rbac'
+import { auth } from '@/lib/auth'
+import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 
 /**
  * GET /api/roles/:id/permissions
@@ -70,6 +72,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     // Validate request body
     const validated = AssignPermissionsToRoleSchema.parse(body)
 
+    // Get existing permissions before update for audit log
+    const existingPermissions = await getRolePermissions(id, false)
+    const existingPermissionIds = existingPermissions.map((p) => p.id)
+
     // Begin transaction
     await query('BEGIN')
 
@@ -104,6 +110,30 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
       // Fetch updated permissions
       const permissions = await getRolePermissions(id, false)
+
+      // Log admin action
+      const session = await auth()
+      if (session?.user?.id) {
+        await logAdminAction({
+          user_id: session.user.id,
+          action: 'role_permissions_updated',
+          category: 'rbac',
+          target_type: 'role',
+          target_id: id,
+          details: {
+            before_count: existingPermissionIds.length,
+            after_count: validated.permission_ids.length,
+            added_permissions: validated.permission_ids.filter(
+              (pId) => !existingPermissionIds.includes(pId)
+            ),
+            removed_permissions: existingPermissionIds.filter(
+              (pId) => !validated.permission_ids.includes(pId)
+            ),
+          },
+          ip_address: getIPAddress(request.headers),
+          user_agent: getUserAgent(request.headers),
+        })
+      }
 
       return NextResponse.json({
         success: true,

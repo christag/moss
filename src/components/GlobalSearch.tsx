@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Icon } from '@/components/ui'
+import { Icon, type IconName } from '@/components/ui'
 
 interface SearchResult {
   id: string
@@ -43,15 +43,15 @@ const TYPE_ROUTES: Record<string, string> = {
   contract: '/contracts',
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  device: '💻',
-  person: '👤',
-  location: '📍',
-  network: '🌐',
-  software: '📦',
-  saas_service: '☁️',
-  document: '📄',
-  contract: '📋',
+const TYPE_ICONS: Record<string, IconName> = {
+  device: 'desktop-computer',
+  person: 'person-user',
+  location: 'location-pin',
+  network: 'globe-world',
+  software: 'package-box',
+  saas_service: 'cloud',
+  document: 'document-file',
+  contract: 'clipboard-check',
 }
 
 export default function GlobalSearch() {
@@ -289,9 +289,13 @@ export default function GlobalSearch() {
                       fontWeight: '600',
                       color: 'var(--color-brew-black-60)',
                       borderTop: '1px solid var(--color-border)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 'var(--spacing-xs)',
                     }}
                   >
-                    {TYPE_ICONS[type]} {TYPE_LABELS[type]}
+                    <Icon name={TYPE_ICONS[type]} size={14} aria-label={TYPE_LABELS[type]} />
+                    {TYPE_LABELS[type]}
                   </div>
                   {items.map((item, _itemIndex) => {
                     const globalIndex = flatResults.findIndex(

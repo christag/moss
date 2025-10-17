@@ -73,7 +73,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           }
 
           .input-icon-error {
-            color: var(--color-orange);
+            color: var(--color-error-border);
           }
 
           .input-icon-success {
@@ -81,13 +81,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           }
 
           .form-input.input-error {
-            border-color: var(--color-orange);
-            background-color: rgba(253, 106, 61, 0.05);
+            border-color: var(--color-error-border);
+            background-color: rgba(224, 45, 60, 0.03);
           }
 
           .form-input.input-error:focus {
-            outline: 2px solid var(--color-orange);
-            outline-offset: 2px;
+            border-color: var(--color-error-border);
+            box-shadow: 0 0 0 1px var(--color-error-border);
           }
 
           .form-input.input-valid {
@@ -95,14 +95,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           }
 
           .form-input.input-valid:focus {
-            outline: 2px solid var(--color-green);
-            outline-offset: 2px;
+            border-color: var(--color-green);
+            box-shadow: 0 0 0 1px var(--color-green);
           }
 
           .input-error-text {
-            margin-top: 0.375rem;
+            margin-top: 6px;
             font-size: 0.875rem;
-            color: var(--color-orange);
+            color: var(--color-error-border);
           }
 
           .input-helper-text {

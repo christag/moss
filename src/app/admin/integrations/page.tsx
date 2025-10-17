@@ -8,6 +8,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Integration } from '@/types'
+import { Icon, type IconName } from '@/components/ui'
 
 export default function IntegrationsPage() {
   const router = useRouter()
@@ -198,15 +199,15 @@ function IntegrationCard({ integration, onDelete, onEdit }: IntegrationCardProps
     other: 'var(--color-light-blue)',
   }
 
-  const typeIcons: Record<string, string> = {
-    idp: '🔐',
-    mdm: '📱',
-    rmm: '🖥️',
-    cloud_provider: '☁️',
-    ticketing: '🎫',
-    monitoring: '📊',
-    backup: '💾',
-    other: '🔌',
+  const typeIcons: Record<string, IconName> = {
+    idp: 'lock-security',
+    mdm: 'mobile-phone',
+    rmm: 'desktop-computer',
+    cloud_provider: 'cloud',
+    ticketing: 'ticket-event-stub',
+    monitoring: 'chart-analytics',
+    backup: 'database-storage',
+    other: 'plugin-connection',
   }
 
   return (
@@ -241,9 +242,11 @@ function IntegrationCard({ integration, onDelete, onEdit }: IntegrationCardProps
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-          <span style={{ fontSize: '2rem' }}>
-            {typeIcons[integration.integration_type] || '🔌'}
-          </span>
+          <Icon
+            name={typeIcons[integration.integration_type] || 'plugin-connection'}
+            size={32}
+            aria-label={`${integration.integration_type} icon`}
+          />
           <div>
             <h3
               style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--color-brew-black)' }}

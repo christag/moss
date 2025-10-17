@@ -8,6 +8,8 @@ import { UpdateRoleSchema } from '@/lib/schemas/rbac'
 import type { Role } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 import { checkRoleHierarchyCycle, invalidateRoleCache } from '@/lib/rbac'
+import { auth } from '@/lib/auth'
+import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 
 /**
  * GET /api/roles/:id
@@ -39,11 +41,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
 
     // Check if it's a system role (system roles cannot be updated)
-    const checkResult = await query<Role>('SELECT is_system_role FROM roles WHERE id = $1', [id])
+    const checkResult = await query<Role>('SELECT * FROM roles WHERE id = $1', [id])
     if (checkResult.rows.length === 0) {
       return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
     }
-    if (checkResult.rows[0].is_system_role) {
+    const existingRole = checkResult.rows[0]
+    if (existingRole.is_system_role) {
       return NextResponse.json(
         { success: false, message: 'System roles cannot be modified' },
         { status: 403 }
@@ -129,10 +132,38 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
     }
 
+    const updatedRole = result.rows[0]
+
     // Invalidate role permission cache
     invalidateRoleCache(id)
 
-    return NextResponse.json({ success: true, data: result.rows[0] })
+    // Log admin action
+    const session = await auth()
+    if (session?.user?.id) {
+      await logAdminAction({
+        user_id: session.user.id,
+        action: 'role_updated',
+        category: 'rbac',
+        target_type: 'role',
+        target_id: id,
+        details: {
+          before: {
+            role_name: existingRole.role_name,
+            description: existingRole.description,
+            parent_role_id: existingRole.parent_role_id,
+          },
+          after: {
+            role_name: updatedRole.role_name,
+            description: updatedRole.description,
+            parent_role_id: updatedRole.parent_role_id,
+          },
+        },
+        ip_address: getIPAddress(request.headers),
+        user_agent: getUserAgent(request.headers),
+      })
+    }
+
+    return NextResponse.json({ success: true, data: updatedRole })
   } catch (error) {
     console.error('Error updating role:', error)
     if (error instanceof Error) {
@@ -155,11 +186,12 @@ export async function DELETE(
     const { id } = await params
 
     // Check if it's a system role (system roles cannot be deleted)
-    const checkResult = await query<Role>('SELECT is_system_role FROM roles WHERE id = $1', [id])
+    const checkResult = await query<Role>('SELECT * FROM roles WHERE id = $1', [id])
     if (checkResult.rows.length === 0) {
       return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
     }
-    if (checkResult.rows[0].is_system_role) {
+    const roleToDelete = checkResult.rows[0]
+    if (roleToDelete.is_system_role) {
       return NextResponse.json(
         { success: false, message: 'System roles cannot be deleted' },
         { status: 403 }
@@ -178,6 +210,25 @@ export async function DELETE(
 
     if (result.rows.length === 0) {
       return NextResponse.json({ success: false, message: 'Role not found' }, { status: 404 })
+    }
+
+    // Log admin action
+    const session = await auth()
+    if (session?.user?.id) {
+      await logAdminAction({
+        user_id: session.user.id,
+        action: 'role_deleted',
+        category: 'rbac',
+        target_type: 'role',
+        target_id: id,
+        details: {
+          role_name: roleToDelete.role_name,
+          description: roleToDelete.description,
+          removed_assignments: assignmentCount,
+        },
+        ip_address: getIPAddress(_request.headers),
+        user_agent: getUserAgent(_request.headers),
+      })
     }
 
     return NextResponse.json({

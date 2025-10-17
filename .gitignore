@@ -89,16 +89,8 @@ rebuild-database.js
 rebuild-database.sh
 
 # Internal documentation and task tracking
-CLAUDE-TODO.md
-CLAUDE-UPDATES.md
-SCHEMA-ALIGNMENT-PLAN.md
-*-SESSION-*.md
-*-REMEDIATION-*.md
-UAT-*.md
-ENHANCED-*.md
-RELATIONSHIP-UI-IMPLEMENTATION-SUMMARY.md
-*-IMPLEMENTATION-SUMMARY.md
-*-DOCUMENTATION-STATUS.md
+.claude/CLAUDE-TODO.md
+.claude/CLAUDE-UPDATES.md
 
 # Testing directory with UAT results
 testing/

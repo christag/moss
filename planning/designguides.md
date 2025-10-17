@@ -105,10 +105,60 @@ The secondary palette is meant to compliment, never overpower the primary palett
   }
 ]
 
+## Component-Specific Colors (Updated 2025-10-16)
+
+From Figma specifications for form inputs, buttons, and UI components:
+
+[
+  {
+    "name": "Border Default",
+    "purpose": "Form input borders, select dropdowns",
+    "RGB": "107/120/133",
+    "HEX": "#6B7885",
+    "cssVar": "--color-border-default"
+  },
+  {
+    "name": "Error Border",
+    "purpose": "Input validation errors",
+    "RGB": "224/45/60",
+    "HEX": "#E02D3C",
+    "cssVar": "--color-error-border",
+    "usage": "Border color for inputs with errors, error text color"
+  },
+  {
+    "name": "Disabled",
+    "purpose": "Disabled form elements, buttons",
+    "RGB": "207/207/207",
+    "HEX": "#CFCFCF",
+    "cssVar": "--color-disabled"
+  },
+  {
+    "name": "Separator",
+    "purpose": "Horizontal rules, dividers",
+    "RGB": "196/196/196",
+    "HEX": "#C4C4C4",
+    "cssVar": "--color-separator"
+  }
+]
+
+**Button Colors (Updated from Figma)**:
+- Primary: Brew Black background (#231F20), Off White text
+- Secondary: White background, Border Default (#6B7885) border, Brew Black text
+- Outline: White background, Brew Black border, Brew Black text
+- Destructive: Orange background (#FD6A3D), Off White text
+- Disabled: Disabled color (#CFCFCF) background, Brew Black 40% opacity text
+
+**Form Input Colors**:
+- Default border: Border Default (#6B7885)
+- Focus border: Brew Black (#231F20) with box-shadow
+- Error border: Error Border (#E02D3C) with light tint background
+- Valid border: Green (#28C077)
+- Disabled: Disabled (#CFCFCF) background
+
 ## Color Combinations and Layering
 
 {
-    "approvedColorCombinations" : 
+    "approvedColorCombinations" :
     {
       "fontOnBackground": {
         "Morning Blue": ["Brew Black", "Off White"],
@@ -128,4 +178,4 @@ The secondary palette is meant to compliment, never overpower the primary palett
         { "top": "Black", "bottom": "Any color except Off White" }
       ]
     }
-}    
+}

@@ -193,6 +193,48 @@ The system uses PostgreSQL with UUID primary keys throughout. The database schem
 
 **For complete database patterns, relationships, and query examples, see [planning/database-architecture.md](planning/database-architecture.md).**
 
+### Database Migrations
+
+**For complete migration documentation, see [MIGRATIONS.md](MIGRATIONS.md).**
+
+M.O.S.S. uses an automated migration system that runs on application boot:
+
+**Auto-Migration Features** (Implemented 2025-10-16):
+- ✅ **Automatic on boot**: Migrations run when server starts (no manual intervention)
+- ✅ **Migration locking**: Prevents concurrent migrations in multi-container deployments
+- ✅ **Retry logic**: Database connection retry with exponential backoff
+- ✅ **Version tracking**: SHA-256 checksums validate migration file integrity
+- ✅ **Execution tracking**: Records execution time, status, and application version
+- ✅ **Graceful failure**: Logs errors but doesn't crash app if migrations fail
+
+**Migration Files**: Located in `/migrations` directory, numbered sequentially (000-020)
+- `000_migration_system.sql` - Bootstrap migration with locking and tracking
+- `001_initial_schema.sql` - Core tables
+- `002_add_authentication.sql` - Users and sessions
+- ... (see `/migrations` for full list)
+- `020_api_tokens.sql` - Bearer token authentication
+
+**Environment Variables**:
+```bash
+AUTO_MIGRATE=true                    # Enable auto-migration (default: true)
+MIGRATION_TIMEOUT_MS=300000          # 5 minutes max for all migrations
+MIGRATION_LOCK_TIMEOUT_MS=30000      # 30 seconds to acquire lock
+```
+
+**Manual Commands**:
+```bash
+npm run db:migrate         # Run all pending migrations
+npm run db:status          # Check migration status
+npm run db:version         # Get current database version
+```
+
+**Admin UI**: Migration status displayed in Admin Dashboard (`/admin`)
+- Shows current database version
+- Indicates if migrations are pending (yellow badge)
+- Links to migration logs
+
+**Creating New Migrations**: See [MIGRATIONS.md](MIGRATIONS.md#creating-new-migrations) for templates and best practices.
+
 ## Development Context
 
 **Current Phase**: Phase 1 ~90% complete - All 16 core objects have full CRUD, Enhanced RBAC implemented
@@ -285,6 +327,32 @@ Every object detail view includes relationship tabs using the **RelatedItemsList
 - Configurable columns with custom render functions
 - Click-through navigation via `linkPattern` (e.g., `/devices/:id`)
 - "Add New" button support with pre-populated parent IDs
+
+### Core UI Components (Updated 2025-10-16)
+
+**Complete component reference**: [COMPONENTS.md](COMPONENTS.md)
+
+All components follow Figma design specifications from the `figma/` folder with precise spacing, sizing, and colors.
+
+**Form Components**:
+- `Button`: 44px height, black primary (was blue), variants: primary/secondary/outline/destructive
+- `Input`: 44px height, white background, #6B7885 border, #E02D3C error state
+- `Select`: Same styling as Input with dropdown functionality
+- `Checkbox`: 19×19px with custom SVG checkmark, black when checked
+- `Textarea`: Auto-height with same styling as Input
+
+**Navigation Components**:
+- `Breadcrumb`: 14px font, "/" separator, 8px gap, black links with opacity hover
+- `Pagination`: 32×32px buttons, 12px gap, ellipsis for large ranges
+- `Footer`: Black background, 4-column grid, legal links, responsive
+
+**New Design System Colors** (from Figma):
+- `--color-border-default: #6B7885` - Form input borders
+- `--color-error-border: #E02D3C` - Error states (replaced orange)
+- `--color-disabled: #CFCFCF` - Disabled elements
+- `--color-separator: #C4C4C4` - Horizontal rules
+
+**Testing**: View all components at `/test/components` showcase page
 
 ### Design System
 

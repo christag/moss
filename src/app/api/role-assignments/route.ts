@@ -10,6 +10,7 @@ import { parseRequestBody } from '@/lib/api'
 import { requireRole } from '@/lib/auth'
 import { invalidateUserCache } from '@/lib/rbac'
 import { z } from 'zod'
+import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 
 // Query schema for GET parameters
 const RoleAssignmentQuerySchema = z.object({
@@ -276,6 +277,24 @@ export async function POST(request: NextRequest) {
           invalidateUserCache(userResult.rows[0].id)
         }
       }
+
+      // Log admin action
+      await logAdminAction({
+        user_id: session.user.id,
+        action: 'role_assignment_created',
+        category: 'rbac',
+        target_type: 'role_assignment',
+        target_id: assignment.id,
+        details: {
+          role_id: validated.role_id,
+          person_id: validated.person_id,
+          group_id: validated.group_id,
+          scope: validated.scope,
+          location_ids: validated.location_ids,
+        },
+        ip_address: getIPAddress(request.headers),
+        user_agent: getUserAgent(request.headers),
+      })
 
       return NextResponse.json({ success: true, data: assignment }, { status: 201 })
     } catch (error) {

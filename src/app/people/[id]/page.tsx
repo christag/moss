@@ -2,22 +2,27 @@
  * Person Detail Page
  *
  * Shows detailed information about a specific person with relationship tabs
+ * If viewing your own record, shows additional Account Settings tab
  */
 'use client'
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { toast } from 'sonner'
 import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
 import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
 import { Badge } from '@/components/ui/Badge'
 import { AttachmentsTab } from '@/components/AttachmentsTab'
+import { PasswordChangeForm } from '@/components/PasswordChangeForm'
+import { ApiTokenManager } from '@/components/ApiTokenManager'
 import type { Person, Company, Location, Device, Group } from '@/types'
 
 export default function PersonDetailPage() {
   const router = useRouter()
   const params = useParams()
   const id = params.id as string
+  const { data: session } = useSession()
 
   const [person, setPerson] = useState<Person | null>(null)
   const [company, setCompany] = useState<Company | null>(null)
@@ -25,6 +30,9 @@ export default function PersonDetailPage() {
   const [manager, setManager] = useState<Person | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Check if viewing own profile
+  const isOwnProfile = session?.user?.person_id === id
 
   // Fetch person data
   useEffect(() => {
@@ -356,6 +364,61 @@ export default function PersonDetailPage() {
       label: 'Overview',
       content: <div>Overview content is rendered by GenericDetailView</div>,
     },
+    // Show Account Settings tab only when viewing own profile
+    ...(isOwnProfile
+      ? [
+          {
+            id: 'account-settings',
+            label: 'Account Settings',
+            content: (
+              <div style={{ padding: '1.5rem' }}>
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '0.5rem' }}>
+                    User Role
+                  </h3>
+                  <p
+                    style={{
+                      fontSize: '14px',
+                      color: 'var(--color-brew-black-60)',
+                      marginBottom: '0.75rem',
+                    }}
+                  >
+                    Your current system role
+                  </p>
+                  <Badge
+                    variant={
+                      session?.user?.role === 'super_admin'
+                        ? 'green'
+                        : session?.user?.role === 'admin'
+                          ? 'blue'
+                          : 'default'
+                    }
+                  >
+                    {session?.user?.role === 'super_admin'
+                      ? 'Super Admin'
+                      : session?.user?.role === 'admin'
+                        ? 'Admin'
+                        : 'User'}
+                  </Badge>
+                </div>
+
+                <div style={{ marginBottom: '3rem' }}>
+                  <PasswordChangeForm />
+                </div>
+              </div>
+            ),
+          },
+          {
+            id: 'api-tokens',
+            label: 'API Tokens',
+            content: (
+              <div style={{ padding: '1.5rem' }}>
+                <ApiTokenManager />
+              </div>
+            ),
+          },
+        ]
+      : []),
     {
       id: 'devices',
       label: 'Assigned Devices',

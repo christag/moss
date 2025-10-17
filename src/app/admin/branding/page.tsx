@@ -6,9 +6,11 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import type { BrandingSettings } from '@/types'
 
 export default function BrandingSettingsPage() {
+  const router = useRouter()
   const [settings, setSettings] = useState<BrandingSettings>({
     site_name: 'M.O.S.S.',
     logo_url: null,
@@ -61,7 +63,12 @@ export default function BrandingSettingsPage() {
       }
 
       setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+
+      // Auto-reload the page after 1 second to show changes
+      setTimeout(() => {
+        router.refresh()
+        window.location.reload()
+      }, 1000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save settings')
     } finally {
@@ -130,7 +137,12 @@ export default function BrandingSettingsPage() {
             border: '1px solid var(--color-green)',
           }}
         >
-          Settings saved successfully!
+          <div style={{ fontWeight: '600', marginBottom: 'var(--spacing-xs)' }}>
+            Settings saved successfully!
+          </div>
+          <div style={{ fontSize: 'var(--font-size-sm)' }}>
+            Reloading page to apply your branding changes...
+          </div>
         </div>
       )}
 

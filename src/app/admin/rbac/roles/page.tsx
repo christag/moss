@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Badge } from '@/components/ui'
+import { Button, Badge, Icon } from '@/components/ui'
 import type { Role } from '@/types'
 
 export default function RolesPage() {
@@ -116,9 +116,17 @@ export default function RolesPage() {
           </h1>
           <p style={{ color: 'var(--color-brew-black-60)' }}>Manage roles and their permissions</p>
         </div>
-        <Button variant="primary" onClick={() => router.push('/admin/rbac/roles/new')}>
-          + Create Role
-        </Button>
+        <div style={{ display: 'flex', gap: 'var(--spacing-sm)' }}>
+          <Button variant="secondary" onClick={() => router.push('/admin/rbac/hierarchy')}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Icon name="hierarchy-network" size={16} aria-label="Hierarchy" />
+              View Hierarchy
+            </span>
+          </Button>
+          <Button variant="primary" onClick={() => router.push('/admin/rbac/roles/new')}>
+            + Create Role
+          </Button>
+        </div>
       </div>
 
       {/* Search */}

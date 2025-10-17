@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button, Badge } from '@/components/ui'
 import AssignRoleModal from '@/components/AssignRoleModal'
+import EditRoleAssignmentModal from '@/components/EditRoleAssignmentModal'
 
 interface RoleAssignment {
   id: string
@@ -23,6 +24,7 @@ interface RoleAssignment {
   locations?: Array<{ id: string; location_name: string }>
   granted_by_name?: string
   created_at: string
+  notes?: string
 }
 
 export default function RoleAssignmentsPage() {
@@ -32,6 +34,7 @@ export default function RoleAssignmentsPage() {
   const [error, setError] = useState<string | null>(null)
   const [scopeFilter, setScopeFilter] = useState<string>('')
   const [showAssignModal, setShowAssignModal] = useState(false)
+  const [editingAssignment, setEditingAssignment] = useState<RoleAssignment | null>(null)
 
   useEffect(() => {
     fetchAssignments()
@@ -299,7 +302,7 @@ export default function RoleAssignmentsPage() {
                         justifyContent: 'flex-end',
                       }}
                     >
-                      <Button variant="secondary" onClick={() => alert('Edit coming soon!')}>
+                      <Button variant="secondary" onClick={() => setEditingAssignment(assignment)}>
                         Edit
                       </Button>
                       <Button
@@ -333,6 +336,24 @@ export default function RoleAssignmentsPage() {
         onClose={() => setShowAssignModal(false)}
         onSuccess={() => fetchAssignments()}
       />
+
+      {/* Edit Role Assignment Modal */}
+      {editingAssignment && (
+        <EditRoleAssignmentModal
+          isOpen={!!editingAssignment}
+          onClose={() => setEditingAssignment(null)}
+          onSuccess={() => {
+            fetchAssignments()
+            setEditingAssignment(null)
+          }}
+          assignmentId={editingAssignment.id}
+          currentScope={editingAssignment.scope}
+          currentLocationIds={editingAssignment.locations?.map((loc) => loc.id) || []}
+          currentNotes={editingAssignment.notes}
+          assigneeName={editingAssignment.person_name || editingAssignment.group_name || 'Unknown'}
+          roleName={editingAssignment.role_name}
+        />
+      )}
     </div>
   )
 }

@@ -7,9 +7,27 @@ import { Pool } from 'pg'
 import fs from 'fs'
 import path from 'path'
 import { URL } from 'url'
+import type { DatabaseConfig } from '@/types'
+
+// Connection configuration interface
+interface ConnectionInfo {
+  host: string
+  port: number
+  user: string
+  password: string
+  database: string
+}
+
+// Store custom connection info if provided
+let customConnectionInfo: ConnectionInfo | null = null
 
 // Parse database connection info from DATABASE_URL or individual env vars
-function parseConnectionInfo() {
+function parseConnectionInfo(): ConnectionInfo | null {
+  // If custom connection info has been provided, use it
+  if (customConnectionInfo) {
+    return customConnectionInfo
+  }
+
   // If DATABASE_URL is provided, parse it
   if (process.env.DATABASE_URL) {
     try {
@@ -23,36 +41,58 @@ function parseConnectionInfo() {
       }
     } catch (error) {
       console.error('[InitDB] Failed to parse DATABASE_URL:', error)
-      // Fall through to use individual env vars
+      return null
     }
   }
 
-  // Use individual environment variables or defaults
-  return {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'postgres',
-    database: process.env.DB_NAME || 'moss',
+  // No DATABASE_URL and no custom config
+  return null
+}
+
+/**
+ * Set custom database connection configuration
+ * Used when user provides connection details through setup wizard
+ */
+export function setDatabaseConfig(config: DatabaseConfig): void {
+  customConnectionInfo = {
+    host: config.host,
+    port: config.port,
+    user: config.username,
+    password: config.password,
+    database: config.database,
   }
 }
 
-const connectionInfo = parseConnectionInfo()
-const DB_HOST = connectionInfo.host
-const DB_PORT = connectionInfo.port
-const DB_USER = connectionInfo.user
-const DB_PASSWORD = connectionInfo.password
-const DB_NAME = connectionInfo.database
+/**
+ * Check if database configuration is available
+ */
+export function hasDatabaseConfig(): boolean {
+  return parseConnectionInfo() !== null
+}
+
+/**
+ * Get current connection info (throws if not available)
+ */
+function getConnectionInfo(): ConnectionInfo {
+  const info = parseConnectionInfo()
+  if (!info) {
+    throw new Error(
+      'Database configuration not available. Please provide connection details or set DATABASE_URL environment variable.'
+    )
+  }
+  return info
+}
 
 /**
  * Connection pool to postgres database (for admin operations)
  */
 function getAdminPool(): Pool {
+  const connectionInfo = getConnectionInfo()
   return new Pool({
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    password: DB_PASSWORD,
+    host: connectionInfo.host,
+    port: connectionInfo.port,
+    user: connectionInfo.user,
+    password: connectionInfo.password,
     database: 'postgres', // Connect to postgres DB for admin operations
     max: 5,
     connectionTimeoutMillis: 10000, // 10 second timeout
@@ -63,12 +103,13 @@ function getAdminPool(): Pool {
  * Connection pool to moss database (for schema operations)
  */
 function getMossPool(): Pool {
+  const connectionInfo = getConnectionInfo()
   return new Pool({
-    host: DB_HOST,
-    port: DB_PORT,
-    user: DB_USER,
-    password: DB_PASSWORD,
-    database: DB_NAME,
+    host: connectionInfo.host,
+    port: connectionInfo.port,
+    user: connectionInfo.user,
+    password: connectionInfo.password,
+    database: connectionInfo.database,
     max: 5,
     connectionTimeoutMillis: 10000,
   })
@@ -78,9 +119,12 @@ function getMossPool(): Pool {
  * Check if the moss database exists
  */
 export async function checkDatabaseExists(): Promise<boolean> {
+  const connectionInfo = getConnectionInfo()
   const pool = getAdminPool()
   try {
-    const result = await pool.query('SELECT 1 FROM pg_database WHERE datname = $1', [DB_NAME])
+    const result = await pool.query('SELECT 1 FROM pg_database WHERE datname = $1', [
+      connectionInfo.database,
+    ])
     return result.rows.length > 0
   } catch (error) {
     console.error('[InitDB] Error checking database existence:', error)
@@ -94,15 +138,16 @@ export async function checkDatabaseExists(): Promise<boolean> {
  * Create the moss database
  */
 export async function createDatabase(): Promise<void> {
+  const connectionInfo = getConnectionInfo()
   const pool = getAdminPool()
   try {
-    console.log(`[InitDB] Creating database: ${DB_NAME}`)
-    await pool.query(`CREATE DATABASE ${DB_NAME}`)
-    console.log(`[InitDB] ✓ Database ${DB_NAME} created successfully`)
+    console.log(`[InitDB] Creating database: ${connectionInfo.database}`)
+    await pool.query(`CREATE DATABASE ${connectionInfo.database}`)
+    console.log(`[InitDB] ✓ Database ${connectionInfo.database} created successfully`)
   } catch (error: unknown) {
     // If database already exists (code 42P04), that's okay
     if ((error as { code?: string }).code === '42P04') {
-      console.log(`[InitDB] Database ${DB_NAME} already exists`)
+      console.log(`[InitDB] Database ${connectionInfo.database} already exists`)
       return
     }
     console.error('[InitDB] Error creating database:', error)
@@ -203,6 +248,7 @@ export async function testConnection(): Promise<{
     database: string
   }
 }> {
+  const connectionInfo = getConnectionInfo()
   const pool = getAdminPool()
   try {
     await pool.query('SELECT 1')
@@ -211,8 +257,8 @@ export async function testConnection(): Promise<{
       success: true,
       message: 'Database connection successful',
       details: {
-        host: DB_HOST,
-        port: DB_PORT,
+        host: connectionInfo.host,
+        port: connectionInfo.port,
         database: 'postgres',
       },
     }
@@ -221,8 +267,8 @@ export async function testConnection(): Promise<{
       success: false,
       message: `Database connection failed: ${(error as Error).message}`,
       details: {
-        host: DB_HOST,
-        port: DB_PORT,
+        host: connectionInfo.host,
+        port: connectionInfo.port,
         database: 'postgres',
       },
     }
@@ -255,12 +301,13 @@ export async function getInitializationStatus(): Promise<{
     // Step 2: Check if database exists
     const databaseExists = await checkDatabaseExists()
     if (!databaseExists) {
+      const connectionInfo = getConnectionInfo()
       return {
         connectionOk: true,
         databaseExists: false,
         tablesExist: false,
         needsInitialization: true,
-        message: `Database '${DB_NAME}' does not exist and needs to be created`,
+        message: `Database '${connectionInfo.database}' does not exist and needs to be created`,
       }
     }
 

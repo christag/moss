@@ -365,6 +365,120 @@ export const CSVExportRequestSchema = z.object({
 })
 
 // ============================================================================
+// DROPDOWN FIELD OPTIONS SCHEMAS
+// ============================================================================
+
+/**
+ * Create Dropdown Option Schema
+ */
+export const CreateDropdownOptionSchema = z.object({
+  object_type: z.string().min(1).max(50),
+  field_name: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z_][a-z0-9_]*$/, 'Field name must be snake_case'),
+  option_value: z
+    .string()
+    .min(1)
+    .max(100)
+    .regex(/^[a-z0-9_]+$/, 'Option value must be lowercase alphanumeric with underscores'),
+  option_label: z.string().min(1).max(255),
+  display_order: z.number().int().nonnegative().default(0),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, 'Must be valid hex color')
+    .optional()
+    .nullable(),
+  description: z.string().max(500).optional().nullable(),
+})
+
+/**
+ * Update Dropdown Option Schema
+ */
+export const UpdateDropdownOptionSchema = z.object({
+  option_label: z.string().min(1).max(255).optional(),
+  display_order: z.number().int().nonnegative().optional(),
+  is_active: z.boolean().optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, 'Must be valid hex color')
+    .optional()
+    .nullable(),
+  description: z.string().max(500).optional().nullable(),
+})
+
+/**
+ * Reorder Dropdown Options Schema
+ */
+export const ReorderDropdownOptionsSchema = z.object({
+  updates: z
+    .array(
+      z.object({
+        id: z.string().uuid(),
+        display_order: z.number().int().nonnegative(),
+      })
+    )
+    .min(1),
+})
+
+/**
+ * Query Dropdown Options Schema
+ */
+export const QueryDropdownOptionsSchema = z.object({
+  object_type: z
+    .string()
+    .min(1)
+    .max(50)
+    .nullish()
+    .transform((val) => (val === null ? undefined : val)),
+  field_name: z
+    .string()
+    .min(1)
+    .max(50)
+    .nullish()
+    .transform((val) => (val === null ? undefined : val)),
+  is_active: z
+    .string()
+    .nullish()
+    .transform((val) => {
+      if (val === null || val === undefined) return undefined
+      return val === 'true' || val === '1'
+    }),
+  include_usage_count: z
+    .string()
+    .nullish()
+    .transform((val) => {
+      if (val === null || val === undefined) return true
+      return val === 'true' || val === '1'
+    }),
+  page: z
+    .string()
+    .nullish()
+    .transform((val) => {
+      if (val === null || val === undefined) return 1
+      const num = parseInt(val, 10)
+      return isNaN(num) || num < 1 ? 1 : num
+    }),
+  limit: z
+    .string()
+    .nullish()
+    .transform((val) => {
+      if (val === null || val === undefined) return 100
+      const num = parseInt(val, 10)
+      return isNaN(num) || num < 1 ? 100 : Math.min(num, 500)
+    }),
+})
+
+/**
+ * Archive Dropdown Option Request Schema
+ * Requires confirmation if usage_count > 0
+ */
+export const ArchiveDropdownOptionSchema = z.object({
+  confirm: z.boolean().optional(), // Must be true if usage_count > 0
+})
+
+// ============================================================================
 // TYPE EXPORTS (inferred from schemas)
 // ============================================================================
 

@@ -53,8 +53,8 @@ export function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
 
       <style jsx>{`
         .breadcrumb {
-          padding: 0.75rem 0;
-          margin-bottom: 1.5rem;
+          padding: 12px 0;
+          margin-bottom: 16px;
         }
 
         .breadcrumb-list {
@@ -64,61 +64,63 @@ export function Breadcrumb({ items, className = '' }: BreadcrumbProps) {
           list-style: none;
           margin: 0;
           padding: 0;
-          gap: 0.5rem;
+          gap: 8px;
         }
 
         .breadcrumb-item {
           display: flex;
           align-items: center;
-          gap: 0.5rem;
-          font-size: 0.875rem;
+          gap: 8px;
+          font-size: 14px;
+          line-height: 21px;
         }
 
         .breadcrumb-link {
-          color: var(--color-blue);
+          color: var(--color-black);
           text-decoration: none;
-          transition: color 0.15s ease;
+          transition: opacity 0.15s ease;
+          font-weight: 400;
         }
 
         .breadcrumb-link:hover {
-          color: var(--color-blue-dark, #1565c0);
-          text-decoration: underline;
+          opacity: 0.7;
         }
 
-        .breadcrumb-link:focus {
-          outline: 2px solid var(--color-blue);
+        .breadcrumb-link:focus-visible {
+          outline: 2px solid var(--color-black);
           outline-offset: 2px;
           border-radius: 2px;
         }
 
         .breadcrumb-separator {
-          color: var(--color-brew-black-40);
-          font-weight: 300;
+          color: var(--color-black);
+          font-weight: 400;
           user-select: none;
+          margin: 0 4px;
         }
 
         .breadcrumb-current {
           color: var(--color-black);
-          font-weight: 500;
+          font-weight: 600;
         }
 
         /* Responsive design */
         @media (max-width: 768px) {
           .breadcrumb {
-            padding: 0.5rem 0;
-            margin-bottom: 1rem;
+            padding: 8px 0;
+            margin-bottom: 12px;
           }
 
           .breadcrumb-item {
-            font-size: 0.8125rem;
+            font-size: 13px;
           }
 
           .breadcrumb-list {
-            gap: 0.375rem;
+            gap: 6px;
           }
 
           .breadcrumb-item {
-            gap: 0.375rem;
+            gap: 6px;
           }
         }
       `}</style>

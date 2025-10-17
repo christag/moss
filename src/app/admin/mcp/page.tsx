@@ -6,6 +6,7 @@
 
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { Icon } from '@/components/ui'
 
 interface OAuthClient {
   id: string
@@ -127,7 +128,10 @@ export default function MCPAdminPage() {
       {/* New Client Secret Display */}
       {newClientSecret && (
         <div className="bg-tangerine/10 border border-tangerine p-4 rounded-lg mb-6">
-          <h3 className="font-semibold text-brew-black mb-2">⚠️ Save Your Client Secret</h3>
+          <div className="flex items-center gap-2 mb-2">
+            <Icon name="alert-warning-triangle" size={20} aria-label="Warning" />
+            <h3 className="font-semibold text-brew-black">Save Your Client Secret</h3>
+          </div>
           <p className="text-sm text-brew-black/80 mb-3">
             This is the only time you&apos;ll see this secret. Save it securely!
           </p>

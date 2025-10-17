@@ -8,6 +8,8 @@ import { CreateRoleSchema } from '@/lib/schemas/rbac'
 import type { Role } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 import { z } from 'zod'
+import { auth } from '@/lib/auth'
+import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 
 // Query schema for GET parameters
 const RoleQuerySchema = z.object({
@@ -161,8 +163,28 @@ export async function POST(request: NextRequest) {
     `
 
     const result = await query<Role>(sql, values)
+    const createdRole = result.rows[0]
 
-    return NextResponse.json({ success: true, data: result.rows[0] }, { status: 201 })
+    // Log admin action
+    const session = await auth()
+    if (session?.user?.id) {
+      await logAdminAction({
+        user_id: session.user.id,
+        action: 'role_created',
+        category: 'rbac',
+        target_type: 'role',
+        target_id: createdRole.id,
+        details: {
+          role_name: createdRole.role_name,
+          description: createdRole.description,
+          is_system_role: createdRole.is_system_role,
+        },
+        ip_address: getIPAddress(request.headers),
+        user_agent: getUserAgent(request.headers),
+      })
+    }
+
+    return NextResponse.json({ success: true, data: createdRole }, { status: 201 })
   } catch (error) {
     console.error('Error creating role:', error)
     if (error instanceof Error) {

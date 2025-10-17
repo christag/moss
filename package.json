@@ -15,6 +15,9 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "db:migrate": "ts-node --compiler-options '{\"module\":\"commonjs\"}' src/lib/migrate.ts",
+    "db:rebuild": "node scripts/db/rebuild-database.js",
+    "db:check-indexes": "node scripts/db/check-missing-fk-indexes.js",
+    "security:check-xss": "node scripts/security/check-legacy-xss.js",
     "prepare": "node -e \"if (process.env.HUSKY === '0' || !require('fs').existsSync('.git')) process.exit(0); require('child_process').execSync('husky', {stdio: 'inherit'})\""
   },
   "dependencies": {

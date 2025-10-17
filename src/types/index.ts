@@ -1296,6 +1296,26 @@ export interface AdminAuditLog {
 }
 
 /**
+ * Database Configuration for Setup Wizard
+ */
+export interface DatabaseConfig {
+  host: string
+  port: number
+  database: string
+  username: string
+  password: string
+}
+
+/**
+ * Database Connection Test Result
+ */
+export interface DatabaseConnectionTest {
+  success: boolean
+  message: string
+  details?: string
+}
+
+/**
  * Storage Backend Types
  */
 export type StorageBackend = 'local' | 'nfs' | 'smb' | 's3'
@@ -1732,4 +1752,75 @@ export interface DownloadUrlResponse {
   }
   message?: string
   error?: string
+}
+
+// ============================================================================
+// DROPDOWN FIELD OPTIONS
+// ============================================================================
+
+/**
+ * Dropdown field option
+ * Represents a single dropdown option for a specific field
+ */
+export interface DropdownFieldOption {
+  id: UUID
+  object_type: string // 'devices', 'people', 'locations', etc.
+  field_name: string // 'device_type', 'status', etc.
+  option_value: string // 'computer', 'active', etc.
+  option_label: string // 'Computer', 'Active', etc.
+  display_order: number
+  is_active: boolean // false = archived
+  is_system: boolean // true = cannot be deleted/edited
+  usage_count: number // cached count of records using this
+  color?: string | null // hex color for badges
+  description?: string | null
+  created_at: Date
+  updated_at: Date
+}
+
+/**
+ * Input for creating a new dropdown option
+ */
+export interface CreateDropdownOptionInput {
+  object_type: string
+  field_name: string
+  option_value: string
+  option_label: string
+  display_order?: number
+  color?: string | null
+  description?: string | null
+}
+
+/**
+ * Input for updating a dropdown option
+ */
+export interface UpdateDropdownOptionInput {
+  option_label?: string
+  display_order?: number
+  is_active?: boolean
+  color?: string | null
+  description?: string | null
+}
+
+/**
+ * Dropdown field metadata
+ * Information about a specific dropdown field
+ */
+export interface DropdownFieldInfo {
+  object_type: string
+  field_name: string
+  field_label: string // Display name for the field
+  total_options: number
+  active_options: number
+  archived_options: number
+}
+
+/**
+ * Query parameters for dropdown options list
+ */
+export interface DropdownOptionsQueryParams {
+  object_type?: string
+  field_name?: string
+  is_active?: boolean
+  include_usage_count?: boolean
 }

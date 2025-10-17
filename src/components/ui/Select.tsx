@@ -27,7 +27,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         <select
           ref={ref}
           id={selectId}
-          className={`form-select ${error ? 'border-orange' : ''} ${className}`}
+          className={`form-select ${error ? 'select-error' : ''} ${className}`}
           aria-invalid={!!error}
           aria-describedby={
             error ? `${selectId}-error` : helperText ? `${selectId}-help` : undefined
@@ -46,15 +46,39 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p id={`${selectId}-error`} className="text-sm text-orange mt-xs">
+          <p id={`${selectId}-error`} className="select-error-text">
             {error}
           </p>
         )}
         {helperText && !error && (
-          <p id={`${selectId}-help`} className="text-sm text-black opacity-60 mt-xs">
+          <p id={`${selectId}-help`} className="select-helper-text">
             {helperText}
           </p>
         )}
+
+        <style jsx>{`
+          .form-select.select-error {
+            border-color: var(--color-error-border);
+            background-color: rgba(224, 45, 60, 0.03);
+          }
+
+          .form-select.select-error:focus {
+            border-color: var(--color-error-border);
+            box-shadow: 0 0 0 1px var(--color-error-border);
+          }
+
+          .select-error-text {
+            margin-top: 6px;
+            font-size: 0.875rem;
+            color: var(--color-error-border);
+          }
+
+          .select-helper-text {
+            margin-top: 6px;
+            font-size: 0.875rem;
+            color: var(--color-brew-black-60);
+          }
+        `}</style>
       </div>
     )
   }

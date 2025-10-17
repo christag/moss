@@ -11,6 +11,7 @@ import { hasRole } from '@/lib/auth'
 import { BrandingSettingsSchema } from '@/lib/schemas/admin'
 import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 import { parseRequestBody } from '@/lib/api'
+import { invalidateConfigCache } from '@/lib/config'
 import type { BrandingSettings, SystemSetting } from '@/types'
 
 /**
@@ -101,6 +102,9 @@ export async function PUT(request: NextRequest) {
     })
 
     await Promise.all(updatePromises)
+
+    // Invalidate config cache so next request loads fresh settings
+    invalidateConfigCache()
 
     // Log admin action
     await logAdminAction({

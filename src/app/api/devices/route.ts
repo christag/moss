@@ -8,16 +8,22 @@ import { successResponse, errorResponse, parseRequestBody } from '@/lib/api'
 import { CreateDeviceSchema, DeviceQuerySchema } from '@/lib/schemas/device'
 import { cache, generateListCacheKey } from '@/lib/cache'
 import { applyRateLimit } from '@/lib/rateLimitMiddleware'
+import { requireApiScope } from '@/lib/apiAuth'
 import type { Device } from '@/types'
 
 /**
  * GET /api/devices
  * List devices with optional filtering, searching, and pagination
+ * Requires: 'read' scope
  */
 export async function GET(request: NextRequest) {
   // Apply rate limiting
   const rateLimitResult = await applyRateLimit(request, 'api')
   if (rateLimitResult) return rateLimitResult
+
+  // Require authentication with 'read' scope
+  const authResult = await requireApiScope(request, ['read'])
+  if (authResult instanceof Response) return authResult
   try {
     const { searchParams } = new URL(request.url)
     const params = Object.fromEntries(searchParams.entries())
@@ -149,11 +155,16 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/devices
  * Create a new device
+ * Requires: 'write' scope
  */
 export async function POST(request: NextRequest) {
   // Apply rate limiting
   const rateLimitResult = await applyRateLimit(request, 'api')
   if (rateLimitResult) return rateLimitResult
+
+  // Require authentication with 'write' scope
+  const authResult = await requireApiScope(request, ['write'])
+  if (authResult instanceof Response) return authResult
 
   try {
     // Parse request body with JSON error handling

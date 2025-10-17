@@ -6,29 +6,29 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui'
+import { Button, Icon, type IconName } from '@/components/ui'
 
 export default function RBACPage() {
   const router = useRouter()
 
-  const sections = [
+  const sections: Array<{ title: string; description: string; href: string; icon: IconName }> = [
     {
       title: 'Roles',
       description: 'Manage roles and permissions',
       href: '/admin/rbac/roles',
-      icon: '👥',
+      icon: 'users-group-team',
     },
     {
       title: 'Role Assignments',
       description: 'Assign roles to users and groups',
       href: '/admin/rbac/assignments',
-      icon: '🔐',
+      icon: 'lock-security',
     },
     {
       title: 'Permission Testing',
       description: 'Test and debug permission checks',
       href: '/admin/rbac/test',
-      icon: '🧪',
+      icon: 'flask-beaker-science',
     },
   ]
 
@@ -69,8 +69,8 @@ export default function RBACPage() {
               e.currentTarget.style.boxShadow = 'none'
             }}
           >
-            <div style={{ fontSize: '2.5rem', marginBottom: 'var(--spacing-md)' }}>
-              {section.icon}
+            <div style={{ marginBottom: 'var(--spacing-md)' }}>
+              <Icon name={section.icon} size={40} aria-label={section.title} />
             </div>
             <h2
               style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: 'var(--spacing-sm)' }}
