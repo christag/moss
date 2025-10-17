@@ -13,12 +13,13 @@ import type { DropdownFieldOption } from '@/types'
  * GET /api/admin/dropdown-options/[id]
  * Get a single dropdown option by ID
  */
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Require admin role
     await requireRole('admin')
 
-    const result = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [params.id])
+    const { id } = await params
+    const result = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [id])
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -58,15 +59,15 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
  * Note: option_value and field identification cannot be changed
  * Note: is_system options cannot be archived (is_active=false)
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Require admin role
     await requireRole('admin')
 
+    const { id } = await params
+
     // Check if option exists
-    const existingResult = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [
-      params.id,
-    ])
+    const existingResult = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [id])
 
     if (existingResult.rows.length === 0) {
       return NextResponse.json(
@@ -149,7 +150,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     updates.push(`updated_at = CURRENT_TIMESTAMP`)
 
     // Add ID parameter
-    queryParams.push(params.id)
+    queryParams.push(id)
 
     const updateQuery = `
       UPDATE dropdown_field_options
@@ -189,15 +190,18 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  * Note: Options with usage_count > 0 require confirmation
  * Note: This is a soft delete (sets is_active=false)
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     // Require admin role
     await requireRole('admin')
 
+    const { id } = await params
+
     // Check if option exists
-    const existingResult = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [
-      params.id,
-    ])
+    const existingResult = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [id])
 
     if (existingResult.rows.length === 0) {
       return NextResponse.json(
@@ -233,7 +237,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     // Update usage count in table
     await query(`UPDATE dropdown_field_options SET usage_count = $1 WHERE id = $2`, [
       currentUsage,
-      params.id,
+      id,
     ])
 
     // Check if confirmation is required
@@ -260,7 +264,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       RETURNING *
     `
 
-    const result = await query(archiveQuery, [params.id])
+    const result = await query(archiveQuery, [id])
 
     return NextResponse.json({
       success: true,
