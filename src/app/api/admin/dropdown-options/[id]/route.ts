@@ -13,13 +13,16 @@ import type { DropdownFieldOption } from '@/types'
  * GET /api/admin/dropdown-options/[id]
  * Get a single dropdown option by ID
  */
-export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Require admin role
     await requireRole('admin')
 
     const { id } = await params
-    const result = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [id])
+    const result = await query<DropdownFieldOption>(
+      `SELECT * FROM dropdown_field_options WHERE id = $1`,
+      [id]
+    )
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -30,7 +33,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({
       success: true,
-      data: result.rows[0] as DropdownFieldOption,
+      data: result.rows[0],
     })
   } catch (error) {
     console.error('Error fetching dropdown option:', error)
@@ -67,7 +70,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const { id } = await params
 
     // Check if option exists
-    const existingResult = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [id])
+    const existingResult = await query<DropdownFieldOption>(
+      `SELECT * FROM dropdown_field_options WHERE id = $1`,
+      [id]
+    )
 
     if (existingResult.rows.length === 0) {
       return NextResponse.json(
@@ -76,7 +82,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       )
     }
 
-    const existing = existingResult.rows[0] as DropdownFieldOption
+    const existing = existingResult.rows[0]
 
     // Parse and validate request body
     const body = await request.json()
@@ -159,12 +165,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       RETURNING *
     `
 
-    const result = await query(updateQuery, queryParams)
+    const result = await query<DropdownFieldOption>(updateQuery, queryParams)
 
     return NextResponse.json({
       success: true,
       message: 'Dropdown option updated successfully',
-      data: result.rows[0] as DropdownFieldOption,
+      data: result.rows[0],
     })
   } catch (error) {
     console.error('Error updating dropdown option:', error)
@@ -201,7 +207,10 @@ export async function DELETE(
     const { id } = await params
 
     // Check if option exists
-    const existingResult = await query(`SELECT * FROM dropdown_field_options WHERE id = $1`, [id])
+    const existingResult = await query<DropdownFieldOption>(
+      `SELECT * FROM dropdown_field_options WHERE id = $1`,
+      [id]
+    )
 
     if (existingResult.rows.length === 0) {
       return NextResponse.json(
@@ -210,7 +219,7 @@ export async function DELETE(
       )
     }
 
-    const existing = existingResult.rows[0] as DropdownFieldOption
+    const existing = existingResult.rows[0]
 
     // Prevent deleting system options
     if (existing.is_system) {
@@ -227,7 +236,7 @@ export async function DELETE(
     const refreshQuery = `
       SELECT calculate_dropdown_usage_count($1, $2, $3) as current_usage
     `
-    const usageResult = await query(refreshQuery, [
+    const usageResult = await query<{ current_usage: string }>(refreshQuery, [
       existing.object_type,
       existing.field_name,
       existing.option_value,
@@ -264,7 +273,7 @@ export async function DELETE(
       RETURNING *
     `
 
-    const result = await query(archiveQuery, [id])
+    const result = await query<DropdownFieldOption>(archiveQuery, [id])
 
     return NextResponse.json({
       success: true,
@@ -272,7 +281,7 @@ export async function DELETE(
         currentUsage > 0
           ? `Option archived. ${currentUsage} existing record(s) will retain this value.`
           : 'Option archived successfully',
-      data: result.rows[0] as DropdownFieldOption,
+      data: result.rows[0],
     })
   } catch (error) {
     console.error('Error archiving dropdown option:', error)

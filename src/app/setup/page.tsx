@@ -204,7 +204,15 @@ export default function SetupWizardPage() {
 
     try {
       // Build request body - include database config if we're on step 0
-      const requestBody: { dbConfig?: typeof data } = {}
+      const requestBody: {
+        dbConfig?: {
+          host: string
+          port: number
+          database: string
+          username: string
+          password: string
+        }
+      } = {}
 
       if (step === 0 || !dbStatus?.connectionOk) {
         requestBody.dbConfig = {

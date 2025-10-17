@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   // Enable standalone output for Docker deployment
   output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
+  // Note: Custom error.tsx and not-found.tsx files handle error pages for App Router
+  skipMiddlewareUrlNormalize: true,
   // Note: instrumentation.ts is automatically loaded by Next.js for auto-migrations
   // Don't fail production builds on ESLint warnings
   eslint: {

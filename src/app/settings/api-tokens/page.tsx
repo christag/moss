@@ -13,10 +13,10 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import Select from '@/components/ui/Select'
-import Checkbox from '@/components/ui/Checkbox'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
+import { Checkbox } from '@/components/ui/Checkbox'
 
 interface ApiToken {
   id: string
@@ -41,6 +41,7 @@ interface NewTokenResponse {
   expiresAt: string | null
   scopes: string[]
   warning: string
+  message?: string
 }
 
 export default function ApiTokensPage() {

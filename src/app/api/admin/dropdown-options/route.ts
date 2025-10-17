@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
       FROM dropdown_field_options
       ${whereClause}
     `
-    const countResult = await query(countQuery, queryParams)
+    const countResult = await query<{ total: string }>(countQuery, queryParams)
     const total = parseInt(countResult.rows[0].total)
 
     // Get options
@@ -109,12 +109,16 @@ export async function GET(request: NextRequest) {
       ORDER BY object_type, field_name, display_order, option_label
       LIMIT $${paramCount} OFFSET $${paramCount + 1}
     `
-    const optionsResult = await query(optionsQuery, [...queryParams, limit, offset])
+    const optionsResult = await query<DropdownFieldOption>(optionsQuery, [
+      ...queryParams,
+      limit,
+      offset,
+    ])
 
     return NextResponse.json({
       success: true,
       data: {
-        options: optionsResult.rows as DropdownFieldOption[],
+        options: optionsResult.rows,
         pagination: {
           page,
           limit,
@@ -205,7 +209,7 @@ export async function POST(request: NextRequest) {
       RETURNING *
     `
 
-    const result = await query(insertQuery, [
+    const result = await query<DropdownFieldOption>(insertQuery, [
       data.object_type,
       data.field_name,
       data.option_value,
@@ -215,7 +219,7 @@ export async function POST(request: NextRequest) {
       data.description ?? null,
     ])
 
-    const newOption = result.rows[0] as DropdownFieldOption
+    const newOption = result.rows[0]
 
     return NextResponse.json(
       {

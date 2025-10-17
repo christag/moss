@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { pool } from '@/lib/db'
+import { getPool } from '@/lib/db'
 
 // Token configuration
 const TOKEN_PREFIX = 'moss_'
@@ -56,6 +56,7 @@ export async function generateApiToken(
   tokenPrefix: string
   createdAt: Date
 }> {
+  const pool = getPool()
   const token = generateSecureToken()
   const tokenHash = await bcrypt.hash(token, 10)
   const tokenPrefix = token.substring(0, TOKEN_PREFIX_DISPLAY_LENGTH)
@@ -93,6 +94,7 @@ export async function verifyApiToken(
   userEmail: string
   userRole: string
 } | null> {
+  const pool = getPool()
   // Query all active, non-expired tokens
   const result = await pool.query(
     `SELECT
@@ -174,7 +176,9 @@ export function getClientIp(request: NextRequest): string {
     return realIp
   }
 
-  return request.ip || 'unknown'
+  // Note: NextRequest doesn't have direct IP access in Next.js 15
+  // IP should be passed via headers in production environments
+  return 'unknown'
 }
 
 /**
@@ -318,6 +322,7 @@ export async function requireApiAdmin(request: NextRequest): Promise<
  * @returns Success boolean
  */
 export async function revokeApiToken(tokenId: string, userId: string): Promise<boolean> {
+  const pool = getPool()
   const result = await pool.query(
     `UPDATE api_tokens
      SET is_active = false,
@@ -328,7 +333,7 @@ export async function revokeApiToken(tokenId: string, userId: string): Promise<b
     [tokenId, userId]
   )
 
-  return result.rowCount > 0
+  return (result.rowCount ?? 0) > 0
 }
 
 /**
@@ -338,6 +343,7 @@ export async function revokeApiToken(tokenId: string, userId: string): Promise<b
  * @returns Success boolean
  */
 export async function revokeApiTokenAdmin(tokenId: string): Promise<boolean> {
+  const pool = getPool()
   const result = await pool.query(
     `UPDATE api_tokens
      SET is_active = false,
@@ -347,7 +353,7 @@ export async function revokeApiTokenAdmin(tokenId: string): Promise<boolean> {
     [tokenId]
   )
 
-  return result.rowCount > 0
+  return (result.rowCount ?? 0) > 0
 }
 
 /**
@@ -357,6 +363,7 @@ export async function revokeApiTokenAdmin(tokenId: string): Promise<boolean> {
  * @returns Array of token metadata (excludes token_hash)
  */
 export async function listUserApiTokens(userId: string) {
+  const pool = getPool()
   const result = await pool.query(
     `SELECT
       id,
@@ -386,6 +393,7 @@ export async function listUserApiTokens(userId: string) {
  * @returns Array of token metadata with user info
  */
 export async function listAllApiTokens(filters?: { isActive?: boolean; userId?: string }) {
+  const pool = getPool()
   let query = `
     SELECT
       t.id,

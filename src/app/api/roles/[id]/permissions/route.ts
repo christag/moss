@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     // Get existing permissions before update for audit log
     const existingPermissions = await getRolePermissions(id, false)
-    const existingPermissionIds = existingPermissions.map((p) => p.id)
+    const existingPermissionIds = existingPermissions.map((p) => p.permission.id)
 
     // Begin transaction
     await query('BEGIN')
