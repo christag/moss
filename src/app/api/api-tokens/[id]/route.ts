@@ -16,7 +16,10 @@ import { revokeApiToken, revokeApiTokenAdmin } from '@/lib/apiAuth'
  * Users can only revoke their own tokens.
  * Admins can revoke any token.
  */
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -24,7 +27,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
     }
 
-    const tokenId = params.id
+    const { id: tokenId } = await params
 
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
