@@ -16,8 +16,13 @@ import { CIDRCalculator } from '@/components/CIDRCalculator'
 import type { CIDRCalculation } from '@/lib/cidr-utils'
 
 interface NetworkFormProps {
+  /** Edit mode: provide existing network data */
   network?: Network
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
+  /** Callback after successful create/update */
   onSuccess: (network: Network) => void
+  /** Callback on cancel */
   onCancel: () => void
 }
 
@@ -32,28 +37,51 @@ const NETWORK_TYPE_OPTIONS: { value: NetworkType; label: string }[] = [
   { value: 'broadcast', label: 'Broadcast' },
 ]
 
-export function NetworkForm({ network, onSuccess, onCancel }: NetworkFormProps) {
+export function NetworkForm({
+  network,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: NetworkFormProps) {
   const isEditMode = !!network
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [locations, setLocations] = useState<Location[]>([])
   const [showCIDRCalculator, setShowCIDRCalculator] = useState(false)
 
+  // Prepare initial form data: merge passed values with existing network data
+  const initialFormData: CreateNetworkInput = isEditMode
+    ? {
+        network_name: network.network_name || '',
+        location_id: network.location_id || undefined,
+        network_address: network.network_address || '',
+        vlan_id: network.vlan_id || undefined,
+        network_type: network.network_type || undefined,
+        gateway: network.gateway || '',
+        dns_servers: network.dns_servers || '',
+        dhcp_enabled: network.dhcp_enabled || false,
+        dhcp_range_start: network.dhcp_range_start || '',
+        dhcp_range_end: network.dhcp_range_end || '',
+        description: network.description || '',
+        notes: network.notes || '',
+      }
+    : {
+        network_name: (passedInitialValues?.network_name as string) || '',
+        location_id: (passedInitialValues?.location_id as string) || undefined,
+        network_address: (passedInitialValues?.network_address as string) || '',
+        vlan_id: (passedInitialValues?.vlan_id as number) || undefined,
+        network_type: (passedInitialValues?.network_type as NetworkType) || undefined,
+        gateway: (passedInitialValues?.gateway as string) || '',
+        dns_servers: (passedInitialValues?.dns_servers as string) || '',
+        dhcp_enabled: (passedInitialValues?.dhcp_enabled as boolean) || false,
+        dhcp_range_start: (passedInitialValues?.dhcp_range_start as string) || '',
+        dhcp_range_end: (passedInitialValues?.dhcp_range_end as string) || '',
+        description: (passedInitialValues?.description as string) || '',
+        notes: (passedInitialValues?.notes as string) || '',
+      }
+
   // Form state
-  const [formData, setFormData] = useState<CreateNetworkInput>({
-    network_name: network?.network_name || '',
-    location_id: network?.location_id || undefined,
-    network_address: network?.network_address || '',
-    vlan_id: network?.vlan_id || undefined,
-    network_type: network?.network_type || undefined,
-    gateway: network?.gateway || '',
-    dns_servers: network?.dns_servers || '',
-    dhcp_enabled: network?.dhcp_enabled || false,
-    dhcp_range_start: network?.dhcp_range_start || '',
-    dhcp_range_end: network?.dhcp_range_end || '',
-    description: network?.description || '',
-    notes: network?.notes || '',
-  })
+  const [formData, setFormData] = useState<CreateNetworkInput>(initialFormData)
 
   // Load locations for dropdown
   useEffect(() => {

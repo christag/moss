@@ -189,6 +189,22 @@ export async function initializeSchema(): Promise<void> {
   try {
     console.log('[InitDB] Running migrations...')
 
+    // Ensure schema_migrations table exists before running migrations
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        id SERIAL PRIMARY KEY,
+        migration_number INTEGER UNIQUE NOT NULL,
+        filename VARCHAR(255) NOT NULL,
+        applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        application_version VARCHAR(20),
+        execution_time_ms INTEGER,
+        status VARCHAR(20) DEFAULT 'completed',
+        error_message TEXT,
+        checksum VARCHAR(64)
+      )
+    `)
+    console.log('[InitDB] ✓ schema_migrations table ensured')
+
     const migrationsDir = path.join(process.cwd(), 'migrations')
     console.log(`[InitDB] Looking for migrations in: ${migrationsDir}`)
     console.log(`[InitDB] Current working directory: ${process.cwd()}`)

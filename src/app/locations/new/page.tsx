@@ -4,12 +4,17 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { LocationForm } from '@/components/LocationForm'
 
 export default function NewLocationPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent company_id from query params if provided
+  const company_id = searchParams.get('company_id')
+  const initialValues = company_id ? { company_id } : {}
 
   const handleSuccess = (location: unknown) => {
     const locationData = location as { id: string }
@@ -34,7 +39,11 @@ export default function NewLocationPage() {
           <span>New Location</span>
         </nav>
 
-        <LocationForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <LocationForm
+          initialValues={initialValues}
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
       </div>
     </div>
   )

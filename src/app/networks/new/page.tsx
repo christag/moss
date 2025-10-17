@@ -4,13 +4,18 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { NetworkForm } from '@/components/NetworkForm'
 import type { Network } from '@/types'
 
 export default function NewNetworkPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent location_id from query params if provided
+  const location_id = searchParams.get('location_id')
+  const initialValues = location_id ? { location_id } : {}
 
   const handleSuccess = (network: Network) => {
     router.push(`/networks/${network.id}`)
@@ -34,7 +39,11 @@ export default function NewNetworkPage() {
           <span>New</span>
         </nav>
 
-        <NetworkForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <NetworkForm
+          initialValues={initialValues}
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
       </div>
     </div>
   )

@@ -13,6 +13,8 @@ import type { Location, LocationType, Company } from '@/types'
 interface LocationFormProps {
   /** Edit mode: provide existing location data */
   location?: Location
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
   /** Callback after successful create/update */
   onSuccess?: (location: unknown) => void
   /** Callback on cancel */
@@ -29,7 +31,12 @@ const LOCATION_TYPE_OPTIONS = [
   { value: 'broadcast_facility', label: 'Broadcast Facility' },
 ]
 
-export function LocationForm({ location, onSuccess, onCancel }: LocationFormProps) {
+export function LocationForm({
+  location,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: LocationFormProps) {
   const isEditMode = !!location
   const [companies, setCompanies] = useState<Company[]>([])
 
@@ -149,7 +156,7 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
   const method = isEditMode ? 'PATCH' : 'POST'
   const schema = isEditMode ? UpdateLocationSchema : CreateLocationSchema
 
-  // Prepare initial values for edit mode
+  // Prepare initial values: merge passed values with edit mode values
   const initialValues = isEditMode
     ? {
         location_name: location.location_name,
@@ -165,7 +172,7 @@ export function LocationForm({ location, onSuccess, onCancel }: LocationFormProp
         access_instructions: location.access_instructions || '',
         notes: location.notes || '',
       }
-    : {}
+    : passedInitialValues || {}
 
   return (
     <GenericForm

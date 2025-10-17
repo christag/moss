@@ -4,13 +4,18 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { SoftwareLicenseForm } from '@/components/SoftwareLicenseForm'
 import type { SoftwareLicense } from '@/types'
 
 export default function NewSoftwareLicensePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent software_id from query params if provided
+  const software_id = searchParams.get('software_id')
+  const initialValues = software_id ? { software_id } : {}
 
   return (
     <div className="container">
@@ -32,6 +37,7 @@ export default function NewSoftwareLicensePage() {
         <h1 className="text-h1 mb-6">Add Software License</h1>
         <div className="card">
           <SoftwareLicenseForm
+            initialValues={initialValues}
             onSuccess={(license: SoftwareLicense) =>
               router.push(`/software-licenses/${license.id}`)
             }

@@ -4,12 +4,23 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { DeviceForm } from '@/components/DeviceForm'
 
 export default function NewDevicePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent fields from query params if provided
+  const room_id = searchParams.get('room_id')
+  const location_id = searchParams.get('location_id')
+  const parent_device_id = searchParams.get('parent_device_id')
+
+  const initialValues: Record<string, string> = {}
+  if (room_id) initialValues.room_id = room_id
+  if (location_id) initialValues.location_id = location_id
+  if (parent_device_id) initialValues.parent_device_id = parent_device_id
 
   const handleSuccess = (device: unknown) => {
     // Navigate to the newly created device's detail page
@@ -36,7 +47,11 @@ export default function NewDevicePage() {
           <span>New</span>
         </nav>
 
-        <DeviceForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <DeviceForm
+          initialValues={initialValues}
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
       </div>
     </div>
   )

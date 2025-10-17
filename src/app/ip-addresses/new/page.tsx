@@ -4,13 +4,22 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { IPAddressForm } from '@/components/IPAddressForm'
 import type { IPAddress } from '@/types'
 
 export default function NewIPAddressPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent fields from query params if provided
+  const io_id = searchParams.get('io_id')
+  const network_id = searchParams.get('network_id')
+
+  const initialValues: Record<string, string> = {}
+  if (io_id) initialValues.io_id = io_id
+  if (network_id) initialValues.network_id = network_id
 
   const handleSuccess = (ipAddress: IPAddress) => {
     router.push(`/ip-addresses/${ipAddress.id}`)
@@ -36,7 +45,11 @@ export default function NewIPAddressPage() {
 
         <h1 className="text-h1 mb-6">Add IP Address</h1>
         <div className="card">
-          <IPAddressForm onSuccess={handleSuccess} onCancel={handleCancel} />
+          <IPAddressForm
+            initialValues={initialValues}
+            onSuccess={handleSuccess}
+            onCancel={handleCancel}
+          />
         </div>
       </div>
     </div>

@@ -4,13 +4,22 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { PersonForm } from '@/components/PersonForm'
 import type { Person } from '@/types'
 
 export default function NewPersonPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent fields from query params if provided
+  const company_id = searchParams.get('company_id')
+  const location_id = searchParams.get('location_id')
+
+  const initialValues: Record<string, string> = {}
+  if (company_id) initialValues.company_id = company_id
+  if (location_id) initialValues.location_id = location_id
 
   const handleSuccess = (person: Person) => {
     router.push(`/people/${person.id}`)
@@ -34,7 +43,11 @@ export default function NewPersonPage() {
           <span>New Person</span>
         </nav>
 
-        <PersonForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <PersonForm
+          initialValues={initialValues}
+          onSuccess={handleSuccess}
+          onCancel={handleCancel}
+        />
       </div>
     </div>
   )

@@ -4,12 +4,17 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { RoomForm } from '@/components/RoomForm'
 
 export default function NewRoomPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent location_id from query params if provided
+  const location_id = searchParams.get('location_id')
+  const initialValues = location_id ? { location_id } : {}
 
   const handleSuccess = (room: unknown) => {
     const roomData = room as { id: string }
@@ -34,7 +39,7 @@ export default function NewRoomPage() {
           <span>New Room</span>
         </nav>
 
-        <RoomForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <RoomForm initialValues={initialValues} onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>
   )

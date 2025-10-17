@@ -4,13 +4,18 @@
 'use client'
 
 import React from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { Breadcrumb } from '@/components/ui'
 import { IOForm } from '@/components/IOForm'
 import type { IO } from '@/types'
 
 export default function NewIOPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Extract parent device_id from query params if provided
+  const device_id = searchParams.get('device_id')
+  const initialValues = device_id ? { device_id } : {}
 
   const handleSuccess = (io: IO) => {
     router.push(`/ios/${io.id}`)
@@ -23,18 +28,9 @@ export default function NewIOPage() {
   return (
     <div className="container">
       <div className="p-lg">
-        <nav
-          className="mb-md"
-          style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-black)', opacity: 0.6 }}
-        >
-          <Link href="/ios" style={{ color: 'var(--color-blue)', textDecoration: 'none' }}>
-            IOs
-          </Link>
-          <span style={{ margin: '0 var(--spacing-xs)' }}>/</span>
-          <span>New</span>
-        </nav>
+        <Breadcrumb items={[{ label: 'IOs', href: '/ios' }, { label: 'New' }]} />
 
-        <IOForm onSuccess={handleSuccess} onCancel={handleCancel} />
+        <IOForm initialValues={initialValues} onSuccess={handleSuccess} onCancel={handleCancel} />
       </div>
     </div>
   )

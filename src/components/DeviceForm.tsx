@@ -13,6 +13,8 @@ import type { Device, DeviceStatus, Company, Location, Room, Person } from '@/ty
 interface DeviceFormProps {
   /** Edit mode: provide existing device data */
   device?: Device
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
   /** Callback after successful create/update */
   onSuccess?: (device: unknown) => void
   /** Callback on cancel */
@@ -46,7 +48,12 @@ const STATUS_OPTIONS = [
   { value: 'storage', label: 'Storage' },
 ]
 
-export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
+export function DeviceForm({
+  device,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: DeviceFormProps) {
   const isEditMode = !!device
   const [companies, setCompanies] = useState<Company[]>([])
   const [locations, setLocations] = useState<Location[]>([])
@@ -316,7 +323,7 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
   const method = isEditMode ? 'PATCH' : 'POST'
   const schema = isEditMode ? UpdateDeviceSchema : CreateDeviceSchema
 
-  // Prepare initial values for edit mode
+  // Prepare initial values: merge passed values with edit mode values
   const initialValues = isEditMode
     ? {
         hostname: device.hostname || '',
@@ -347,7 +354,7 @@ export function DeviceForm({ device, onSuccess, onCancel }: DeviceFormProps) {
           : '',
         notes: device.notes || '',
       }
-    : { status: 'active' as DeviceStatus }
+    : passedInitialValues || { status: 'active' as DeviceStatus }
 
   return (
     <GenericForm

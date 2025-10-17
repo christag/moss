@@ -5,6 +5,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { Button, Input, Select, Textarea } from '@/components/ui'
 import { JunctionTableManager } from './JunctionTableManager'
 import type {
   IO,
@@ -20,8 +21,13 @@ import type {
 } from '@/types'
 
 interface IOFormProps {
+  /** Edit mode: provide existing IO data */
   io?: IO
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
+  /** Callback after successful create/update */
   onSuccess: (io: IO) => void
+  /** Callback on cancel */
   onCancel: () => void
 }
 
@@ -79,7 +85,12 @@ const TRUNK_MODE_OPTIONS: { value: TrunkMode; label: string }[] = [
   { value: 'n/a', label: 'N/A' },
 ]
 
-export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
+export function IOForm({
+  io,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: IOFormProps) {
   const isEditMode = !!io
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -93,28 +104,47 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
   // Tagged networks for trunk/hybrid ports
   const [taggedNetworks, setTaggedNetworks] = useState<Network[]>([])
 
+  // Prepare initial form data: merge passed values with existing IO data
+  const initialFormData: CreateIOInput = isEditMode
+    ? {
+        device_id: io.device_id || undefined,
+        room_id: io.room_id || undefined,
+        native_network_id: io.native_network_id || undefined,
+        connected_to_io_id: io.connected_to_io_id || undefined,
+        interface_name: io.interface_name || '',
+        interface_type: io.interface_type || 'ethernet',
+        media_type: io.media_type || undefined,
+        status: io.status || 'active',
+        speed: io.speed || '',
+        duplex: io.duplex || undefined,
+        trunk_mode: io.trunk_mode || undefined,
+        port_number: io.port_number || '',
+        mac_address: io.mac_address || '',
+        voltage: io.voltage || '',
+        amperage: io.amperage || '',
+        wattage: io.wattage || '',
+        power_connector_type: io.power_connector_type || '',
+        description: io.description || '',
+        notes: io.notes || '',
+      }
+    : {
+        ...(passedInitialValues || {}),
+        interface_name: (passedInitialValues?.interface_name as string) || '',
+        interface_type: (passedInitialValues?.interface_type as InterfaceType) || 'ethernet',
+        status: (passedInitialValues?.status as IOStatus) || 'active',
+        speed: (passedInitialValues?.speed as string) || '',
+        port_number: (passedInitialValues?.port_number as string) || '',
+        mac_address: (passedInitialValues?.mac_address as string) || '',
+        voltage: (passedInitialValues?.voltage as string) || '',
+        amperage: (passedInitialValues?.amperage as string) || '',
+        wattage: (passedInitialValues?.wattage as string) || '',
+        power_connector_type: (passedInitialValues?.power_connector_type as string) || '',
+        description: (passedInitialValues?.description as string) || '',
+        notes: (passedInitialValues?.notes as string) || '',
+      }
+
   // Form state
-  const [formData, setFormData] = useState<CreateIOInput>({
-    device_id: io?.device_id || undefined,
-    room_id: io?.room_id || undefined,
-    native_network_id: io?.native_network_id || undefined,
-    connected_to_io_id: io?.connected_to_io_id || undefined,
-    interface_name: io?.interface_name || '',
-    interface_type: io?.interface_type || 'ethernet',
-    media_type: io?.media_type || undefined,
-    status: io?.status || 'active',
-    speed: io?.speed || '',
-    duplex: io?.duplex || undefined,
-    trunk_mode: io?.trunk_mode || undefined,
-    port_number: io?.port_number || '',
-    mac_address: io?.mac_address || '',
-    voltage: io?.voltage || '',
-    amperage: io?.amperage || '',
-    wattage: io?.wattage || '',
-    power_connector_type: io?.power_connector_type || '',
-    description: io?.description || '',
-    notes: io?.notes || '',
-  })
+  const [formData, setFormData] = useState<CreateIOInput>(initialFormData)
 
   // Determine which field groups to show based on interface_type
   const isNetworkInterface = ['ethernet', 'wifi', 'virtual', 'fiber_optic'].includes(
@@ -272,252 +302,160 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="card">
-        <h2 className="text-h3 mb-4">{isEditMode ? 'Edit IO' : 'Create New IO'}</h2>
+    <div className="generic-form">
+      <h2 className="form-title">{isEditMode ? 'Edit IO' : 'Create New IO'}</h2>
 
+      <form onSubmit={handleSubmit} className="form-content">
         {error && (
-          <div className="bg-orange text-black p-4 rounded mb-4">
+          <div className="form-error" role="alert">
             <strong>Error:</strong> {error}
           </div>
         )}
 
-        <div className="grid grid-2 gap-4">
+        <div className="form-fields">
           {/* Interface Name */}
-          <div>
-            <label htmlFor="interface_name" className="block mb-2 font-bold">
-              Interface Name *
-            </label>
-            <input
-              type="text"
-              id="interface_name"
-              value={formData.interface_name}
-              onChange={(e) => handleChange('interface_name', e.target.value)}
-              required
-              className="w-full p-2 border rounded"
-              placeholder="e.g., eth0, GigabitEthernet1/0/1"
-            />
-          </div>
+          <Input
+            type="text"
+            id="interface_name"
+            label="Interface Name"
+            value={formData.interface_name}
+            onChange={(e) => handleChange('interface_name', e.target.value)}
+            required
+            placeholder="e.g., eth0, GigabitEthernet1/0/1"
+          />
 
           {/* Interface Type */}
-          <div>
-            <label htmlFor="interface_type" className="block mb-2 font-bold">
-              Interface Type *
-            </label>
-            <select
-              id="interface_type"
-              value={formData.interface_type}
-              onChange={(e) => handleChange('interface_type', e.target.value as InterfaceType)}
-              required
-              className="w-full p-2 border rounded"
-            >
-              {INTERFACE_TYPE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            id="interface_type"
+            label="Interface Type"
+            value={formData.interface_type}
+            onChange={(e) => handleChange('interface_type', e.target.value as InterfaceType)}
+            required
+            options={INTERFACE_TYPE_OPTIONS}
+          />
 
           {/* Device */}
-          <div>
-            <label htmlFor="device_id" className="block mb-2 font-bold">
-              Device
-            </label>
-            <select
-              id="device_id"
-              value={formData.device_id || ''}
-              onChange={(e) => handleChange('device_id', e.target.value || undefined)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">-- Select Device --</option>
-              {devices &&
-                devices.map((device) => (
-                  <option key={device.id} value={device.id}>
-                    {device.hostname ||
-                      device.model ||
-                      `${device.manufacturer} ${device.device_type}`}
-                  </option>
-                ))}
-            </select>
-          </div>
+          <Select
+            id="device_id"
+            label="Device"
+            value={formData.device_id || ''}
+            onChange={(e) => handleChange('device_id', e.target.value || undefined)}
+            options={[
+              { value: '', label: '-- Select Device --' },
+              ...devices.map((device) => ({
+                value: device.id,
+                label:
+                  device.hostname || device.model || `${device.manufacturer} ${device.device_type}`,
+              })),
+            ]}
+          />
 
           {/* Room */}
-          <div>
-            <label htmlFor="room_id" className="block mb-2 font-bold">
-              Room
-            </label>
-            <select
-              id="room_id"
-              value={formData.room_id || ''}
-              onChange={(e) => handleChange('room_id', e.target.value || undefined)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">-- Select Room --</option>
-              {rooms &&
-                rooms.map((room) => (
-                  <option key={room.id} value={room.id}>
-                    {room.room_name}
-                  </option>
-                ))}
-            </select>
-          </div>
+          <Select
+            id="room_id"
+            label="Room"
+            value={formData.room_id || ''}
+            onChange={(e) => handleChange('room_id', e.target.value || undefined)}
+            options={[
+              { value: '', label: '-- Select Room --' },
+              ...rooms.map((room) => ({
+                value: room.id,
+                label: room.room_name,
+              })),
+            ]}
+          />
 
           {/* Status */}
-          <div>
-            <label htmlFor="status" className="block mb-2 font-bold">
-              Status
-            </label>
-            <select
-              id="status"
-              value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value as IOStatus)}
-              className="w-full p-2 border rounded"
-            >
-              {STATUS_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            id="status"
+            label="Status"
+            value={formData.status}
+            onChange={(e) => handleChange('status', e.target.value as IOStatus)}
+            options={STATUS_OPTIONS}
+          />
 
           {/* Port Number */}
-          <div>
-            <label htmlFor="port_number" className="block mb-2 font-bold">
-              Port Number
-            </label>
-            <input
-              type="text"
-              id="port_number"
-              value={formData.port_number}
-              onChange={(e) => handleChange('port_number', e.target.value || undefined)}
-              className="w-full p-2 border rounded"
-              placeholder="e.g., 1, 24, 1/0/1"
-            />
-          </div>
+          <Input
+            type="text"
+            id="port_number"
+            label="Port Number"
+            value={formData.port_number}
+            onChange={(e) => handleChange('port_number', e.target.value || undefined)}
+            placeholder="e.g., 1, 24, 1/0/1"
+          />
         </div>
 
         {/* Network-specific fields */}
         {isNetworkInterface && (
           <>
-            <h3 className="text-h4 mt-6 mb-4">Network Configuration</h3>
-            <div className="grid grid-2 gap-4">
+            <h3 className="section-title">Network Configuration</h3>
+            <div className="form-fields">
               {/* Media Type */}
-              <div>
-                <label htmlFor="media_type" className="block mb-2 font-bold">
-                  Media Type
-                </label>
-                <select
-                  id="media_type"
-                  value={formData.media_type || ''}
-                  onChange={(e) =>
-                    handleChange('media_type', (e.target.value as MediaType) || undefined)
-                  }
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">-- Select Media Type --</option>
-                  {MEDIA_TYPE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="media_type"
+                label="Media Type"
+                value={formData.media_type || ''}
+                onChange={(e) =>
+                  handleChange('media_type', (e.target.value as MediaType) || undefined)
+                }
+                options={[{ value: '', label: '-- Select Media Type --' }, ...MEDIA_TYPE_OPTIONS]}
+              />
 
               {/* Speed */}
-              <div>
-                <label htmlFor="speed" className="block mb-2 font-bold">
-                  Speed
-                </label>
-                <input
-                  type="text"
-                  id="speed"
-                  value={formData.speed}
-                  onChange={(e) => handleChange('speed', e.target.value || undefined)}
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g., 1Gbps, 10Gbps, 100Mbps"
-                />
-              </div>
+              <Input
+                type="text"
+                id="speed"
+                label="Speed"
+                value={formData.speed}
+                onChange={(e) => handleChange('speed', e.target.value || undefined)}
+                placeholder="e.g., 1Gbps, 10Gbps, 100Mbps"
+              />
 
               {/* Duplex */}
-              <div>
-                <label htmlFor="duplex" className="block mb-2 font-bold">
-                  Duplex
-                </label>
-                <select
-                  id="duplex"
-                  value={formData.duplex || ''}
-                  onChange={(e) => handleChange('duplex', (e.target.value as Duplex) || undefined)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">-- Select Duplex --</option>
-                  {DUPLEX_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="duplex"
+                label="Duplex"
+                value={formData.duplex || ''}
+                onChange={(e) => handleChange('duplex', (e.target.value as Duplex) || undefined)}
+                options={[{ value: '', label: '-- Select Duplex --' }, ...DUPLEX_OPTIONS]}
+              />
 
               {/* Trunk Mode */}
-              <div>
-                <label htmlFor="trunk_mode" className="block mb-2 font-bold">
-                  Trunk Mode
-                </label>
-                <select
-                  id="trunk_mode"
-                  value={formData.trunk_mode || ''}
-                  onChange={(e) =>
-                    handleChange('trunk_mode', (e.target.value as TrunkMode) || undefined)
-                  }
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">-- Select Trunk Mode --</option>
-                  {TRUNK_MODE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="trunk_mode"
+                label="Trunk Mode"
+                value={formData.trunk_mode || ''}
+                onChange={(e) =>
+                  handleChange('trunk_mode', (e.target.value as TrunkMode) || undefined)
+                }
+                options={[{ value: '', label: '-- Select Trunk Mode --' }, ...TRUNK_MODE_OPTIONS]}
+              />
 
               {/* MAC Address */}
-              <div>
-                <label htmlFor="mac_address" className="block mb-2 font-bold">
-                  MAC Address
-                </label>
-                <input
-                  type="text"
-                  id="mac_address"
-                  value={formData.mac_address}
-                  onChange={(e) => handleChange('mac_address', e.target.value || undefined)}
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g., 00:1A:2B:3C:4D:5E"
-                  maxLength={17}
-                />
-              </div>
+              <Input
+                type="text"
+                id="mac_address"
+                label="MAC Address"
+                value={formData.mac_address}
+                onChange={(e) => handleChange('mac_address', e.target.value || undefined)}
+                placeholder="e.g., 00:1A:2B:3C:4D:5E"
+                maxLength={17}
+              />
 
               {/* Native Network (VLAN) */}
-              <div>
-                <label htmlFor="native_network_id" className="block mb-2 font-bold">
-                  Native Network (VLAN)
-                </label>
-                <select
-                  id="native_network_id"
-                  value={formData.native_network_id || ''}
-                  onChange={(e) => handleChange('native_network_id', e.target.value || undefined)}
-                  className="w-full p-2 border rounded"
-                >
-                  <option value="">-- Select Network --</option>
-                  {networks &&
-                    networks.map((network) => (
-                      <option key={network.id} value={network.id}>
-                        {network.network_name} {network.vlan_id && `(VLAN ${network.vlan_id})`}
-                      </option>
-                    ))}
-                </select>
-              </div>
+              <Select
+                id="native_network_id"
+                label="Native Network (VLAN)"
+                value={formData.native_network_id || ''}
+                onChange={(e) => handleChange('native_network_id', e.target.value || undefined)}
+                options={[
+                  { value: '', label: '-- Select Network --' },
+                  ...networks.map((network) => ({
+                    value: network.id,
+                    label: `${network.network_name}${network.vlan_id ? ` (VLAN ${network.vlan_id})` : ''}`,
+                  })),
+                ]}
+              />
             </div>
 
             {/* Tagged Networks (VLAN Tagging) - only for trunk/hybrid ports in edit mode */}
@@ -548,138 +486,173 @@ export function IOForm({ io, onSuccess, onCancel }: IOFormProps) {
         {/* Power-specific fields */}
         {isPowerInterface && (
           <>
-            <h3 className="text-h4 mt-6 mb-4">Power Configuration</h3>
-            <div className="grid grid-2 gap-4">
+            <h3 className="section-title">Power Configuration</h3>
+            <div className="form-fields">
               {/* Voltage */}
-              <div>
-                <label htmlFor="voltage" className="block mb-2 font-bold">
-                  Voltage
-                </label>
-                <input
-                  type="text"
-                  id="voltage"
-                  value={formData.voltage}
-                  onChange={(e) => handleChange('voltage', e.target.value || undefined)}
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g., 120V, 240V"
-                />
-              </div>
+              <Input
+                type="text"
+                id="voltage"
+                label="Voltage"
+                value={formData.voltage}
+                onChange={(e) => handleChange('voltage', e.target.value || undefined)}
+                placeholder="e.g., 120V, 240V"
+              />
 
               {/* Amperage */}
-              <div>
-                <label htmlFor="amperage" className="block mb-2 font-bold">
-                  Amperage
-                </label>
-                <input
-                  type="text"
-                  id="amperage"
-                  value={formData.amperage}
-                  onChange={(e) => handleChange('amperage', e.target.value || undefined)}
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g., 15A, 20A"
-                />
-              </div>
+              <Input
+                type="text"
+                id="amperage"
+                label="Amperage"
+                value={formData.amperage}
+                onChange={(e) => handleChange('amperage', e.target.value || undefined)}
+                placeholder="e.g., 15A, 20A"
+              />
 
               {/* Wattage */}
-              <div>
-                <label htmlFor="wattage" className="block mb-2 font-bold">
-                  Wattage
-                </label>
-                <input
-                  type="text"
-                  id="wattage"
-                  value={formData.wattage}
-                  onChange={(e) => handleChange('wattage', e.target.value || undefined)}
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g., 1000W, 1500W"
-                />
-              </div>
+              <Input
+                type="text"
+                id="wattage"
+                label="Wattage"
+                value={formData.wattage}
+                onChange={(e) => handleChange('wattage', e.target.value || undefined)}
+                placeholder="e.g., 1000W, 1500W"
+              />
 
               {/* Power Connector Type */}
-              <div>
-                <label htmlFor="power_connector_type" className="block mb-2 font-bold">
-                  Power Connector Type
-                </label>
-                <input
-                  type="text"
-                  id="power_connector_type"
-                  value={formData.power_connector_type}
-                  onChange={(e) =>
-                    handleChange('power_connector_type', e.target.value || undefined)
-                  }
-                  className="w-full p-2 border rounded"
-                  placeholder="e.g., IEC C13, NEMA 5-15"
-                />
-              </div>
+              <Input
+                type="text"
+                id="power_connector_type"
+                label="Power Connector Type"
+                value={formData.power_connector_type}
+                onChange={(e) => handleChange('power_connector_type', e.target.value || undefined)}
+                placeholder="e.g., IEC C13, NEMA 5-15"
+              />
             </div>
           </>
         )}
 
         {/* Connectivity */}
-        <h3 className="text-h4 mt-6 mb-4">Connectivity</h3>
-        <div className="grid grid-2 gap-4">
+        <h3 className="section-title">Connectivity</h3>
+        <div className="form-fields">
           {/* Connected to IO */}
-          <div>
-            <label htmlFor="connected_to_io_id" className="block mb-2 font-bold">
-              Connected to IO
-            </label>
-            <select
-              id="connected_to_io_id"
-              value={formData.connected_to_io_id || ''}
-              onChange={(e) => handleChange('connected_to_io_id', e.target.value || undefined)}
-              className="w-full p-2 border rounded"
-            >
-              <option value="">-- Select IO --</option>
-              {ios &&
-                ios.map((io) => (
-                  <option key={io.id} value={io.id}>
-                    {io.interface_name} ({io.interface_type})
-                  </option>
-                ))}
-            </select>
-          </div>
+          <Select
+            id="connected_to_io_id"
+            label="Connected to IO"
+            value={formData.connected_to_io_id || ''}
+            onChange={(e) => handleChange('connected_to_io_id', e.target.value || undefined)}
+            options={[
+              { value: '', label: '-- Select IO --' },
+              ...ios.map((io) => ({
+                value: io.id,
+                label: `${io.interface_name} (${io.interface_type})`,
+              })),
+            ]}
+          />
         </div>
 
         {/* Description */}
-        <div className="mt-4">
-          <label htmlFor="description" className="block mb-2 font-bold">
-            Description
-          </label>
-          <textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => handleChange('description', e.target.value || undefined)}
-            rows={3}
-            className="w-full p-2 border rounded"
-            placeholder="Interface description and purpose"
-          />
-        </div>
+        <Textarea
+          id="description"
+          label="Description"
+          value={formData.description}
+          onChange={(e) => handleChange('description', e.target.value || undefined)}
+          rows={3}
+          placeholder="Interface description and purpose"
+        />
 
         {/* Notes */}
-        <div className="mt-4">
-          <label htmlFor="notes" className="block mb-2 font-bold">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            value={formData.notes}
-            onChange={(e) => handleChange('notes', e.target.value || undefined)}
-            rows={4}
-            className="w-full p-2 border rounded"
-            placeholder="Additional notes and technical information"
-          />
-        </div>
+        <Textarea
+          id="notes"
+          label="Notes"
+          value={formData.notes}
+          onChange={(e) => handleChange('notes', e.target.value || undefined)}
+          rows={4}
+          placeholder="Additional notes and technical information"
+        />
 
         {/* Actions */}
-        <div className="flex gap-4 mt-6">
-          <button type="submit" disabled={isSubmitting} className="btn btn-primary">
-            {isSubmitting ? 'Saving...' : isEditMode ? 'Update IO' : 'Create IO'}
-          </button>
-          <button type="button" onClick={onCancel} className="btn btn-secondary">
+        <div className="form-actions">
+          <Button type="submit" variant="primary" disabled={isSubmitting} isLoading={isSubmitting}>
+            {isEditMode ? 'Update IO' : 'Create IO'}
+          </Button>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancel
-          </button>
+          </Button>
         </div>
-      </div>
-    </form>
+      </form>
+
+      <style jsx>{`
+        .generic-form {
+          background: var(--color-off-white);
+          border-radius: 8px;
+          padding: 2rem;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
+        .form-title {
+          font-size: 1.8rem;
+          font-weight: 600;
+          color: var(--color-brew-black);
+          margin-bottom: 1.5rem;
+        }
+
+        .form-content {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .form-error {
+          background: var(--color-orange);
+          color: var(--color-brew-black);
+          padding: 1rem;
+          border-radius: 4px;
+          margin-bottom: 1rem;
+        }
+
+        .form-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 1.5rem;
+        }
+
+        .section-title {
+          font-size: 1.4rem;
+          font-weight: 600;
+          color: var(--color-brew-black);
+          margin: 1.5rem 0 1rem 0;
+          padding-top: 1.5rem;
+          border-top: 1px solid var(--color-brew-black-10);
+        }
+
+        .section-title:first-of-type {
+          border-top: none;
+          padding-top: 0;
+        }
+
+        .form-actions {
+          display: flex;
+          gap: 1rem;
+          margin-top: 1rem;
+          padding-top: 1.5rem;
+          border-top: 1px solid var(--color-brew-black-10);
+        }
+
+        @media (max-width: 768px) {
+          .generic-form {
+            padding: 1rem;
+          }
+
+          .form-title {
+            font-size: 1.5rem;
+          }
+
+          .form-actions {
+            flex-direction: column;
+          }
+        }
+      `}</style>
+    </div>
   )
 }

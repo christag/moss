@@ -7,8 +7,13 @@ import React, { useState, useEffect } from 'react'
 import type { IPAddress, IO, Network, IPVersion, IPAddressType } from '@/types'
 
 interface IPAddressFormProps {
+  /** Edit mode: provide existing IP address data */
   ipAddress?: IPAddress
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
+  /** Callback after successful create/update */
   onSuccess: (ipAddress: IPAddress) => void
+  /** Callback on cancel */
   onCancel: () => void
 }
 
@@ -20,21 +25,40 @@ const IPV4_REGEX =
 const IPV6_REGEX =
   /^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|::)$/
 
-export function IPAddressForm({ ipAddress, onSuccess, onCancel }: IPAddressFormProps) {
+export function IPAddressForm({
+  ipAddress,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: IPAddressFormProps) {
   const isEdit = !!ipAddress
 
-  const [formData, setFormData] = useState({
-    io_id: ipAddress?.io_id || '',
-    network_id: ipAddress?.network_id || '',
-    ip_address: ipAddress?.ip_address || '',
-    ip_version: (ipAddress?.ip_version || 'v4') as IPVersion,
-    type: (ipAddress?.type || 'static') as IPAddressType,
-    dns_name: ipAddress?.dns_name || '',
-    assignment_date: ipAddress?.assignment_date
-      ? new Date(ipAddress.assignment_date).toISOString().split('T')[0]
-      : '',
-    notes: ipAddress?.notes || '',
-  })
+  // Prepare initial form data: merge passed values with existing IP address data
+  const initialFormData = isEdit
+    ? {
+        io_id: ipAddress.io_id || '',
+        network_id: ipAddress.network_id || '',
+        ip_address: ipAddress.ip_address || '',
+        ip_version: (ipAddress.ip_version || 'v4') as IPVersion,
+        type: (ipAddress.type || 'static') as IPAddressType,
+        dns_name: ipAddress.dns_name || '',
+        assignment_date: ipAddress.assignment_date
+          ? new Date(ipAddress.assignment_date).toISOString().split('T')[0]
+          : '',
+        notes: ipAddress.notes || '',
+      }
+    : {
+        io_id: (passedInitialValues?.io_id as string) || '',
+        network_id: (passedInitialValues?.network_id as string) || '',
+        ip_address: (passedInitialValues?.ip_address as string) || '',
+        ip_version: (passedInitialValues?.ip_version as IPVersion) || 'v4',
+        type: (passedInitialValues?.type as IPAddressType) || 'static',
+        dns_name: (passedInitialValues?.dns_name as string) || '',
+        assignment_date: (passedInitialValues?.assignment_date as string) || '',
+        notes: (passedInitialValues?.notes as string) || '',
+      }
+
+  const [formData, setFormData] = useState(initialFormData)
 
   const [ios, setIos] = useState<IO[]>([])
   const [networks, setNetworks] = useState<Network[]>([])

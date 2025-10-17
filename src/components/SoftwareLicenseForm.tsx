@@ -7,34 +7,62 @@ import React, { useState, useEffect } from 'react'
 import type { SoftwareLicense, Software, Company, LicenseType } from '@/types'
 
 interface SoftwareLicenseFormProps {
+  /** Edit mode: provide existing license data */
   license?: SoftwareLicense
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
+  /** Callback after successful create/update */
   onSuccess: (license: SoftwareLicense) => void
+  /** Callback on cancel */
   onCancel: () => void
 }
 
-export function SoftwareLicenseForm({ license, onSuccess, onCancel }: SoftwareLicenseFormProps) {
+export function SoftwareLicenseForm({
+  license,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: SoftwareLicenseFormProps) {
   const isEdit = !!license
 
-  const [formData, setFormData] = useState({
-    software_id: license?.software_id || '',
-    purchased_from_id: license?.purchased_from_id || '',
-    license_key: license?.license_key || '',
-    license_type: (license?.license_type || '') as LicenseType | '',
-    purchase_date: license?.purchase_date
-      ? new Date(license.purchase_date).toISOString().split('T')[0]
-      : '',
-    expiration_date: license?.expiration_date
-      ? new Date(license.expiration_date).toISOString().split('T')[0]
-      : '',
-    seat_count: license?.seat_count?.toString() || '',
-    seats_used: license?.seats_used?.toString() || '',
-    cost: license?.cost?.toString() || '',
-    renewal_date: license?.renewal_date
-      ? new Date(license.renewal_date).toISOString().split('T')[0]
-      : '',
-    auto_renew: license?.auto_renew ?? false,
-    notes: license?.notes || '',
-  })
+  // Prepare initial form data: merge passed values with existing license data
+  const initialFormData = isEdit
+    ? {
+        software_id: license.software_id || '',
+        purchased_from_id: license.purchased_from_id || '',
+        license_key: license.license_key || '',
+        license_type: (license.license_type || '') as LicenseType | '',
+        purchase_date: license.purchase_date
+          ? new Date(license.purchase_date).toISOString().split('T')[0]
+          : '',
+        expiration_date: license.expiration_date
+          ? new Date(license.expiration_date).toISOString().split('T')[0]
+          : '',
+        seat_count: license.seat_count?.toString() || '',
+        seats_used: license.seats_used?.toString() || '',
+        cost: license.cost?.toString() || '',
+        renewal_date: license.renewal_date
+          ? new Date(license.renewal_date).toISOString().split('T')[0]
+          : '',
+        auto_renew: license.auto_renew ?? false,
+        notes: license.notes || '',
+      }
+    : {
+        software_id: (passedInitialValues?.software_id as string) || '',
+        purchased_from_id: (passedInitialValues?.purchased_from_id as string) || '',
+        license_key: (passedInitialValues?.license_key as string) || '',
+        license_type: (passedInitialValues?.license_type as LicenseType) || '',
+        purchase_date: (passedInitialValues?.purchase_date as string) || '',
+        expiration_date: (passedInitialValues?.expiration_date as string) || '',
+        seat_count: (passedInitialValues?.seat_count as string) || '',
+        seats_used: (passedInitialValues?.seats_used as string) || '',
+        cost: (passedInitialValues?.cost as string) || '',
+        renewal_date: (passedInitialValues?.renewal_date as string) || '',
+        auto_renew: (passedInitialValues?.auto_renew as boolean) ?? false,
+        notes: (passedInitialValues?.notes as string) || '',
+      }
+
+  const [formData, setFormData] = useState(initialFormData)
 
   const [software, setSoftware] = useState<Software[]>([])
   const [companies, setCompanies] = useState<Company[]>([])

@@ -8,32 +8,66 @@ import React, { useState, useEffect } from 'react'
 import type { Person, PersonType, PersonStatus, Company, Location } from '@/types'
 
 interface PersonFormProps {
+  /** Edit mode: provide existing person data */
   person?: Person
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
+  /** Callback after successful create/update */
   onSuccess: (person: Person) => void
+  /** Callback on cancel */
   onCancel: () => void
 }
 
-export function PersonForm({ person, onSuccess, onCancel }: PersonFormProps) {
+export function PersonForm({
+  person,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: PersonFormProps) {
   const isEditMode = !!person
 
-  const [formData, setFormData] = useState({
-    company_id: person?.company_id || '',
-    location_id: person?.location_id || '',
-    full_name: person?.full_name || '',
-    email: person?.email || '',
-    username: person?.username || '',
-    employee_id: person?.employee_id || '',
-    person_type: (person?.person_type || 'employee') as PersonType,
-    department: person?.department || '',
-    job_title: person?.job_title || '',
-    phone: person?.phone || '',
-    mobile: person?.mobile || '',
-    start_date: person?.start_date ? new Date(person.start_date).toISOString().split('T')[0] : '',
-    status: (person?.status || 'active') as PersonStatus,
-    manager_id: person?.manager_id || '',
-    preferred_contact_method: person?.preferred_contact_method || '',
-    notes: person?.notes || '',
-  })
+  // Prepare initial form data: merge passed values with existing person data
+  const initialFormData = isEditMode
+    ? {
+        company_id: person.company_id || '',
+        location_id: person.location_id || '',
+        full_name: person.full_name || '',
+        email: person.email || '',
+        username: person.username || '',
+        employee_id: person.employee_id || '',
+        person_type: (person.person_type || 'employee') as PersonType,
+        department: person.department || '',
+        job_title: person.job_title || '',
+        phone: person.phone || '',
+        mobile: person.mobile || '',
+        start_date: person.start_date
+          ? new Date(person.start_date).toISOString().split('T')[0]
+          : '',
+        status: (person.status || 'active') as PersonStatus,
+        manager_id: person.manager_id || '',
+        preferred_contact_method: person.preferred_contact_method || '',
+        notes: person.notes || '',
+      }
+    : {
+        company_id: (passedInitialValues?.company_id as string) || '',
+        location_id: (passedInitialValues?.location_id as string) || '',
+        full_name: (passedInitialValues?.full_name as string) || '',
+        email: (passedInitialValues?.email as string) || '',
+        username: (passedInitialValues?.username as string) || '',
+        employee_id: (passedInitialValues?.employee_id as string) || '',
+        person_type: (passedInitialValues?.person_type as PersonType) || 'employee',
+        department: (passedInitialValues?.department as string) || '',
+        job_title: (passedInitialValues?.job_title as string) || '',
+        phone: (passedInitialValues?.phone as string) || '',
+        mobile: (passedInitialValues?.mobile as string) || '',
+        start_date: (passedInitialValues?.start_date as string) || '',
+        status: (passedInitialValues?.status as PersonStatus) || 'active',
+        manager_id: (passedInitialValues?.manager_id as string) || '',
+        preferred_contact_method: (passedInitialValues?.preferred_contact_method as string) || '',
+        notes: (passedInitialValues?.notes as string) || '',
+      }
+
+  const [formData, setFormData] = useState(initialFormData)
 
   const [companies, setCompanies] = useState<Company[]>([])
   const [locations, setLocations] = useState<Location[]>([])

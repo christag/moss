@@ -13,6 +13,8 @@ import type { Room, RoomType, Location } from '@/types'
 interface RoomFormProps {
   /** Edit mode: provide existing room data */
   room?: Room
+  /** Initial values for create mode (e.g., from query params) */
+  initialValues?: Record<string, unknown>
   /** Callback after successful create/update */
   onSuccess?: (room: unknown) => void
   /** Callback on cancel */
@@ -30,7 +32,12 @@ const ROOM_TYPE_OPTIONS = [
   { value: 'other', label: 'Other' },
 ]
 
-export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
+export function RoomForm({
+  room,
+  initialValues: passedInitialValues,
+  onSuccess,
+  onCancel,
+}: RoomFormProps) {
   const isEditMode = !!room
   const [locations, setLocations] = useState<Location[]>([])
 
@@ -126,7 +133,7 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
   const method = isEditMode ? 'PATCH' : 'POST'
   const schema = isEditMode ? UpdateRoomSchema : CreateRoomSchema
 
-  // Prepare initial values for edit mode
+  // Prepare initial values: merge passed values with edit mode values
   const initialValues = isEditMode
     ? {
         room_name: room.room_name,
@@ -138,7 +145,7 @@ export function RoomForm({ room, onSuccess, onCancel }: RoomFormProps) {
         access_requirements: room.access_requirements || '',
         notes: room.notes || '',
       }
-    : {}
+    : passedInitialValues || {}
 
   return (
     <GenericForm
