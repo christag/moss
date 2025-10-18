@@ -3,12 +3,26 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { LocationForm } from '@/components/LocationForm'
 
 export default function NewLocationPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewLocationPageContent />
+    </Suspense>
+  )
+}
+
+function NewLocationPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

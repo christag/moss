@@ -3,12 +3,26 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { DeviceForm } from '@/components/DeviceForm'
 
 export default function NewDevicePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewDevicePageContent />
+    </Suspense>
+  )
+}
+
+function NewDevicePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

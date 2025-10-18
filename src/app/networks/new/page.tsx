@@ -3,13 +3,27 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { NetworkForm } from '@/components/NetworkForm'
 import type { Network } from '@/types'
 
 export default function NewNetworkPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewNetworkPageContent />
+    </Suspense>
+  )
+}
+
+function NewNetworkPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

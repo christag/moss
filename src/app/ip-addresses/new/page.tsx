@@ -3,13 +3,27 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { IPAddressForm } from '@/components/IPAddressForm'
 import type { IPAddress } from '@/types'
 
 export default function NewIPAddressPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewIPAddressPageContent />
+    </Suspense>
+  )
+}
+
+function NewIPAddressPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

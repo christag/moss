@@ -3,13 +3,27 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { SoftwareLicenseForm } from '@/components/SoftwareLicenseForm'
 import type { SoftwareLicense } from '@/types'
 
 export default function NewSoftwareLicensePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewSoftwareLicensePageContent />
+    </Suspense>
+  )
+}
+
+function NewSoftwareLicensePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

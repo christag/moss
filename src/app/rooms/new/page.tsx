@@ -3,12 +3,26 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { RoomForm } from '@/components/RoomForm'
 
 export default function NewRoomPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewRoomPageContent />
+    </Suspense>
+  )
+}
+
+function NewRoomPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 

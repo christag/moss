@@ -3,13 +3,27 @@
  */
 'use client'
 
-import React from 'react'
+import React, { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Breadcrumb } from '@/components/ui'
 import { IOForm } from '@/components/IOForm'
 import type { IO } from '@/types'
 
 export default function NewIOPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container">
+          <div className="p-lg">Loading...</div>
+        </div>
+      }
+    >
+      <NewIOPageContent />
+    </Suspense>
+  )
+}
+
+function NewIOPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
