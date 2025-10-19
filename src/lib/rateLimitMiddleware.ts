@@ -207,10 +207,12 @@ export function addRateLimitHeaders(response: NextResponse, request: NextRequest
 }
 
 /**
- * Reset rate limit for a specific IP and path (e.g., after successful login)
+ * Reset rate limit for a specific identifier or IP+path combination
+ * @param ipOrIdentifier - Either a composite identifier (e.g., "ip:email") or just an IP address
+ * @param path - Optional path when using separate IP and path parameters
  */
-export function resetRateLimit(ip: string, path: string): void {
-  const key = `${ip}:${path}`
+export function resetRateLimit(ipOrIdentifier: string, path?: string): void {
+  const key = path ? `${ipOrIdentifier}:${path}` : ipOrIdentifier
   delete store[key]
 }
 
