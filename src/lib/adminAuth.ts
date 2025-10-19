@@ -216,19 +216,13 @@ export function canAccessAdminSection(
 
 /**
  * Get user's IP address from request headers
+ * @deprecated Use getClientIP from rateLimitMiddleware instead
  */
 export function getIPAddress(headers: Headers): string | undefined {
-  const forwardedFor = headers.get('x-forwarded-for')
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim()
-  }
-
-  const realIP = headers.get('x-real-ip')
-  if (realIP) {
-    return realIP
-  }
-
-  return undefined
+  // Import moved to rateLimitMiddleware for consolidation
+  const { getClientIP } = require('./rateLimitMiddleware')
+  const ip = getClientIP(headers)
+  return ip === 'dev-client' ? undefined : ip
 }
 
 /**

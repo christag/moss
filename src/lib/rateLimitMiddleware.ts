@@ -1,7 +1,7 @@
 /**
- * Comprehensive Rate Limiting Middleware
- * Uses express-rate-limit for API endpoint protection
- * Addresses: DEF-ROUND2-MASTER-001 - Rate Limiting Not Implemented
+ * Consolidated Rate Limiting Library
+ * Provides rate limiting for both middleware and API routes
+ * Supports flexible identifier-based limiting and pre-configured endpoint types
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -134,22 +134,25 @@ export function createRateLimiter(config: { windowMs: number; max: number; messa
 
 /**
  * Extract client IP address from request
+ * Works with NextRequest or Headers object
  */
-function getClientIP(request: NextRequest): string {
+export function getClientIP(requestOrHeaders: NextRequest | Headers): string {
+  const headers = requestOrHeaders instanceof Headers ? requestOrHeaders : requestOrHeaders.headers
+
   // Check common headers set by proxies/load balancers
-  const forwardedFor = request.headers.get('x-forwarded-for')
+  const forwardedFor = headers.get('x-forwarded-for')
   if (forwardedFor) {
     // x-forwarded-for can be comma-separated list, take the first IP
     return forwardedFor.split(',')[0].trim()
   }
 
-  const realIP = request.headers.get('x-real-ip')
+  const realIP = headers.get('x-real-ip')
   if (realIP) {
     return realIP
   }
 
   // Cloudflare
-  const cfConnectingIP = request.headers.get('cf-connecting-ip')
+  const cfConnectingIP = headers.get('cf-connecting-ip')
   if (cfConnectingIP) {
     return cfConnectingIP
   }
@@ -251,5 +254,67 @@ export function getRateLimitStatus(
     remaining,
     resetAt: entry.resetAt,
     blocked,
+  }
+}
+
+/**
+ * Create a rate limit identifier combining IP and email
+ * This prevents both IP-based and email-based brute force attacks
+ */
+export function createRateLimitIdentifier(ip: string, email?: string): string {
+  if (email) {
+    return `${ip}:${email.toLowerCase()}`
+  }
+  return ip
+}
+
+/**
+ * Flexible rate limit checking (useful for middleware and custom scenarios)
+ * Returns detailed rate limit status
+ */
+export interface RateLimitConfig {
+  identifier: string
+  maxAttempts?: number
+  windowMs?: number
+}
+
+export interface RateLimitResult {
+  allowed: boolean
+  attempts: number
+  limit: number
+  remaining: number
+  resetAt: number
+  retryAfter?: number
+}
+
+export function checkRateLimit(config: RateLimitConfig): RateLimitResult {
+  const maxAttempts = config.maxAttempts || 5
+  const windowMs = config.windowMs || 15 * 60 * 1000 // 15 minutes
+  const now = Date.now()
+
+  let entry = store[config.identifier]
+
+  // Create new entry if doesn't exist or has expired
+  if (!entry || entry.resetAt < now) {
+    entry = {
+      count: 0,
+      resetAt: now + windowMs,
+    }
+    store[config.identifier] = entry
+  }
+
+  // Increment attempt count
+  entry.count++
+
+  const remaining = Math.max(0, maxAttempts - entry.count)
+  const allowed = entry.count <= maxAttempts
+
+  return {
+    allowed,
+    attempts: entry.count,
+    limit: maxAttempts,
+    remaining,
+    resetAt: entry.resetAt,
+    retryAfter: allowed ? undefined : entry.resetAt - now,
   }
 }

@@ -11,7 +11,7 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { checkRateLimit, getClientIP } from './lib/rateLimit'
+import { checkRateLimit, getClientIP } from './lib/rateLimitMiddleware'
 
 // Routes that require authentication
 const protectedRoutes = [

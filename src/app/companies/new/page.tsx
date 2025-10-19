@@ -8,7 +8,7 @@
 import React from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { CompanyForm } from '@/components/forms/CompanyForm'
+import { CompanyForm } from '@/components/CompanyForm'
 
 export default function CreateCompanyPage() {
   const router = useRouter()

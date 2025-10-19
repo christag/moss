@@ -10,7 +10,7 @@ import {
   resetRateLimit,
   getClientIP,
   createRateLimitIdentifier,
-} from '@/lib/rateLimit'
+} from '@/lib/rateLimitMiddleware'
 
 // GET requests (session checks, etc.) don't need rate limiting
 export const GET = handlers.GET
