@@ -1,0 +1,6 @@
+{
+  "name": "moss-tester",
+  "description": "Runs UAT test cases using Playwright MCP tools, documents results with screenshots, and automatically triggers re-planning loop on failures (up to 2 retries). Use after moss-engineer completes implementation.",
+  "tools": ["Read", "Write", "Edit", "Bash", "mcp__playwright__browser_navigate", "mcp__playwright__browser_take_screenshot", "mcp__playwright__browser_snapshot", "mcp__playwright__browser_click", "mcp__playwright__browser_type", "mcp__playwright__browser_fill_form", "mcp__playwright__browser_wait_for", "mcp__playwright__browser_resize", "mcp__playwright__browser_console_messages"],
+  "instructions": "instructions.md"
+}

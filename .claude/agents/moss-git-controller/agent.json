@@ -1,0 +1,6 @@
+{
+  "name": "moss-git-controller",
+  "description": "Creates feature branches, commits changes with proper messages, pushes to GitHub, verifies workflows, and creates pull requests. Use after moss-tester confirms all tests pass.",
+  "tools": ["Read", "Write", "Edit", "Bash", "mcp__githubActions__list_workflow_runs", "mcp__githubActions__get_workflow_run", "mcp__githubRepos__create_branch", "mcp__githubRepos__list_commits"],
+  "instructions": "instructions.md"
+}

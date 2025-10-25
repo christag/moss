@@ -1,14 +1,41 @@
+'use client'
+
 import React from 'react'
+import { motion } from 'framer-motion'
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
+  /** Disable hover animation (default: false) */
+  noHover?: boolean
 }
 
-export const Card: React.FC<CardProps> = ({ children, className = '', ...props }) => {
+export const Card: React.FC<CardProps> = ({
+  children,
+  className = '',
+  noHover = false,
+  ...props
+}) => {
+  // For cards without hover effect, render a regular div
+  if (noHover) {
+    return (
+      <div className={`card ${className}`} {...props}>
+        {children}
+      </div>
+    )
+  }
+
+  // For cards with hover effect, use motion.div
   return (
-    <div className={`card ${className}`} {...props}>
+    <motion.div
+      className={`card ${className}`}
+      whileHover={{
+        y: -4,
+        boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
+      }}
+      transition={{ duration: 0.2, ease: [0, 0, 0.2, 1] }}
+    >
       {children}
-    </div>
+    </motion.div>
   )
 }
 
