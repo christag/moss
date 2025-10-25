@@ -22,7 +22,7 @@ export const GroupTypeSchema = z.enum([
  */
 export const CreateGroupSchema = z.object({
   group_name: z.string().min(1).max(255),
-  group_type: GroupTypeSchema,
+  group_type: z.preprocess((val) => (val === '' ? null : val), GroupTypeSchema),
   description: z.string().nullable().optional(),
   group_id_external: z.string().max(255).nullable().optional(),
   created_date: z.string().date().nullable().optional(),
@@ -34,7 +34,7 @@ export const CreateGroupSchema = z.object({
  */
 export const UpdateGroupSchema = z.object({
   group_name: z.string().min(1).max(255).optional(),
-  group_type: GroupTypeSchema.optional(),
+  group_type: z.preprocess((val) => (val === '' ? null : val), GroupTypeSchema.optional()),
   description: z.string().optional().nullable(),
   group_id_external: z.string().max(255).optional().nullable(),
   created_date: z.string().date().optional().nullable(),

@@ -16,7 +16,10 @@ export const CreateSoftwareLicenseSchema = z.object({
   software_id: z.string().uuid().nullable().optional(),
   purchased_from_id: z.string().uuid().nullable().optional(),
   license_key: z.string().nullable().optional(),
-  license_type: LicenseTypeSchema.nullable().optional(),
+  license_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    LicenseTypeSchema.nullable().optional()
+  ),
   purchase_date: z.string().nullable().optional(),
   expiration_date: z.string().nullable().optional(),
   seat_count: z.number().int().positive().nullable().optional(),
@@ -31,7 +34,7 @@ export const UpdateSoftwareLicenseSchema = z.object({
   software_id: z.string().uuid().optional(),
   purchased_from_id: z.string().uuid().optional(),
   license_key: z.string().optional(),
-  license_type: LicenseTypeSchema.optional(),
+  license_type: z.preprocess((val) => (val === '' ? null : val), LicenseTypeSchema.optional()),
   purchase_date: z.string().optional(),
   expiration_date: z.string().optional(),
   seat_count: z.number().int().positive().optional(),

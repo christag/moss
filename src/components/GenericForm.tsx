@@ -45,6 +45,8 @@ export interface FieldConfig {
   defaultValue?: string | number | boolean | null
   disabled?: boolean
   hidden?: boolean // Conditionally hide fields
+  width?: 'full' | 'half' | 'third' // Column width for multi-column layouts
+  group?: string // Optional group name for field grouping
 }
 
 interface GenericFormProps<T extends z.ZodType> {
@@ -70,6 +72,8 @@ interface GenericFormProps<T extends z.ZodType> {
   submitText?: string
   /** Show cancel button */
   showCancel?: boolean
+  /** Enable compact mode with reduced spacing */
+  compact?: boolean
 }
 
 export function GenericForm<T extends z.ZodType>({
@@ -84,6 +88,7 @@ export function GenericForm<T extends z.ZodType>({
   onCancel,
   submitText = 'Save',
   showCancel = true,
+  compact = false,
 }: GenericFormProps<T>) {
   const [formData, setFormData] = useState<Record<string, string | number | boolean | null>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -372,7 +377,10 @@ export function GenericForm<T extends z.ZodType>({
 
         <div className="form-fields">
           {fields.map((field) => (
-            <div key={field.name} className="form-field">
+            <div
+              key={field.name}
+              className={`form-field ${field.width ? `field-width-${field.width}` : 'field-width-full'}`}
+            >
               {renderField(field)}
             </div>
           ))}
@@ -407,22 +415,22 @@ export function GenericForm<T extends z.ZodType>({
         .generic-form {
           background: var(--color-off-white);
           border-radius: 8px;
-          padding: 2rem;
-          max-width: 800px;
+          padding: ${compact ? '1rem' : '1.5rem'};
+          max-width: 900px;
           margin: 0 auto;
         }
 
         .form-title {
-          font-size: 1.8rem;
+          font-size: ${compact ? '1.5rem' : '1.8rem'};
           font-weight: 600;
           color: var(--color-brew-black);
-          margin-bottom: 1.5rem;
+          margin-bottom: ${compact ? '0.75rem' : '1rem'};
         }
 
         .form-content {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: ${compact ? '0.75rem' : '1rem'};
         }
 
         .form-error {
@@ -434,21 +442,37 @@ export function GenericForm<T extends z.ZodType>({
         }
 
         .form-fields {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: ${compact ? 'var(--spacing-sm)' : 'var(--spacing-md)'};
+          column-gap: var(--spacing-lg);
         }
 
         .form-field {
           width: 100%;
         }
 
+        /* Multi-column layout support */
+        .field-width-full {
+          grid-column: 1 / -1;
+        }
+
+        .field-width-half {
+          grid-column: span 1;
+        }
+
+        .field-width-third {
+          grid-column: span 1;
+          min-width: 200px;
+        }
+
         .form-actions {
           display: flex;
           gap: 1rem;
-          margin-top: 1rem;
-          padding-top: 1.5rem;
-          border-top: 1px solid var(--color-brew-black-10);
+          margin-top: ${compact ? '0.5rem' : '1rem'};
+          padding-top: ${compact ? '0.75rem' : '1rem'};
+          border-top: 1px solid rgba(var(--color-black-rgb), 0.1);
+          grid-column: 1 / -1;
         }
 
         @media (max-width: 768px) {
@@ -458,6 +482,15 @@ export function GenericForm<T extends z.ZodType>({
 
           .form-title {
             font-size: 1.5rem;
+          }
+
+          .form-fields {
+            grid-template-columns: 1fr;
+          }
+
+          .field-width-half,
+          .field-width-third {
+            grid-column: 1 / -1;
           }
 
           .form-actions {

@@ -17,14 +17,20 @@ export const CreateSaaSServiceSchema = z.object({
   service_name: z.string().min(1).max(255),
   service_url: z.string().max(255).nullable().optional(),
   account_id: z.string().max(255).nullable().optional(),
-  environment: SaaSEnvironmentSchema.nullable().optional(),
-  status: SaaSStatusSchema.default('active'),
+  environment: z.preprocess(
+    (val) => (val === '' ? null : val),
+    SaaSEnvironmentSchema.nullable().optional()
+  ),
+  status: z.preprocess((val) => (val === '' ? null : val), SaaSStatusSchema.default('active')),
   subscription_start: z.string().nullable().optional(),
   subscription_end: z.string().nullable().optional(),
   seat_count: z.number().int().min(0).nullable().optional(),
   cost: z.number().min(0).nullable().optional(),
   billing_frequency: z.string().max(50).nullable().optional(),
-  criticality: SaaSCriticalitySchema.nullable().optional(),
+  criticality: z.preprocess(
+    (val) => (val === '' ? null : val),
+    SaaSCriticalitySchema.nullable().optional()
+  ),
   sso_provider: z.string().max(50).nullable().optional(),
   sso_protocol: z.string().max(50).nullable().optional(),
   scim_enabled: z.boolean().default(false),
@@ -42,14 +48,20 @@ export const UpdateSaaSServiceSchema = z.object({
   service_name: z.string().min(1).max(255).optional(),
   service_url: z.string().max(255).nullable().optional(),
   account_id: z.string().max(255).nullable().optional(),
-  environment: SaaSEnvironmentSchema.nullable().optional(),
-  status: SaaSStatusSchema.optional(),
+  environment: z.preprocess(
+    (val) => (val === '' ? null : val),
+    SaaSEnvironmentSchema.nullable().optional()
+  ),
+  status: z.preprocess((val) => (val === '' ? null : val), SaaSStatusSchema.optional()),
   subscription_start: z.string().nullable().optional(),
   subscription_end: z.string().nullable().optional(),
   seat_count: z.number().int().min(0).nullable().optional(),
   cost: z.number().min(0).nullable().optional(),
   billing_frequency: z.string().max(50).nullable().optional(),
-  criticality: SaaSCriticalitySchema.nullable().optional(),
+  criticality: z.preprocess(
+    (val) => (val === '' ? null : val),
+    SaaSCriticalitySchema.nullable().optional()
+  ),
   sso_provider: z.string().max(50).nullable().optional(),
   sso_protocol: z.string().max(50).nullable().optional(),
   scim_enabled: z.boolean().optional(),

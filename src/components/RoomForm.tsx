@@ -7,7 +7,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { GenericForm, FieldConfig } from '@/components/GenericForm'
+import { QuickCreateSection, QuickCreateField } from '@/components/QuickCreateSection'
 import { CreateRoomSchema, UpdateRoomSchema } from '@/lib/schemas/room'
+import { toast } from 'sonner'
 import type { Room, RoomType, Location } from '@/types'
 
 interface RoomFormProps {
@@ -40,6 +42,7 @@ export function RoomForm({
 }: RoomFormProps) {
   const isEditMode = !!room
   const [locations, setLocations] = useState<Location[]>([])
+  const [generatedPorts, setGeneratedPorts] = useState<Array<Record<string, unknown>>>([])
 
   // Fetch locations for the dropdown
   useEffect(() => {
@@ -128,6 +131,39 @@ export function RoomForm({
     },
   ]
 
+  // Patch panel port template fields for QuickCreateSection
+  const patchPanelTemplateFields: QuickCreateField[] = [
+    {
+      key: 'interface_type',
+      label: 'Port Type',
+      type: 'select',
+      defaultValue: 'patch_panel_port',
+      options: [
+        { value: 'patch_panel_port', label: 'Patch Panel Port' },
+        { value: 'ethernet', label: 'Ethernet' },
+        { value: 'fiber_optic', label: 'Fiber' },
+      ],
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      defaultValue: 'inactive',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'reserved', label: 'Reserved' },
+      ],
+    },
+    {
+      key: 'speed',
+      label: 'Speed',
+      type: 'text',
+      defaultValue: '1G',
+      placeholder: '1G, 10G, 100M',
+    },
+  ]
+
   // Determine API endpoint and method based on mode
   const apiEndpoint = isEditMode ? `/api/rooms/${room.id}` : '/api/rooms'
   const method = isEditMode ? 'PATCH' : 'POST'
@@ -147,18 +183,98 @@ export function RoomForm({
       }
     : passedInitialValues || {}
 
+  // Custom success handler to create patch panel ports if generated
+  const handleSuccess = async (createdRoom: unknown) => {
+    const roomData = createdRoom as { id: string }
+
+    // If ports were generated, create them
+    if (generatedPorts.length > 0 && !isEditMode) {
+      try {
+        const portsWithRoomId = generatedPorts.map((port) => ({
+          ...port,
+          interface_name: port.name as string,
+          room_id: roomData.id,
+        }))
+
+        const response = await fetch('/api/ios/bulk-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: portsWithRoomId }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to create patch panel ports')
+        }
+
+        const result = await response.json()
+        toast.success(
+          `Room created successfully with ${result.data.created_count} patch panel port(s)`
+        )
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : 'Room created but ports failed to create')
+      }
+    }
+
+    // Call original onSuccess handler
+    if (onSuccess) {
+      onSuccess(createdRoom)
+    }
+  }
+
+  // Handle port generation
+  const handleGeneratePorts = (items: Array<Record<string, unknown>>) => {
+    setGeneratedPorts(items)
+    toast.success(`${items.length} patch panel port(s) staged for creation`)
+  }
+
   return (
-    <GenericForm
-      title={isEditMode ? 'Edit Room' : 'Create New Room'}
-      fields={fields}
-      schema={schema}
-      apiEndpoint={apiEndpoint}
-      method={method}
-      initialValues={initialValues}
-      onSuccess={onSuccess}
-      onCancel={onCancel}
-      submitText={isEditMode ? 'Update Room' : 'Create Room'}
-      showCancel={true}
-    />
+    <>
+      <GenericForm
+        title={isEditMode ? 'Edit Room' : 'Create New Room'}
+        fields={fields}
+        schema={schema}
+        apiEndpoint={apiEndpoint}
+        method={method}
+        initialValues={initialValues}
+        onSuccess={handleSuccess}
+        onCancel={onCancel}
+        submitText={isEditMode ? 'Update Room' : 'Create Room'}
+        showCancel={true}
+      />
+
+      {!isEditMode && (
+        <QuickCreateSection
+          title="Quick Create Patch Panel Ports"
+          description="Quickly generate multiple patch panel ports for this room (e.g., 48 ports for a server room patch panel)"
+          templateFields={patchPanelTemplateFields}
+          onGenerate={handleGeneratePorts}
+          examples={[
+            'Create 48 ports: PP-A-{n} where n = 1-48',
+            'Create 24 ports: Patch Port {n}',
+            'Create 96 ports: Port-{n} (for two 48-port panels)',
+          ]}
+          defaultQuantity={48}
+          maxQuantity={192}
+          defaultPattern="PP-{n}"
+        />
+      )}
+
+      {generatedPorts.length > 0 && (
+        <div
+          style={{ marginTop: '1rem', padding: '1rem', background: '#e6f4ea', borderRadius: '4px' }}
+        >
+          <strong>✓ {generatedPorts.length} patch panel port(s) ready to create</strong>
+          <p
+            style={{
+              margin: '0.5rem 0 0',
+              fontSize: '0.9rem',
+              color: 'var(--color-brew-black-60)',
+            }}
+          >
+            These patch panel ports will be created automatically when you save the room.
+          </p>
+        </div>
+      )}
+    </>
   )
 }

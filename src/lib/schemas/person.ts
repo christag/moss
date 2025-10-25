@@ -43,7 +43,7 @@ export const CreatePersonSchema = z
     username: z.string().max(100, 'Username too long').nullable().optional(),
     phone: z.string().max(50, 'Phone number too long').nullable().optional(),
     mobile: z.string().max(50, 'Mobile number too long').nullable().optional(),
-    person_type: PersonTypeSchema,
+    person_type: z.preprocess((val) => (val === '' ? null : val), PersonTypeSchema),
     company_id: UUIDSchema.nullable().optional(),
     employee_id: z.string().max(100, 'Employee ID too long').nullable().optional(),
     job_title: z.string().max(255, 'Job title too long').nullable().optional(),
@@ -55,7 +55,10 @@ export const CreatePersonSchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (use YYYY-MM-DD)')
       .nullable()
       .optional(),
-    status: PersonStatusSchema.optional().default('active'),
+    status: z.preprocess(
+      (val) => (val === '' ? null : val),
+      PersonStatusSchema.optional().default('active')
+    ),
     preferred_contact_method: z
       .string()
       .max(50, 'Preferred contact method too long')
@@ -101,7 +104,7 @@ export const UpdatePersonSchema = z
     username: z.string().max(100, 'Username too long').optional().nullable(),
     phone: z.string().max(50, 'Phone number too long').optional().nullable(),
     mobile: z.string().max(50, 'Mobile number too long').optional().nullable(),
-    person_type: PersonTypeSchema.optional(),
+    person_type: z.preprocess((val) => (val === '' ? null : val), PersonTypeSchema.optional()),
     company_id: UUIDSchema.optional().nullable(),
     employee_id: z.string().max(100, 'Employee ID too long').optional().nullable(),
     job_title: z.string().max(255, 'Job title too long').optional().nullable(),
@@ -113,7 +116,7 @@ export const UpdatePersonSchema = z
       .regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format (use YYYY-MM-DD)')
       .optional()
       .nullable(),
-    status: PersonStatusSchema.optional(),
+    status: z.preprocess((val) => (val === '' ? null : val), PersonStatusSchema.optional()),
     preferred_contact_method: z
       .string()
       .max(50, 'Preferred contact method too long')

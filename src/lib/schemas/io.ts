@@ -48,12 +48,18 @@ export const CreateIOSchema = z.object({
   native_network_id: z.string().uuid().nullable().optional(),
   connected_to_io_id: z.string().uuid().nullable().optional(),
   interface_name: z.string().min(1).max(255),
-  interface_type: InterfaceTypeSchema,
-  media_type: MediaTypeSchema.nullable().optional(),
-  status: IOStatusSchema.default('active'),
+  interface_type: z.preprocess((val) => (val === '' ? null : val), InterfaceTypeSchema),
+  media_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    MediaTypeSchema.nullable().optional()
+  ),
+  status: z.preprocess((val) => (val === '' ? null : val), IOStatusSchema.default('active')),
   speed: z.string().max(50).nullable().optional(),
-  duplex: DuplexSchema.nullable().optional(),
-  trunk_mode: TrunkModeSchema.nullable().optional(),
+  duplex: z.preprocess((val) => (val === '' ? null : val), DuplexSchema.nullable().optional()),
+  trunk_mode: z.preprocess(
+    (val) => (val === '' ? null : val),
+    TrunkModeSchema.nullable().optional()
+  ),
   port_number: z.string().max(50).nullable().optional(),
   mac_address: z.string().max(17).nullable().optional(),
   voltage: z.string().max(20).nullable().optional(),
@@ -70,12 +76,18 @@ export const UpdateIOSchema = z.object({
   native_network_id: z.string().uuid().nullable().optional(),
   connected_to_io_id: z.string().uuid().nullable().optional(),
   interface_name: z.string().min(1).max(255).optional(),
-  interface_type: InterfaceTypeSchema.optional(),
-  media_type: MediaTypeSchema.nullable().optional(),
-  status: IOStatusSchema.optional(),
+  interface_type: z.preprocess((val) => (val === '' ? null : val), InterfaceTypeSchema.optional()),
+  media_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    MediaTypeSchema.nullable().optional()
+  ),
+  status: z.preprocess((val) => (val === '' ? null : val), IOStatusSchema.optional()),
   speed: z.string().max(50).nullable().optional(),
-  duplex: DuplexSchema.nullable().optional(),
-  trunk_mode: TrunkModeSchema.nullable().optional(),
+  duplex: z.preprocess((val) => (val === '' ? null : val), DuplexSchema.nullable().optional()),
+  trunk_mode: z.preprocess(
+    (val) => (val === '' ? null : val),
+    TrunkModeSchema.nullable().optional()
+  ),
   port_number: z.string().max(50).nullable().optional(),
   mac_address: z.string().max(17).nullable().optional(),
   voltage: z.string().max(20).nullable().optional(),

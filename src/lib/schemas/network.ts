@@ -25,7 +25,10 @@ export const CreateNetworkSchema = z.object({
   network_name: z.string().min(1).max(255),
   network_address: z.string().max(50).nullable().optional(),
   vlan_id: z.number().int().min(1).max(4094).nullable().optional(),
-  network_type: NetworkTypeSchema.nullable().optional(),
+  network_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    NetworkTypeSchema.nullable().optional()
+  ),
   gateway: z.string().max(50).nullable().optional(),
   dns_servers: z.string().nullable().optional(),
   dhcp_enabled: z.boolean().default(false),
@@ -43,7 +46,10 @@ export const UpdateNetworkSchema = z.object({
   network_name: z.string().min(1).max(255).optional(),
   network_address: z.string().max(50).nullable().optional(),
   vlan_id: z.number().int().min(1).max(4094).nullable().optional(),
-  network_type: NetworkTypeSchema.nullable().optional(),
+  network_type: z.preprocess(
+    (val) => (val === '' ? null : val),
+    NetworkTypeSchema.nullable().optional()
+  ),
   gateway: z.string().max(50).nullable().optional(),
   dns_servers: z.string().nullable().optional(),
   dhcp_enabled: z.boolean().optional(),

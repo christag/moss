@@ -159,4 +159,4 @@ $RECYCLE.BIN/
 .npm
 .yarn/cache
 .yarn/unplugged
-.pnpm-store/
+.claude/skills/

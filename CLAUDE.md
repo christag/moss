@@ -8,6 +8,29 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 
 **Target Users**: IT departments at mid-size companies with complex infrastructure including traditional IT equipment, broadcast/AV equipment, and cloud services.
 
+## M.O.S.S. Skills System
+
+**Location**: `.claude/skills/` (project-level, gitignored)
+
+The project includes 8 specialized skills to ensure consistency and efficiency when building M.O.S.S. features:
+
+1. **moss-visual-check** - Verify design system compliance (colors, typography, spacing, component sizing, accessibility)
+2. **moss-component-builder** - Build UI components following Figma specs with proper TypeScript, CSS variables, and WCAG AA
+3. **moss-form-builder** - Create forms using GenericForm pattern with Zod validation and FieldGroup organization
+4. **moss-api-endpoint** - Build REST API routes with NextAuth, RBAC, Zod validation, and standard response format
+5. **moss-database-migration** - Create numbered PostgreSQL migrations with UUIDs, timestamps, and proper indexes
+6. **moss-uat-generator** - Generate UAT test cases using Playwright MCP for navigation, forms, validation, and accessibility
+7. **moss-zod-schema** - Create Zod schemas matching database structure with proper types and validation
+8. **moss-relationship-tab** - Add relationship tabs using RelatedItemsList component for object navigation
+
+**When to Use Skills**:
+- Invoke skills proactively when their purpose matches your task
+- Use `moss-visual-check` AFTER creating/modifying any UI component
+- Use `moss-uat-generator` AFTER implementing any feature to generate tests
+- Skills ensure consistency and catch issues before user discovery
+
+**How to Invoke**: Type the skill name (e.g., "moss-visual-check") or Claude will suggest them automatically.
+
 ## Development Workflow
 
 **CRITICAL**: Follow this workflow for EVERY development task:

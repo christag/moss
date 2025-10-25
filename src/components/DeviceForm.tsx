@@ -7,7 +7,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { GenericForm, FieldConfig } from '@/components/GenericForm'
+import { QuickCreateSection, QuickCreateField } from '@/components/QuickCreateSection'
 import { CreateDeviceSchema, UpdateDeviceSchema } from '@/lib/schemas/device'
+import { toast } from 'sonner'
 import type { Device, DeviceStatus, Company, Location, Room, Person } from '@/types'
 
 interface DeviceFormProps {
@@ -60,6 +62,7 @@ export function DeviceForm({
   const [rooms, setRooms] = useState<Room[]>([])
   const [people, setPeople] = useState<Person[]>([])
   const [parentDevices, setParentDevices] = useState<Device[]>([])
+  const [generatedInterfaces, setGeneratedInterfaces] = useState<Array<Record<string, unknown>>>([])
 
   // Fetch companies for the dropdown
   useEffect(() => {
@@ -318,6 +321,45 @@ export function DeviceForm({
     },
   ]
 
+  // Interface template fields for QuickCreateSection
+  const interfaceTemplateFields: QuickCreateField[] = [
+    {
+      key: 'interface_type',
+      label: 'Interface Type',
+      type: 'select',
+      defaultValue: 'ethernet',
+      options: [
+        { value: 'ethernet', label: 'Ethernet' },
+        { value: 'fiber_optic', label: 'Fiber' },
+        { value: 'wifi', label: 'WiFi' },
+        { value: 'sdi', label: 'SDI' },
+        { value: 'hdmi', label: 'HDMI' },
+        { value: 'patch_panel_port', label: 'Patch Panel' },
+        { value: 'power_input', label: 'Power In' },
+        { value: 'power_output', label: 'Power Out' },
+      ],
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      defaultValue: 'active',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'monitoring', label: 'Monitoring' },
+        { value: 'reserved', label: 'Reserved' },
+      ],
+    },
+    {
+      key: 'speed',
+      label: 'Speed',
+      type: 'text',
+      defaultValue: '1G',
+      placeholder: '1G, 10G, 100M',
+    },
+  ]
+
   // Determine API endpoint and method based on mode
   const apiEndpoint = isEditMode ? `/api/devices/${device.id}` : '/api/devices'
   const method = isEditMode ? 'PATCH' : 'POST'
@@ -356,18 +398,98 @@ export function DeviceForm({
       }
     : passedInitialValues || { status: 'active' as DeviceStatus }
 
+  // Custom success handler to create interfaces if generated
+  const handleSuccess = async (createdDevice: unknown) => {
+    const deviceData = createdDevice as { id: string }
+
+    // If interfaces were generated, create them
+    if (generatedInterfaces.length > 0 && !isEditMode) {
+      try {
+        const interfacesWithDeviceId = generatedInterfaces.map((iface) => ({
+          ...iface,
+          interface_name: iface.name as string,
+          device_id: deviceData.id,
+        }))
+
+        const response = await fetch('/api/ios/bulk-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items: interfacesWithDeviceId }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to create interfaces')
+        }
+
+        const result = await response.json()
+        toast.success(`Device created successfully with ${result.data.created_count} interface(s)`)
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : 'Device created but interfaces failed to create'
+        )
+      }
+    }
+
+    // Call original onSuccess handler
+    if (onSuccess) {
+      onSuccess(createdDevice)
+    }
+  }
+
+  // Handle interface generation
+  const handleGenerateInterfaces = (items: Array<Record<string, unknown>>) => {
+    setGeneratedInterfaces(items)
+    toast.success(`${items.length} interface(s) staged for creation`)
+  }
+
   return (
-    <GenericForm
-      title={isEditMode ? 'Edit Device' : 'Create New Device'}
-      fields={fields}
-      schema={schema}
-      apiEndpoint={apiEndpoint}
-      method={method}
-      initialValues={initialValues}
-      onSuccess={onSuccess}
-      onCancel={onCancel}
-      submitText={isEditMode ? 'Update Device' : 'Create Device'}
-      showCancel={true}
-    />
+    <>
+      <GenericForm
+        title={isEditMode ? 'Edit Device' : 'Create New Device'}
+        fields={fields}
+        schema={schema}
+        apiEndpoint={apiEndpoint}
+        method={method}
+        initialValues={initialValues}
+        onSuccess={handleSuccess}
+        onCancel={onCancel}
+        submitText={isEditMode ? 'Update Device' : 'Create Device'}
+        showCancel={true}
+      />
+
+      {!isEditMode && (
+        <QuickCreateSection
+          title="Quick Create Interfaces/Ports"
+          description="Quickly generate multiple interfaces for this device (e.g., 24 or 48 ports for a switch)"
+          templateFields={interfaceTemplateFields}
+          onGenerate={handleGenerateInterfaces}
+          examples={[
+            'Create 24 ports: gi0/1 - gi0/24',
+            'Create 48 ports: Ethernet {n} where n = 1-48',
+            'Create 4 10G ports: TenGigE0/{n} where n = 1-4',
+          ]}
+          defaultQuantity={24}
+          maxQuantity={96}
+          defaultPattern="gi0/{n}"
+        />
+      )}
+
+      {generatedInterfaces.length > 0 && (
+        <div
+          style={{ marginTop: '1rem', padding: '1rem', background: '#e6f4ea', borderRadius: '4px' }}
+        >
+          <strong>✓ {generatedInterfaces.length} interface(s) ready to create</strong>
+          <p
+            style={{
+              margin: '0.5rem 0 0',
+              fontSize: '0.9rem',
+              color: 'var(--color-brew-black-60)',
+            }}
+          >
+            These interfaces will be created automatically when you save the device.
+          </p>
+        </div>
+      )}
+    </>
   )
 }

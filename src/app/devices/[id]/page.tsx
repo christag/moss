@@ -10,6 +10,8 @@ import { useRouter, useParams } from 'next/navigation'
 import { toast } from 'sonner'
 import { GenericDetailView, TabConfig, FieldGroup } from '@/components/GenericDetailView'
 import { RelatedItemsList, RelatedColumn } from '@/components/RelatedItemsList'
+import { EditableTable, ColumnConfig } from '@/components/EditableTable'
+import { BulkAction } from '@/components/BulkActionToolbar'
 import { Badge } from '@/components/ui/Badge'
 import { AttachmentsTab } from '@/components/AttachmentsTab'
 import { DeviceDuplicates } from '@/components/DeviceDuplicates'
@@ -176,6 +178,163 @@ export default function DeviceDetailPage() {
     }
   }
 
+  // Define editable columns for interfaces
+  const ioEditableColumns: ColumnConfig<IO>[] = [
+    {
+      key: 'interface_name',
+      label: 'Interface Name',
+      type: 'text',
+      required: true,
+      placeholder: 'e.g., eth0, gi0/1',
+      width: '200px',
+    },
+    {
+      key: 'port_number',
+      label: 'Port #',
+      type: 'text',
+      placeholder: '1-48',
+      width: '100px',
+    },
+    {
+      key: 'interface_type',
+      label: 'Type',
+      type: 'select',
+      required: true,
+      options: [
+        { value: 'ethernet', label: 'Ethernet' },
+        { value: 'fiber_optic', label: 'Fiber' },
+        { value: 'wifi', label: 'WiFi' },
+        { value: 'sdi', label: 'SDI' },
+        { value: 'hdmi', label: 'HDMI' },
+        { value: 'xlr', label: 'XLR' },
+        { value: 'coax', label: 'Coax' },
+        { value: 'patch_panel_port', label: 'Patch Panel' },
+        { value: 'power_input', label: 'Power In' },
+        { value: 'power_output', label: 'Power Out' },
+        { value: 'serial', label: 'Serial' },
+        { value: 'usb', label: 'USB' },
+        { value: 'thunderbolt', label: 'Thunderbolt' },
+        { value: 'displayport', label: 'DisplayPort' },
+        { value: 'virtual', label: 'Virtual' },
+        { value: 'other', label: 'Other' },
+      ],
+      width: '150px',
+    },
+    {
+      key: 'speed',
+      label: 'Speed',
+      type: 'text',
+      placeholder: '1G, 10G, 100M',
+      width: '120px',
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'inactive', label: 'Inactive' },
+        { value: 'monitoring', label: 'Monitoring' },
+        { value: 'reserved', label: 'Reserved' },
+      ],
+      width: '120px',
+    },
+    {
+      key: 'mac_address',
+      label: 'MAC Address',
+      type: 'text',
+      placeholder: '00:11:22:33:44:55',
+      width: '160px',
+    },
+  ]
+
+  // Define bulk actions for interfaces
+  const ioBulkActions: BulkAction[] = [
+    {
+      id: 'set-active',
+      label: 'Set Active',
+      icon: '✓',
+      variant: 'primary',
+      action: async (selectedIds: Set<string>) => {
+        try {
+          const response = await fetch('/api/ios/bulk-update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ids: Array.from(selectedIds),
+              updates: { status: 'active' },
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to update interfaces')
+          }
+
+          toast.success(`${selectedIds.size} interface(s) set to active`)
+          // Trigger refetch by updating device state
+          setDevice({ ...device! })
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : 'Failed to update')
+        }
+      },
+    },
+    {
+      id: 'set-inactive',
+      label: 'Set Inactive',
+      icon: '○',
+      variant: 'secondary',
+      action: async (selectedIds: Set<string>) => {
+        try {
+          const response = await fetch('/api/ios/bulk-update', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ids: Array.from(selectedIds),
+              updates: { status: 'inactive' },
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error('Failed to update interfaces')
+          }
+
+          toast.success(`${selectedIds.size} interface(s) set to inactive`)
+          setDevice({ ...device! })
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : 'Failed to update')
+        }
+      },
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: '🗑',
+      variant: 'destructive',
+      action: async (selectedIds: Set<string>) => {
+        if (
+          !confirm(
+            `Are you sure you want to delete ${selectedIds.size} interface(s)? This cannot be undone.`
+          )
+        ) {
+          return
+        }
+
+        try {
+          const deletePromises = Array.from(selectedIds).map((id) =>
+            fetch(`/api/ios/${id}`, { method: 'DELETE' })
+          )
+
+          await Promise.all(deletePromises)
+
+          toast.success(`${selectedIds.size} interface(s) deleted`)
+          setDevice({ ...device! })
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : 'Failed to delete')
+        }
+      },
+    },
+  ]
+
   // Define field groups for overview tab
   const fieldGroups: FieldGroup[] = [
     {
@@ -289,58 +448,6 @@ export default function DeviceDetailPage() {
     },
   ]
 
-  // Define columns for related items
-  const ioColumns: RelatedColumn<IO>[] = [
-    { key: 'interface_name', label: 'Interface Name' },
-    { key: 'port_number', label: 'Port #', width: '100px' },
-    {
-      key: 'interface_type',
-      label: 'Type',
-      render: (io) => {
-        const typeMap: Record<string, { label: string; color: string }> = {
-          ethernet: { label: 'Ethernet', color: 'blue' },
-          fiber: { label: 'Fiber', color: 'purple' },
-          wifi: { label: 'WiFi', color: 'green' },
-          sdi: { label: 'SDI', color: 'orange' },
-          hdmi: { label: 'HDMI', color: 'red' },
-          power_input: { label: 'Power In', color: 'yellow' },
-          power_output: { label: 'Power Out', color: 'yellow' },
-        }
-        const type = io.interface_type ? typeMap[io.interface_type] : null
-        return type ? (
-          <Badge variant={type.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
-            {type.label}
-          </Badge>
-        ) : (
-          '—'
-        )
-      },
-      width: '120px',
-    },
-    { key: 'speed', label: 'Speed' },
-    {
-      key: 'status',
-      label: 'Status',
-      render: (io) => {
-        const statusMap: Record<string, { label: string; color: string }> = {
-          active: { label: 'Active', color: 'success' },
-          inactive: { label: 'Inactive', color: 'secondary' },
-          down: { label: 'Down', color: 'warning' },
-          disabled: { label: 'Disabled', color: 'default' },
-        }
-        const status = io.status ? statusMap[io.status] : null
-        return status ? (
-          <Badge variant={status.color as 'default' | 'success' | 'warning' | 'error' | 'info'}>
-            {status.label}
-          </Badge>
-        ) : (
-          '—'
-        )
-      },
-      width: '100px',
-    },
-  ]
-
   const childDeviceColumns: RelatedColumn<Device>[] = [
     { key: 'hostname', label: 'Hostname' },
     { key: 'device_type', label: 'Type', render: (d) => formatDeviceType(d.device_type) },
@@ -400,12 +507,17 @@ export default function DeviceDetailPage() {
       id: 'ios',
       label: 'Interfaces/Ports',
       content: (
-        <RelatedItemsList<IO>
+        <EditableTable<IO>
           apiEndpoint={`/api/ios?device_id=${id}`}
-          columns={ioColumns}
-          linkPattern="/ios/:id"
-          addButtonLabel="Add Interface"
-          onAdd={() => router.push(`/ios/new?device_id=${id}`)}
+          columns={ioEditableColumns}
+          selectable={true}
+          addNewRow={true}
+          addNewLabel="Add Interface"
+          onAddNew={() => router.push(`/ios/new?device_id=${id}`)}
+          bulkActions={ioBulkActions}
+          editable={true}
+          updateEndpoint="/api/ios/:id"
+          deleteEndpoint="/api/ios/:id"
           emptyMessage="No interfaces/ports configured for this device"
           limit={50}
         />
