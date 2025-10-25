@@ -6,9 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { pool } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
+import { transaction } from '@/lib/db'
 import { z } from 'zod'
 
 // Validation schema for bulk update (supports two formats)
@@ -51,10 +50,7 @@ const BulkUpdateIOSchemaSimple = z.object({
 export async function PATCH(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAuth()
 
     // Parse and validate request body
     const body = await request.json()
@@ -75,11 +71,8 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No updates provided' }, { status: 400 })
     }
 
-    // Begin transaction
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-
+    // Execute in transaction
+    const result = await transaction(async (client) => {
       const updatedIds: string[] = []
       const errors: Array<{ id: string; error: string }> = []
 
@@ -120,35 +113,23 @@ export async function PATCH(request: NextRequest) {
         }
       }
 
-      // Commit transaction if at least some updates succeeded
+      // Return results
       if (updatedIds.length > 0) {
-        await client.query('COMMIT')
-
-        return NextResponse.json({
+        return {
           success: true,
-          data: {
-            updated_count: updatedIds.length,
-            updated_ids: updatedIds,
-            errors: errors.length > 0 ? errors : undefined,
-          },
-        })
+          updated_count: updatedIds.length,
+          updated_ids: updatedIds,
+          errors: errors.length > 0 ? errors : undefined,
+        }
       } else {
-        await client.query('ROLLBACK')
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'No IOs were updated',
-            details: errors,
-          },
-          { status: 400 }
-        )
+        throw new Error('No IOs were updated')
       }
-    } catch (err) {
-      await client.query('ROLLBACK')
-      throw err
-    } finally {
-      client.release()
-    }
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: result,
+    })
   } catch (error) {
     console.error('Bulk update IOs error:', error)
 

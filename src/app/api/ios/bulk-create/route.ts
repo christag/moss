@@ -6,9 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
-import { pool } from '@/lib/db'
+import { requireAuth } from '@/lib/auth'
+import { transaction } from '@/lib/db'
 import { CreateIOSchema } from '@/lib/schemas/io'
 import { z } from 'zod'
 
@@ -20,10 +19,7 @@ const BulkCreateIOSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     // Check authentication
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 })
-    }
+    await requireAuth()
 
     // Parse and validate request body
     const body = await request.json()
@@ -33,11 +29,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No items provided' }, { status: 400 })
     }
 
-    // Begin transaction
-    const client = await pool.connect()
-    try {
-      await client.query('BEGIN')
-
+    // Execute in transaction
+    const result = await transaction(async (client) => {
       const createdIds: string[] = []
       const errors: Array<{ index: number; name?: string; error: string }> = []
 
@@ -79,23 +72,17 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Commit transaction if all creates succeeded
-      await client.query('COMMIT')
+      return {
+        created_count: createdIds.length,
+        created_ids: createdIds,
+        errors: errors.length > 0 ? errors : undefined,
+      }
+    })
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          created_count: createdIds.length,
-          created_ids: createdIds,
-          errors: errors.length > 0 ? errors : undefined,
-        },
-      })
-    } catch (err) {
-      await client.query('ROLLBACK')
-      throw err
-    } finally {
-      client.release()
-    }
+    return NextResponse.json({
+      success: true,
+      data: result,
+    })
   } catch (error) {
     console.error('Bulk create IOs error:', error)
 
