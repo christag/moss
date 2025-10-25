@@ -59,7 +59,7 @@ export interface EditableTableProps<T extends { id: string }> {
   /** API endpoint for update (PATCH /api/resource/:id) */
   updateEndpoint?: string
   /** API endpoint for delete (DELETE /api/resource/:id) */
-  deleteEndpoint?: string
+  deleteEndpoint?: string // Unused - kept for future implementation
   /** Empty message */
   emptyMessage?: string
   /** Max rows to display */
@@ -78,7 +78,7 @@ export function EditableTable<T extends { id: string }>({
   bulkActions = [],
   editable = true,
   updateEndpoint,
-  _deleteEndpoint,
+  deleteEndpoint: _deleteEndpoint,
   emptyMessage = 'No items found',
   limit = 100,
   className = '',

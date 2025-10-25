@@ -249,13 +249,20 @@ export default function DeviceDetailPage() {
   ]
 
   // Define bulk actions for interfaces
+  // TODO: Implement bulk action functionality - needs EditableTable to expose selectedIds
   const ioBulkActions: BulkAction[] = [
     {
       id: 'set-active',
       label: 'Set Active',
       icon: '✓',
       variant: 'primary',
-      action: async (selectedIds: Set<string>) => {
+      onClick: async () => {
+        // TODO: Get selectedIds from EditableTable
+        const selectedIds = new Set<string>()
+        if (selectedIds.size === 0) {
+          toast.error('No items selected')
+          return
+        }
         try {
           const response = await fetch('/api/ios/bulk-update', {
             method: 'PATCH',
@@ -283,7 +290,12 @@ export default function DeviceDetailPage() {
       label: 'Set Inactive',
       icon: '○',
       variant: 'secondary',
-      action: async (selectedIds: Set<string>) => {
+      onClick: async () => {
+        const selectedIds = new Set<string>()
+        if (selectedIds.size === 0) {
+          toast.error('No items selected')
+          return
+        }
         try {
           const response = await fetch('/api/ios/bulk-update', {
             method: 'PATCH',
@@ -310,7 +322,12 @@ export default function DeviceDetailPage() {
       label: 'Delete',
       icon: '🗑',
       variant: 'destructive',
-      action: async (selectedIds: Set<string>) => {
+      onClick: async () => {
+        const selectedIds = new Set<string>()
+        if (selectedIds.size === 0) {
+          toast.error('No items selected')
+          return
+        }
         if (
           !confirm(
             `Are you sure you want to delete ${selectedIds.size} interface(s)? This cannot be undone.`

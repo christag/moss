@@ -112,7 +112,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     Object.entries(fields).forEach(([key, value]) => {
       if (fieldMapping[key] && value !== undefined) {
         updates.push(`${fieldMapping[key]} = $${paramCount}`)
-        values.push(value)
+        values.push(value as string | number | null)
         paramCount++
       }
     })
