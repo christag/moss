@@ -65,7 +65,9 @@ export async function syncComputersFromJamf(
     const config = configResult.rows[0]
 
     // 2. Decrypt credentials and parse config
-    const credentials = decryptCredentials(config.credentials_encrypted) as JamfCredentials | null
+    const credentials = decryptCredentials(
+      config.credentials_encrypted as string
+    ) as JamfCredentials | null
 
     if (!credentials) {
       throw new Error('Failed to decrypt JAMF credentials')
@@ -80,7 +82,7 @@ export async function syncComputersFromJamf(
     })
 
     // 4. Get sync settings
-    const syncSettings = config.sync_settings || {}
+    const syncSettings = (config.sync_settings || {}) as { sync_computer_sections?: string[] }
     const sections = syncSettings.sync_computer_sections || [
       'GENERAL',
       'HARDWARE',
@@ -205,7 +207,7 @@ async function syncSingleComputer(
 
   if (existingDevice.rows.length > 0) {
     // Device exists - update it
-    deviceId = existingDevice.rows[0].id
+    deviceId = existingDevice.rows[0].id as string
 
     if (!updateExisting) {
       // Skip update if disabled
@@ -290,7 +292,7 @@ async function syncSingleComputer(
       ]
     )
 
-    deviceId = insertResult.rows[0].id
+    deviceId = insertResult.rows[0].id as string
   }
 
   // Create/update MAC address IO objects
@@ -356,7 +358,7 @@ async function findOrCreatePerson(userLocation: {
 
   if (existing.rows.length > 0) {
     // Person exists - optionally update contact info
-    const personId = existing.rows[0].id
+    const personId = existing.rows[0].id as string
 
     await query(
       `UPDATE people
@@ -386,7 +388,7 @@ async function findOrCreatePerson(userLocation: {
     [username || email, fullName, email, phone, jobTitle, 'Imported from JAMF Pro']
   )
 
-  return insertResult.rows[0].id
+  return insertResult.rows[0].id as string
 }
 
 /**
@@ -409,13 +411,13 @@ async function findOrCreateLocation(
     const existingLocation = await query('SELECT id FROM locations WHERE name = $1', [buildingId])
 
     if (existingLocation.rows.length > 0) {
-      locationId = existingLocation.rows[0].id
+      locationId = existingLocation.rows[0].id as string
     } else if (createMissing) {
       const insertResult = await query(
         'INSERT INTO locations (name, notes) VALUES ($1, $2) RETURNING id',
         [buildingId, 'Auto-created from JAMF sync']
       )
-      locationId = insertResult.rows[0].id
+      locationId = insertResult.rows[0].id as string
     }
   }
 
@@ -427,13 +429,13 @@ async function findOrCreateLocation(
     ])
 
     if (existingRoom.rows.length > 0) {
-      roomId = existingRoom.rows[0].id
+      roomId = existingRoom.rows[0].id as string
     } else if (createMissing) {
       const insertResult = await query(
         'INSERT INTO rooms (name, location_id, notes) VALUES ($1, $2, $3) RETURNING id',
         [roomName, locationId, 'Auto-created from JAMF sync']
       )
-      roomId = insertResult.rows[0].id
+      roomId = insertResult.rows[0].id as string
     }
   }
 

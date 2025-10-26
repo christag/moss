@@ -8,11 +8,28 @@ M.O.S.S. (Material Organization & Storage System) is an open-source IT asset man
 
 **Target Users**: IT departments at mid-size companies with complex infrastructure including traditional IT equipment, broadcast/AV equipment, and cloud services.
 
-## M.O.S.S. Skills System
+## M.O.S.S. Agents & Skills System
 
-**Location**: `.claude/skills/` (project-level, gitignored)
+**Location**: `.claude/` directory contains agents, skills, and task management files
 
-The project includes 8 specialized skills to ensure consistency and efficiency when building M.O.S.S. features:
+### Agents (Workflow Automation)
+**Location**: `.claude/agents/` - See [.claude/agents/README.md](.claude/agents/README.md) for complete documentation
+
+The project uses 6 specialized agents for workflow automation from planning to deployment:
+
+1. **moss-task-planner** - Maintains TODO lists, breaks down features into tasks
+2. **moss-feature-planner** - Designs implementation approach, creates technical specs
+3. **moss-engineer** - Implements features following specs from planner
+4. **moss-tester** - Runs UAT tests using Playwright MCP, reports failures
+5. **moss-git-controller** - Manages commits, PRs, merges
+6. **moss-documentation-updater** - Updates docs after feature completion
+
+**When to Use Agents**: For complex multi-step features requiring planning, implementation, testing, and documentation. Agents coordinate with each other to complete features systematically.
+
+### Skills (Specialized Capabilities)
+**Location**: `.claude/skills/` - See [.claude/skills/README.md](.claude/skills/README.md) for complete documentation
+
+The project includes 8 specialized skills to ensure consistency and compliance when building M.O.S.S. features:
 
 1. **moss-visual-check** - Verify design system compliance (colors, typography, spacing, component sizing, accessibility)
 2. **moss-component-builder** - Build UI components following Figma specs with proper TypeScript, CSS variables, and WCAG AA
@@ -23,13 +40,13 @@ The project includes 8 specialized skills to ensure consistency and efficiency w
 7. **moss-zod-schema** - Create Zod schemas matching database structure with proper types and validation
 8. **moss-relationship-tab** - Add relationship tabs using RelatedItemsList component for object navigation
 
-**When to Use Skills**:
-- Invoke skills proactively when their purpose matches your task
-- Use `moss-visual-check` AFTER creating/modifying any UI component
-- Use `moss-uat-generator` AFTER implementing any feature to generate tests
-- Skills ensure consistency and catch issues before user discovery
+**When to Use Skills**: Invoke skills proactively when performing specific tasks that require strict adherence to M.O.S.S. patterns and standards. Skills provide step-by-step guidance and ensure consistency.
 
-**How to Invoke**: Type the skill name (e.g., "moss-visual-check") or Claude will suggest them automatically.
+**Key Differences**:
+- **Agents**: Multi-step workflow automation (plan → implement → test → deploy)
+- **Skills**: Single-task guidance with strict pattern adherence (build form, check design, create migration)
+
+**How to Use**: Type the agent/skill name (e.g., "moss-visual-check" or "moss-task-planner") or Claude will suggest them automatically.
 
 ## Development Workflow
 

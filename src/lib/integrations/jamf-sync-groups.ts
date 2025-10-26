@@ -71,7 +71,9 @@ export async function syncGroupsFromJamf(
     const config = configResult.rows[0]
 
     // 2. Decrypt credentials and parse config
-    const credentials = decryptCredentials(config.credentials_encrypted) as JamfCredentials | null
+    const credentials = decryptCredentials(
+      config.credentials_encrypted as string
+    ) as JamfCredentials | null
 
     if (!credentials) {
       throw new Error('Failed to decrypt JAMF credentials')
