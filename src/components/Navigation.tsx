@@ -61,6 +61,7 @@ export function Navigation() {
 
   const itServicesItems: NavDropdownItem[] = [
     { label: 'Networks', href: '/networks', description: 'VLANs & subnets' },
+    { label: 'Network Topology', href: '/topology', description: 'Visual network map' },
     { label: 'IOs', href: '/ios', description: 'Interfaces & ports' },
     { label: 'IP Addresses', href: '/ip-addresses', description: 'IP management' },
     { label: 'Software', href: '/software', description: 'Product catalog' },

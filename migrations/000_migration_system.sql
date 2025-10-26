@@ -3,8 +3,15 @@
 -- Enhances migration tracking with versioning, checksums, and locking
 -- ============================================================================
 
+-- Create base schema_migrations table if it doesn't exist
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    id SERIAL PRIMARY KEY,
+    migration_number INTEGER UNIQUE NOT NULL,
+    filename VARCHAR(255) NOT NULL,
+    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Enhance schema_migrations table with additional tracking fields
--- Note: The base table is already created by migrate.ts, we just add columns
 DO $$
 BEGIN
     -- Add application_version column (tracks which app version ran the migration)

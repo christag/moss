@@ -524,20 +524,47 @@ export default function DeviceDetailPage() {
       id: 'ios',
       label: 'Interfaces/Ports',
       content: (
-        <EditableTable<IO>
-          apiEndpoint={`/api/ios?device_id=${id}`}
-          columns={ioEditableColumns}
-          selectable={true}
-          addNewRow={true}
-          addNewLabel="Add Interface"
-          onAddNew={() => router.push(`/ios/new?device_id=${id}`)}
-          bulkActions={ioBulkActions}
-          editable={true}
-          updateEndpoint="/api/ios/:id"
-          deleteEndpoint="/api/ios/:id"
-          emptyMessage="No interfaces/ports configured for this device"
-          limit={50}
-        />
+        <div>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              marginBottom: '1rem',
+              padding: '0 1rem',
+            }}
+          >
+            <button
+              onClick={() => router.push(`/topology?device_id=${id}&depth=2`)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: 'var(--color-morning-blue, #1C7FF2)',
+                color: 'var(--color-off-white, #FAF9F5)',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontFamily: 'Inter',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+              }}
+            >
+              View Network Topology
+            </button>
+          </div>
+          <EditableTable<IO>
+            apiEndpoint={`/api/ios?device_id=${id}`}
+            columns={ioEditableColumns}
+            selectable={true}
+            addNewRow={true}
+            addNewLabel="Add Interface"
+            onAddNew={() => router.push(`/ios/new?device_id=${id}`)}
+            bulkActions={ioBulkActions}
+            editable={true}
+            updateEndpoint="/api/ios/:id"
+            deleteEndpoint="/api/ios/:id"
+            emptyMessage="No interfaces/ports configured for this device"
+            limit={50}
+          />
+        </div>
       ),
     },
     {

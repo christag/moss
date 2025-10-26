@@ -333,6 +333,10 @@ M.O.S.S. includes comprehensive planning documentation to guide development and 
 **Completed (Phase 2.10):**
 - [x] UI Polish & Animations (Framer Motion integration, page transitions, micro-interactions, loading states) - **Completed 2025-10-25**
 
+**Completed (Phase 2.11 - Partial):**
+- [x] Equipment Check-Out: Phase 1 - QR Code Generation (QR utilities, label printing, bulk generation API) - **Completed 2025-10-25**
+- [ ] Equipment Check-Out: Phases 2-5 - Reservation system, check-out/check-in workflows (deferred to future iteration)
+
 ### Phase 3: Automation & Integration 📅 **FUTURE**
 
 **Authentication & Authorization:**
