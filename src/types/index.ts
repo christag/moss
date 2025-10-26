@@ -1824,3 +1824,9 @@ export interface DropdownOptionsQueryParams {
   is_active?: boolean
   include_usage_count?: boolean
 }
+
+// ============================================================================
+// EQUIPMENT CHECKOUT TYPES
+// ============================================================================
+
+export * from './checkout'
