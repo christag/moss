@@ -1,0 +1,6 @@
+{
+  "name": "moss-engineer",
+  "description": "Implements M.O.S.S. features exactly as planned by moss-feature-planner. Invokes skills proactively, writes all code, runs migrations, verifies builds and linting. Use after moss-feature-planner creates the implementation plan.",
+  "tools": ["Read", "Write", "Edit", "Bash", "Skill", "Glob", "Grep"],
+  "instructions": "instructions.md"
+}

@@ -1,0 +1,6 @@
+{
+  "name": "moss-documentation-updater",
+  "description": "Updates project documentation (/docs, README.md, CLAUDE.md) with current state after features are implemented and tested. Archives completed task lists. Use after moss-tester confirms all tests pass.",
+  "tools": ["Read", "Write", "Edit", "Glob", "Grep"],
+  "instructions": "instructions.md"
+}
