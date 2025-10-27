@@ -83,11 +83,32 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           .form-input.input-error {
             border-color: var(--color-error-border);
             background-color: rgba(224, 45, 60, 0.03);
+            animation: shake 0.4s ease-in-out;
           }
 
           .form-input.input-error:focus {
             border-color: var(--color-error-border);
             box-shadow: 0 0 0 1px var(--color-error-border);
+          }
+
+          @keyframes shake {
+            0%,
+            100% {
+              transform: translateX(0);
+            }
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+              transform: translateX(-4px);
+            }
+            20%,
+            40%,
+            60%,
+            80% {
+              transform: translateX(4px);
+            }
           }
 
           .form-input.input-valid {
@@ -103,6 +124,18 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             margin-top: 6px;
             font-size: 0.875rem;
             color: var(--color-error-border);
+            animation: slideDown 0.2s ease-out;
+          }
+
+          @keyframes slideDown {
+            from {
+              opacity: 0;
+              transform: translateY(-4px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
 
           .input-helper-text {

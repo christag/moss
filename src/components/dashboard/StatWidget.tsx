@@ -6,7 +6,9 @@
 'use client'
 
 import Link from 'next/link'
+import CountUp from 'react-countup'
 import { Icon, IconName } from '@/components/ui'
+import { useReducedMotion } from '@/lib/animations/utils'
 
 interface StatWidgetProps {
   title: string
@@ -25,6 +27,9 @@ export default function StatWidget({
   link,
   description,
 }: StatWidgetProps) {
+  const prefersReducedMotion = useReducedMotion()
+  const isNumeric = typeof value === 'number'
+
   const content = (
     <div
       style={{
@@ -88,7 +93,11 @@ export default function StatWidget({
               color: 'var(--color-brew-black)',
             }}
           >
-            {value}
+            {isNumeric && !prefersReducedMotion ? (
+              <CountUp end={value} duration={1.5} separator="," />
+            ) : (
+              value
+            )}
           </div>
         </div>
         {icon && (
