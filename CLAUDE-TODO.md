@@ -28,10 +28,9 @@
 - IP Address Management with Subnet Visualization (10-14h)
 
 ### Medium Priority (P2)
-- Bulk Import/Export (CSV) (8-12h)
-- File Attachments (6-8h)
+- Bulk Import/Export (CSV) (DONE - existing implementation)
+- File Attachments (DONE - existing implementation)
 - Custom Reports and Dashboards (10-14h)
-- Advanced Search with Saved Filters (6-8h)
 - Frontend Testing Coverage - 15 objects remaining (20-30h)
 - Database Optimization - Missing indexes (4-6h)
 - Dashboard Widget Fixes - 500 errors (2-3h)
@@ -98,6 +97,7 @@
 
 ## Latest Milestones
 
+- **2025-10-26**: Advanced Search with Saved Filters Complete (PR #6)
 - **2025-10-26**: Network Topology Visualization Complete
 - **2025-10-25**: UI Polish & Animations Complete (PR #2)
 - **2025-10-25**: Equipment Check-Out Phase 1 Complete (PR #3)
