@@ -16,12 +16,14 @@ import { updateSavedFilterSchema, type SavedFilter } from '@/lib/schemas/saved-f
  * Get a specific saved filter
  * Requires: 'read' scope
  */
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authResult = await requireApiScope(_request, ['read'])
     if (authResult instanceof NextResponse) {
       return authResult
     }
+
+    const { id } = await params
 
     const result = await query(
       `SELECT
@@ -32,7 +34,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
       LEFT JOIN users u ON sf.user_id = u.id
       WHERE sf.id = $1
         AND (sf.user_id = $2 OR sf.is_public = true)`,
-      [params.id, authResult.userId]
+      [id, authResult.userId]
     )
 
     if (result.rows.length === 0) {
@@ -51,15 +53,17 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
  * Update a saved filter (only owner can update)
  * Requires: 'write' scope
  */
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const authResult = await requireApiScope(request, ['write'])
     if (authResult instanceof NextResponse) {
       return authResult
     }
 
+    const { id } = await params
+
     // Verify ownership
-    const ownerCheck = await query('SELECT user_id FROM saved_filters WHERE id = $1', [params.id])
+    const ownerCheck = await query('SELECT user_id FROM saved_filters WHERE id = $1', [id])
 
     if (ownerCheck.rows.length === 0) {
       return errorResponse('Saved filter not found', 404)
@@ -102,7 +106,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       return errorResponse('No fields to update', 400)
     }
 
-    values.push(params.id)
+    values.push(id)
     const updateQuery = `
       UPDATE saved_filters
       SET ${updates.join(', ')}, updated_at = CURRENT_TIMESTAMP
@@ -127,15 +131,20 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
  * Delete a saved filter (only owner can delete)
  * Requires: 'write' scope
  */
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const authResult = await requireApiScope(_request, ['write'])
     if (authResult instanceof NextResponse) {
       return authResult
     }
 
+    const { id } = await params
+
     // Verify ownership
-    const ownerCheck = await query('SELECT user_id FROM saved_filters WHERE id = $1', [params.id])
+    const ownerCheck = await query('SELECT user_id FROM saved_filters WHERE id = $1', [id])
 
     if (ownerCheck.rows.length === 0) {
       return errorResponse('Saved filter not found', 404)
@@ -145,7 +154,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
       return errorResponse('You can only delete your own saved filters', 403)
     }
 
-    await query('DELETE FROM saved_filters WHERE id = $1', [params.id])
+    await query('DELETE FROM saved_filters WHERE id = $1', [id])
 
     return successResponse({}, 'Saved filter deleted successfully')
   } catch (error) {

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Build WHERE clause
     const whereClauses: string[] = []
-    const queryParams: (string | boolean)[] = []
+    const queryParams: (string | boolean | number)[] = []
     let paramIndex = 1
 
     // Filter by object type if specified
