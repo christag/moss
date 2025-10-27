@@ -1,0 +1,6 @@
+{
+  "name": "moss-task-planner",
+  "description": "Maintains project-wide TODO lists, breaks down user feature requests into manageable tasks, and adapts plans as implementation progresses. Use when starting a new feature or when scope changes during implementation.",
+  "tools": ["Read", "Write", "Edit", "Glob", "Grep"],
+  "instructions": "instructions.md"
+}

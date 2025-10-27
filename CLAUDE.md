@@ -31,6 +31,120 @@ The project includes 8 specialized skills to ensure consistency and efficiency w
 
 **How to Invoke**: Type the skill name (e.g., "moss-visual-check") or Claude will suggest them automatically.
 
+## M.O.S.S. Agent System
+
+**Location**: `.claude/agents/` (project-level)
+
+The project includes 6 specialized agents that automate the complete feature development lifecycle from planning through deployment. Agents work in a hybrid workflow: core pipeline (Task Planner → Feature Planner → Engineer → Tester loop) runs sequentially, with Git Controller and Documentation Updater running in parallel at completion.
+
+### Agents
+
+1. **moss-task-planner** - Maintains project-wide TODO lists, breaks down user requests into tasks, adapts plans as scope changes
+2. **moss-feature-planner** - Reviews project docs, checks for existing patterns, creates detailed implementation plans with UAT test cases
+3. **moss-engineer** - Implements features exactly as planned, invokes skills proactively, verifies builds and linting
+4. **moss-tester** - Runs UAT tests via Playwright MCP, documents results with screenshots, auto-retries on failure (up to 2 times)
+5. **moss-git-controller** - Creates branches, commits with proper messages, pushes to GitHub, verifies workflows, creates PRs
+6. **moss-documentation-updater** - Updates /docs, README.md, CLAUDE.md with current state, archives completed task lists
+
+### Agent Workflow
+
+```
+User Feature Request
+    ↓
+1. moss-task-planner
+   - Updates CLAUDE-TODO.md
+   - Creates .claude/task-lists/active-feature.md
+    ↓
+2. moss-feature-planner
+   - Reviews project documentation
+   - Checks for existing patterns
+   - Creates implementation plan
+   - Generates UAT test cases
+    ↓
+3. moss-engineer
+   - Implements feature as planned
+   - Invokes moss-* skills
+   - Runs build & lint
+    ↓
+4. moss-tester
+   - Runs UAT tests via Playwright
+   - ✅ PASS → Continue to parallel execution
+   - ❌ FAIL (attempt 1-2) → Back to step 2
+   - ❌ FAIL (attempt 3) → Report to user
+    ↓
+   [Parallel Execution]
+    ↓                              ↓
+5. moss-git-controller        6. moss-documentation-updater
+   - Create feature branch       - Update docs/COMPONENTS.md
+   - Commit changes              - Update README.md roadmap
+   - Push to GitHub              - Update planning/*.md
+   - Create PR                   - Add CLAUDE-UPDATES.md entry
+   - Verify workflows            - Archive task to completed-features.md
+```
+
+### Task List Management
+
+**Two-tier system**:
+- **CLAUDE-TODO.md** - Manual high-level planning and project roadmap (maintained by user and moss-task-planner)
+- **.claude/task-lists/active-feature.md** - Agent-managed feature-specific task list (created by moss-task-planner, used by all agents)
+- **.claude/task-lists/completed-features.md** - Archive of completed features (maintained by moss-documentation-updater)
+
+### How to Use Agents
+
+**Option 1: Invoke agents manually**
+```
+User: "Add a dark mode toggle to settings"
+Claude invokes: moss-task-planner
+[Agent creates task breakdown]
+Claude invokes: moss-feature-planner
+[Agent creates implementation plan]
+Claude invokes: moss-engineer
+[Agent implements feature]
+Claude invokes: moss-tester
+[Agent runs tests]
+Claude invokes in parallel: moss-git-controller, moss-documentation-updater
+```
+
+**Option 2: Let Claude orchestrate** (recommended)
+```
+User: "Add a dark mode toggle to settings"
+Claude: "I'll use the M.O.S.S. agent system to implement this feature"
+[Claude automatically invokes agents in sequence]
+```
+
+### Agent Outputs
+
+Each agent updates `.claude/task-lists/active-feature.md` with its progress:
+- **Task Planner**: Adds task breakdown with estimates
+- **Feature Planner**: Adds implementation plan and UAT test cases
+- **Engineer**: Adds implementation notes and file changes
+- **Tester**: Adds test results with pass/fail status and screenshots
+- **Git Controller**: Adds branch name, commit hash, and PR URL
+- **Documentation Updater**: Archives task to completed-features.md
+
+### When Agents Invoke Skills
+
+Agents automatically invoke M.O.S.S. skills as part of their workflow:
+- **moss-feature-planner** → Invokes `moss-uat-generator` to create test cases
+- **moss-engineer** → Invokes `moss-database-migration`, `moss-api-endpoint`, `moss-zod-schema`, `moss-form-builder`, `moss-component-builder`, `moss-relationship-tab`, and `moss-visual-check` as needed
+
+### Retry Logic
+
+**moss-tester** automatically handles test failures:
+- **Attempt 1 fails** → Triggers moss-feature-planner to re-plan → moss-engineer re-implements → moss-tester re-tests
+- **Attempt 2 fails** → Same retry loop
+- **Attempt 3 fails** → Halts pipeline, reports to user for manual intervention
+
+### Success Criteria
+
+A feature is complete when:
+- ✅ All UAT tests pass
+- ✅ Build passes with 0 errors
+- ✅ Lint passes with ≤20 warnings
+- ✅ PR created and workflows pass
+- ✅ Documentation updated
+- ✅ Task list archived
+
 ## Development Workflow
 
 **CRITICAL**: Follow this workflow for EVERY development task:
