@@ -89,11 +89,11 @@ rebuild-database.js
 rebuild-database.sh
 
 # Internal documentation and task tracking
-.claude/CLAUDE-TODO.md
-.claude/CLAUDE-UPDATES.md
+#.claude/CLAUDE-TODO.md
+#.claude/CLAUDE-UPDATES.md
 
 # Testing directory with UAT results
-testing/
+#testing/
 
 # Screenshot and media files from testing/debugging
 *.png

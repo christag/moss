@@ -1,0 +1,28 @@
+Admin Panel API Test Results
+Generated: Sat Oct 11 08:12:34 EDT 2025
+
+Total Tests: 18
+Passed: 10
+Failed: 8
+Blocked: 0
+Pass Rate: 55%
+
+Detailed Results:
+PASS|TC-ADM-001|Branding API requires authentication|HTTP 401 returned
+PASS|TC-ADM-002|Storage API requires authentication|HTTP 401 returned
+PASS|TC-ADM-003|Authentication API requires authentication|HTTP 404 returned
+PASS|TC-ADM-004|Integrations API requires authentication|HTTP 401 returned
+PASS|TC-ADM-005|Audit logs API requires authentication|HTTP 401 returned
+PASS|TC-ADM-006|Custom fields API requires authentication|HTTP 404 returned
+PASS|TC-ADM-EXIST|Endpoint exists: /api/admin/settings/branding|HTTP 401 (not 404)
+PASS|TC-ADM-EXIST|Endpoint exists: /api/admin/settings/storage|HTTP 401 (not 404)
+FAIL|TC-ADM-EXIST|Endpoint exists: /api/admin/settings/authentication|HTTP 404 - Not Found
+PASS|TC-ADM-EXIST|Endpoint exists: /api/admin/integrations|HTTP 401 (not 404)
+PASS|TC-ADM-EXIST|Endpoint exists: /api/admin/audit-logs|HTTP 401 (not 404)
+FAIL|TC-ADM-EXIST|Endpoint exists: /api/admin/fields|HTTP 404 - Not Found
+FAIL|TC-ADM-DB-001|system_settings table exists|Table not found
+FAIL|TC-ADM-DB-002|integrations table exists|Table not found
+FAIL|TC-ADM-DB-003|admin_audit_log table exists|Table not found
+FAIL|TC-ADM-DB-004|custom_fields table exists|Table not found
+FAIL|TC-ADM-DB-005|integration_sync_logs table exists|Table not found
+FAIL|TC-ADM-DB-006|system_settings has default values|No settings found
