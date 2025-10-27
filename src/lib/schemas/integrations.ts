@@ -166,7 +166,7 @@ export const jamfSyncSettingsSchema = z.object({
         'GROUP_MEMBERSHIPS',
       ])
     )
-    .default(['GENERAL', 'HARDWARE', 'SOFTWARE', 'USER_AND_LOCATION', 'GROUP_MEMBERSHIPS']),
+    .default(['GENERAL', 'HARDWARE', 'APPLICATIONS', 'USER_AND_LOCATION', 'GROUP_MEMBERSHIPS']),
   create_missing_locations: z.boolean().default(true),
   update_existing_devices: z.boolean().default(true),
   import_as_device_type: z.string().default('Workstation'), // Default device type
