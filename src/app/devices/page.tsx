@@ -2,12 +2,15 @@
  * Devices List Page
  *
  * Enhanced with column management, per-column filtering, and URL persistence
+ * Includes bulk QR code generation
  */
 'use client'
 
 import React, { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { GenericListView, ColumnConfig, Pagination } from '@/components/GenericListView'
+import { BulkActionToolbar } from '@/components/BulkActionToolbar'
+import { BulkQRCodeLabel } from '@/components/QRCodeLabel'
 import type { Device, DeviceType, DeviceStatus } from '@/types'
 
 // Helper function to format device type
@@ -35,7 +38,10 @@ function getStatusColor(status: DeviceStatus): string {
   }
 }
 
-// Define ALL possible columns for devices
+// Helper component for device columns (needs to be inside the component for access to selection state)
+// This will be defined in the component body
+
+// Define ALL possible columns for devices (selection column will be added dynamically)
 const ALL_COLUMNS: ColumnConfig<Device>[] = [
   {
     key: 'hostname',
@@ -230,6 +236,17 @@ export default function DevicesPage() {
   const [sortBy, setSortBy] = useState('hostname')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [currentPage, setCurrentPage] = useState(1)
+  const [selectedDevices, setSelectedDevices] = useState<Set<string>>(new Set())
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [qrCodes, setQRCodes] = useState<
+    Array<{
+      deviceId: string
+      assetTag: string
+      hostname: string
+      model?: string
+      qrCodeDataUrl: string
+    }>
+  >([])
 
   // Fetch devices from API
   useEffect(() => {
@@ -303,38 +320,174 @@ export default function DevicesPage() {
     router.push('/devices/new')
   }
 
+  const handleSelectAll = () => {
+    if (selectedDevices.size === devices.length) {
+      setSelectedDevices(new Set())
+    } else {
+      setSelectedDevices(new Set(devices.map((d) => d.id)))
+    }
+  }
+
+  const handleSelectDevice = (deviceId: string) => {
+    const newSelection = new Set(selectedDevices)
+    if (newSelection.has(deviceId)) {
+      newSelection.delete(deviceId)
+    } else {
+      newSelection.add(deviceId)
+    }
+    setSelectedDevices(newSelection)
+  }
+
+  const handleGenerateQRCodes = async () => {
+    if (selectedDevices.size === 0) return
+
+    try {
+      const response = await fetch('/api/devices/generate-qr-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ device_ids: Array.from(selectedDevices) }),
+      })
+
+      if (!response.ok) throw new Error('Failed to generate QR codes')
+
+      const result = await response.json()
+      setQRCodes(result.data.qrCodes)
+      setShowQRModal(true)
+    } catch (error) {
+      console.error('Error generating QR codes:', error)
+      alert('Failed to generate QR codes. Please try again.')
+    }
+  }
+
+  const handlePrintLabels = async () => {
+    if (selectedDevices.size === 0) return
+
+    try {
+      const response = await fetch('/api/devices/generate-qr-codes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ device_ids: Array.from(selectedDevices) }),
+      })
+
+      if (!response.ok) throw new Error('Failed to generate QR codes for printing')
+
+      const result = await response.json()
+      setQRCodes(result.data.qrCodes)
+      setShowQRModal(true)
+    } catch (error) {
+      console.error('Error preparing labels for printing:', error)
+      alert('Failed to prepare labels. Please try again.')
+    }
+  }
+
+  // Add checkbox column dynamically
+  const columnsWithSelection: ColumnConfig<Device>[] = [
+    {
+      key: '_select',
+      label: (
+        <input
+          type="checkbox"
+          checked={selectedDevices.size === devices.length && devices.length > 0}
+          onChange={handleSelectAll}
+          aria-label="Select all devices"
+        />
+      ) as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      alwaysVisible: true,
+      defaultVisible: true,
+      sortable: false,
+      filterable: false,
+      width: '50px',
+      render: (device) => (
+        <input
+          type="checkbox"
+          checked={selectedDevices.has(device.id)}
+          onChange={() => handleSelectDevice(device.id)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Select ${device.hostname}`}
+        />
+      ),
+    },
+    ...ALL_COLUMNS,
+  ]
+
   return (
     <>
       <Suspense fallback={<div>Loading...</div>}>
-        <GenericListView
-          title="Devices"
-          columns={ALL_COLUMNS}
-          data={devices}
-          pagination={pagination}
-          filterValues={filterValues}
-          searchPlaceholder="Search by hostname, serial number, model, or asset tag..."
-          searchValue={searchValue}
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          loading={loading}
-          onSearch={handleSearch}
-          onFilterChange={handleFilterChange}
-          onSort={handleSort}
-          onPageChange={handlePageChange}
-          onAdd={handleAdd}
-          addButtonLabel="Add Device"
-          emptyMessage="No devices found. Add your first device to get started."
-          rowLink={(device) => `/devices/${device.id}`}
-          enableColumnManagement={true}
-          enablePerColumnFiltering={true}
-          enableExport={true}
-          exportObjectType="devices"
-          exportObjectTypeName="Devices"
-        />
+        <div className="devices-page-container">
+          {selectedDevices.size > 0 && (
+            <BulkActionToolbar
+              selectedCount={selectedDevices.size}
+              totalCount={devices.length}
+              actions={[
+                {
+                  id: 'generate-qr',
+                  label: 'Generate QR Codes',
+                  onClick: handleGenerateQRCodes,
+                  variant: 'primary',
+                },
+                {
+                  id: 'print-labels',
+                  label: 'Print Labels',
+                  onClick: handlePrintLabels,
+                  variant: 'secondary',
+                },
+              ]}
+              onClearSelection={() => setSelectedDevices(new Set())}
+            />
+          )}
+
+          <GenericListView
+            title="Devices"
+            columns={columnsWithSelection}
+            data={devices}
+            pagination={pagination}
+            filterValues={filterValues}
+            searchPlaceholder="Search by hostname, serial number, model, or asset tag..."
+            searchValue={searchValue}
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            loading={loading}
+            onSearch={handleSearch}
+            onFilterChange={handleFilterChange}
+            onSort={handleSort}
+            onPageChange={handlePageChange}
+            onAdd={handleAdd}
+            addButtonLabel="Add Device"
+            emptyMessage="No devices found. Add your first device to get started."
+            rowLink={(device) => `/devices/${device.id}`}
+            enableColumnManagement={true}
+            enablePerColumnFiltering={true}
+            enableExport={true}
+            exportObjectType="devices"
+            exportObjectTypeName="Devices"
+          />
+        </div>
+
+        {showQRModal && qrCodes.length > 0 && (
+          <BulkQRCodeLabel
+            devices={qrCodes.map((qr) => ({
+              deviceId: qr.deviceId,
+              assetTag: qr.assetTag,
+              hostname: qr.hostname,
+              model: qr.model,
+              qrCodeDataUrl: qr.qrCodeDataUrl,
+            }))}
+            onClose={() => {
+              setShowQRModal(false)
+              setQRCodes([])
+              setSelectedDevices(new Set())
+            }}
+          />
+        )}
       </Suspense>
       <style jsx global>{`
         .text-muted {
           color: var(--color-brew-black-40);
+        }
+        .devices-page-container {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
         }
       `}</style>
     </>
