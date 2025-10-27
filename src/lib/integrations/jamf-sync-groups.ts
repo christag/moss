@@ -207,7 +207,7 @@ async function syncSingleGroup(
 
   if (existingMapping.rows.length > 0) {
     // Group mapping exists - update the group
-    groupId = existingMapping.rows[0].internal_id
+    groupId = existingMapping.rows[0].internal_id as string
 
     if (!updateExisting) {
       // Skip update if disabled
@@ -248,7 +248,7 @@ async function syncSingleGroup(
       ]
     )
 
-    groupId = insertResult.rows[0].id
+    groupId = insertResult.rows[0].id as string
     isNew = true
   }
 
@@ -327,7 +327,7 @@ async function syncGroupMembership(
     )
 
     if (deviceMapping.rows.length > 0) {
-      deviceIds.push(deviceMapping.rows[0].internal_id)
+      deviceIds.push(deviceMapping.rows[0].internal_id as string)
     }
   }
 
