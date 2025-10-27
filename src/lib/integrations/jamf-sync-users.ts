@@ -64,7 +64,9 @@ export async function syncUsersFromJamf(
     const config = configResult.rows[0]
 
     // 2. Decrypt credentials and parse config
-    const credentials = decryptCredentials(config.credentials_encrypted) as JamfCredentials | null
+    const credentials = decryptCredentials(
+      config.credentials_encrypted as string
+    ) as JamfCredentials | null
 
     if (!credentials) {
       throw new Error('Failed to decrypt JAMF credentials')
@@ -186,7 +188,7 @@ async function syncSingleUser(
 
   if (existingPerson.rows.length > 0) {
     // Person exists - update it
-    personId = existingPerson.rows[0].id
+    personId = existingPerson.rows[0].id as string
 
     if (!updateExisting) {
       // Skip update if disabled
@@ -222,7 +224,7 @@ async function syncSingleUser(
       [username || email, fullName, email, phoneNumber, position, 'Imported from JAMF Pro']
     )
 
-    personId = insertResult.rows[0].id
+    personId = insertResult.rows[0].id as string
     isNew = true
   }
 

@@ -1,0 +1,28 @@
+{
+  "agents": [
+    {
+      "name": "moss-task-planner",
+      "path": ".claude/agents/moss-task-planner"
+    },
+    {
+      "name": "moss-feature-planner",
+      "path": ".claude/agents/moss-feature-planner"
+    },
+    {
+      "name": "moss-engineer",
+      "path": ".claude/agents/moss-engineer"
+    },
+    {
+      "name": "moss-tester",
+      "path": ".claude/agents/moss-tester"
+    },
+    {
+      "name": "moss-git-controller",
+      "path": ".claude/agents/moss-git-controller"
+    },
+    {
+      "name": "moss-documentation-updater",
+      "path": ".claude/agents/moss-documentation-updater"
+    }
+  ]
+}

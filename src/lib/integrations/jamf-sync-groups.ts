@@ -339,7 +339,7 @@ async function syncGroupMembership(
     [mossGroupId]
   )
 
-  const currentDeviceIds = new Set(currentMembers.rows.map((row) => row.device_id))
+  const currentDeviceIds = new Set(currentMembers.rows.map((row) => row.device_id as string))
   const newDeviceIds = new Set(deviceIds)
 
   // Add new members
