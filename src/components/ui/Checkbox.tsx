@@ -107,7 +107,9 @@ export const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             opacity: 0;
             color: white;
             transform: scale(0.8);
-            transition: all 0.15s ease;
+            transition:
+              opacity 0.15s ease,
+              transform 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
           }
 
           /* When checked */

@@ -1,0 +1,6 @@
+{
+  "name": "moss-feature-planner",
+  "description": "Reviews M.O.S.S. project documentation to create detailed implementation plans. Prevents duplicate work by checking existing components, patterns, and best practices. Generates UAT test cases. Use after moss-task-planner creates the initial task list.",
+  "tools": ["Read", "Write", "Edit", "Glob", "Grep", "Skill"],
+  "instructions": "instructions.md"
+}

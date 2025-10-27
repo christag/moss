@@ -1,4 +1,7 @@
+'use client'
+
 import React from 'react'
+import { motion } from 'framer-motion'
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'destructive'
 export type ButtonSize = 'sm' | 'md' | 'lg'
@@ -52,40 +55,46 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       .join(' ')
 
     return (
-      <button ref={ref} className={classes} disabled={disabled || isLoading} {...props}>
-        {isLoading && (
-          <span className="btn-spinner" aria-hidden="true">
-            ⟳
+      <motion.div
+        whileHover={!disabled && !isLoading ? { scale: 1.02 } : undefined}
+        whileTap={!disabled && !isLoading ? { scale: 0.98 } : undefined}
+        transition={{ duration: 0.15 }}
+        style={{ display: 'inline-block', width: fullWidth ? '100%' : 'auto' }}
+      >
+        <button ref={ref} className={classes} disabled={disabled || isLoading} {...props}>
+          {isLoading && (
+            <motion.span
+              className="btn-spinner"
+              aria-hidden="true"
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 1,
+                repeat: Infinity,
+                ease: 'linear',
+              }}
+            >
+              ⟳
+            </motion.span>
+          )}
+          <span
+            style={{
+              opacity: isLoading ? 0.7 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.375rem',
+            }}
+          >
+            {children}
           </span>
-        )}
-        <span
-          style={{
-            opacity: isLoading ? 0.7 : 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.375rem',
-          }}
-        >
-          {children}
-        </span>
 
-        <style jsx>{`
-          .btn-spinner {
-            display: inline-block;
-            margin-right: 0.5rem;
-            animation: spin 1s linear infinite;
-          }
-
-          @keyframes spin {
-            from {
-              transform: rotate(0deg);
+          <style jsx>{`
+            .btn-spinner {
+              display: inline-block;
+              margin-right: 0.5rem;
             }
-            to {
-              transform: rotate(360deg);
-            }
-          }
-        `}</style>
-      </button>
+          `}</style>
+        </button>
+      </motion.div>
     )
   }
 )
