@@ -1877,3 +1877,34 @@ export interface SavedFilter {
   created_by_email?: string
   created_by_full_name?: string | null
 }
+
+// ============================================================================
+// CUSTOM REPORTS & DASHBOARDS TYPES
+// ============================================================================
+
+/**
+ * Re-export report and dashboard types from schemas
+ * These types are used for custom reporting and dashboard features
+ */
+export type {
+  // Report types
+  ObjectType as ReportObjectType,
+  FilterOperator,
+  LogicalOperator,
+  AggregationType,
+  SortDirection,
+  ExportFormat,
+  FilterCondition,
+  AggregationConfig,
+  SortConfig,
+  CustomReport,
+  CreateCustomReport,
+  UpdateCustomReport,
+  // Dashboard types
+  WidgetLayout,
+  WidgetConfig,
+  CustomDashboard,
+  CreateCustomDashboard,
+  UpdateCustomDashboard,
+  DashboardWidgetType,
+} from '@/lib/schemas/reports'

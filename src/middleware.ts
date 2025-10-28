@@ -33,6 +33,8 @@ const protectedRoutes = [
   '/contracts',
   '/external-documents',
   '/import',
+  '/reports',
+  '/dashboards',
 ]
 
 // Routes that require admin role (admin or super_admin)
