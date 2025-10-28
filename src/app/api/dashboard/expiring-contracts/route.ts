@@ -24,11 +24,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
 
     // Query contracts with end dates approaching
+    // JOIN with companies table to get vendor name
     const result = await query<ExpiringContract>(
       `SELECT
         c.*,
+        c.contract_name as contract_title,
+        co.company_name as vendor,
         (c.end_date - CURRENT_DATE) as days_until_expiration
       FROM contracts c
+      LEFT JOIN companies co ON c.company_id = co.id
       WHERE c.end_date IS NOT NULL
         AND c.end_date > CURRENT_DATE
         AND c.end_date <= CURRENT_DATE + INTERVAL '1 day' * $1
