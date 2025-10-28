@@ -9,6 +9,8 @@ import {
   type ViewState,
 } from '@/lib/urlStateManager'
 import { ExportModal } from '@/components/ExportModal'
+import { SavedFilterModal } from '@/components/SavedFilterModal'
+import { SavedFilterDropdown } from '@/components/SavedFilterDropdown'
 
 /**
  * Enhanced column definition with filtering and visibility control
@@ -83,6 +85,10 @@ export interface GenericListViewProps<T> {
   enableExport?: boolean // Enable CSV export button
   exportObjectType?: string // Object type identifier for export API (e.g., 'devices', 'people')
   exportObjectTypeName?: string // Display name for export modal (e.g., 'Devices', 'People')
+  // Saved Filters functionality
+  enableSavedFilters?: boolean // Enable saved filters dropdown and save button
+  savedFiltersObjectType?: import('@/types').SavedFilterObjectType // Object type for saved filters
+  onSavedFilterApply?: (filterConfig: import('@/types').FilterConfig) => void // Callback when saved filter is applied
 }
 
 /**
@@ -115,6 +121,9 @@ export function GenericListView<T extends { id: string }>({
   enableExport = false,
   exportObjectType,
   exportObjectTypeName,
+  enableSavedFilters = false,
+  savedFiltersObjectType,
+  onSavedFilterApply,
 }: GenericListViewProps<T>) {
   const router = useRouter()
   const pathname = usePathname()
@@ -138,6 +147,7 @@ export function GenericListView<T extends { id: string }>({
   )
   const [selectedRowIndex, setSelectedRowIndex] = useState<number>(-1)
   const [exportModalOpen, setExportModalOpen] = useState(false)
+  const [savedFilterModalOpen, setSavedFilterModalOpen] = useState(false)
 
   // Get visible column configs
   const visibleColumnConfigs = columns.filter((col) => visibleColumns.includes(col.key as string))
@@ -386,6 +396,41 @@ export function GenericListView<T extends { id: string }>({
                     <Icon name="download" size={16} aria-hidden="true" />
                     Export
                   </button>
+                )}
+                {enableSavedFilters && savedFiltersObjectType && (
+                  <>
+                    <SavedFilterDropdown
+                      objectType={savedFiltersObjectType}
+                      onFilterApply={(filterConfig) => {
+                        if (onSavedFilterApply) {
+                          onSavedFilterApply(filterConfig)
+                        }
+                      }}
+                    />
+                    <button
+                      onClick={() => setSavedFilterModalOpen(true)}
+                      aria-label="Save current filter"
+                      className="list-action-button"
+                      style={{
+                        backgroundColor: 'rgba(40, 192, 119, 0.2)',
+                        color: 'var(--color-off-white)',
+                        padding: 'var(--spacing-sm) var(--spacing-md)',
+                        borderRadius: '4px',
+                        border: '1px solid rgba(40, 192, 119, 0.3)',
+                        cursor: 'pointer',
+                        fontSize: 'var(--font-size-base)',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 'var(--spacing-xs)',
+                        whiteSpace: 'nowrap',
+                      }}
+                      title="Save current filter configuration"
+                    >
+                      <Icon name="bookmark" size={16} aria-hidden="true" />
+                      Save Filter
+                    </button>
+                  </>
                 )}
                 {enableColumnManagement && (
                   <button
@@ -915,6 +960,28 @@ export function GenericListView<T extends { id: string }>({
             ...filterValues,
             ...columnFilters,
             search: localSearch,
+          }}
+        />
+      )}
+
+      {/* Saved Filter Modal */}
+      {enableSavedFilters && savedFiltersObjectType && (
+        <SavedFilterModal
+          isOpen={savedFilterModalOpen}
+          onClose={() => setSavedFilterModalOpen(false)}
+          objectType={savedFiltersObjectType}
+          currentFilterConfig={{
+            search: localSearch,
+            filters: {
+              ...filterValues,
+              ...columnFilters,
+            },
+            sort_by: sortBy,
+            sort_order: sortOrder,
+          }}
+          onSave={(filterId) => {
+            console.log('Filter saved:', filterId)
+            setSavedFilterModalOpen(false)
           }}
         />
       )}

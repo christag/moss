@@ -1830,3 +1830,50 @@ export interface DropdownOptionsQueryParams {
 // ============================================================================
 
 export * from './checkout'
+
+// ============================================================================
+// SAVED FILTERS TYPES
+// ============================================================================
+
+export type SavedFilterObjectType =
+  | 'devices'
+  | 'networks'
+  | 'ios'
+  | 'ip_addresses'
+  | 'people'
+  | 'companies'
+  | 'locations'
+  | 'rooms'
+  | 'groups'
+  | 'software'
+  | 'saas_services'
+  | 'installed_applications'
+  | 'software_licenses'
+  | 'documents'
+  | 'external_documents'
+  | 'contracts'
+
+export interface FilterConfig {
+  search?: string
+  filters?: Record<string, string>
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+export interface SavedFilter {
+  id: UUID
+  user_id: UUID
+  filter_name: string
+  description?: string | null
+  object_type: SavedFilterObjectType
+  filter_config: FilterConfig
+  is_public: boolean
+  is_default: boolean
+  last_used_at?: string | null
+  use_count: number
+  created_at: string
+  updated_at: string
+  // Optional creator info (present when JOIN with users table)
+  created_by_email?: string
+  created_by_full_name?: string | null
+}
