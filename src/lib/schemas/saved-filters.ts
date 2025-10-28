@@ -86,7 +86,7 @@ export const applyFilterSchema = z.object({
 
 // Public saved filter schema (includes creator info)
 export const publicSavedFilterSchema = savedFilterSchema.extend({
-  created_by_username: z.string(),
+  created_by_email: z.string(),
   created_by_full_name: z.string().nullable(),
 })
 

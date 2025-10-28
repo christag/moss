@@ -1874,6 +1874,6 @@ export interface SavedFilter {
   created_at: string
   updated_at: string
   // Optional creator info (present when JOIN with users table)
-  created_by_username?: string
+  created_by_email?: string
   created_by_full_name?: string | null
 }

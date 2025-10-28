@@ -99,10 +99,11 @@ CREATE TRIGGER enforce_single_default_filter
 CREATE OR REPLACE VIEW public_saved_filters AS
 SELECT
     sf.*,
-    u.username as created_by_username,
-    u.full_name as created_by_full_name
+    u.email as created_by_email,
+    COALESCE(p.first_name || ' ' || p.last_name, u.email) as created_by_full_name
 FROM saved_filters sf
 JOIN users u ON sf.user_id = u.id
+LEFT JOIN people p ON u.person_id = p.id
 WHERE sf.is_public = true;
 
 -- Grant permissions

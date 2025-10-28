@@ -75,10 +75,11 @@ export async function GET(request: NextRequest) {
     const dataQuery = `
       SELECT
         sf.*,
-        u.username as created_by_username,
-        u.full_name as created_by_full_name
+        u.email as created_by_email,
+        COALESCE(p.first_name || ' ' || p.last_name, u.email) as created_by_full_name
       FROM saved_filters sf
       LEFT JOIN users u ON sf.user_id = u.id
+      LEFT JOIN people p ON u.person_id = p.id
       ${whereClause}
       ${orderBy}
       LIMIT $${paramIndex++} OFFSET $${paramIndex++}

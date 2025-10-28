@@ -148,8 +148,8 @@ export function SavedFilterDropdown({
   }
 
   // Separate own filters and public filters
-  const ownFilters = filters.filter((f) => !f.created_by_username || f.created_by_username === '')
-  const publicFilters = filters.filter((f) => f.created_by_username && f.created_by_username !== '')
+  const ownFilters = filters.filter((f) => !f.created_by_email || f.created_by_email === '')
+  const publicFilters = filters.filter((f) => f.created_by_email && f.created_by_email !== '')
 
   const appliedFilter = filters.find((f) => f.id === appliedFilterId)
 
@@ -241,7 +241,7 @@ export function SavedFilterDropdown({
                           <div className="filter-description">{filter.description}</div>
                         )}
                         <div className="filter-meta">
-                          By {filter.created_by_full_name || filter.created_by_username}
+                          By {filter.created_by_full_name || filter.created_by_email}
                         </div>
                       </div>
                     </button>

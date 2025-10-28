@@ -28,10 +28,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const result = await query(
       `SELECT
         sf.*,
-        u.username as created_by_username,
-        u.full_name as created_by_full_name
+        u.email as created_by_email,
+        COALESCE(p.first_name || ' ' || p.last_name, u.email) as created_by_full_name
       FROM saved_filters sf
       LEFT JOIN users u ON sf.user_id = u.id
+      LEFT JOIN people p ON u.person_id = p.id
       WHERE sf.id = $1
         AND (sf.user_id = $2 OR sf.is_public = true)`,
       [id, authResult.userId]
