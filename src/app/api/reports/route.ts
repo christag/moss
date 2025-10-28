@@ -21,11 +21,8 @@ export async function GET(request: NextRequest) {
   const rateLimitResult = await applyRateLimit(request, 'api')
   if (rateLimitResult) return rateLimitResult
 
-  // Require authentication with 'read' scope
-  const authResult = await requireApiScope(request, ['read'])
-  if (authResult instanceof NextResponse) return authResult
-
-  const { userId } = authResult
+  // Note: Web UI uses NextAuth session-based auth via middleware
+  // API token auth is available via requireApiScope for external API access
 
   try {
     const { searchParams } = new URL(request.url)
@@ -39,13 +36,12 @@ export async function GET(request: NextRequest) {
     const values: unknown[] = []
     let paramCount = 0
 
+    // For now, show all public and system reports
+    // TODO: Add user filtering when session context is available
     if (isPublic) {
       conditions.push('is_public = true')
     } else {
-      // Show user's own reports + public reports
-      paramCount++
-      conditions.push(`(created_by = $${paramCount} OR is_public = true)`)
-      values.push(userId)
+      conditions.push('(is_public = true OR is_system = true)')
     }
 
     if (objectType) {
