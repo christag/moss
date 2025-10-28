@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
     const result = await query<ExpiringWarranty>(
       `SELECT
         d.*,
+        d.hostname as device_name,
         (d.warranty_expiration - CURRENT_DATE) as days_until_expiration
       FROM devices d
       WHERE d.warranty_expiration IS NOT NULL

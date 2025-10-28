@@ -27,9 +27,12 @@ export async function GET(request: NextRequest) {
 
     // Query licenses with expiration dates approaching
     // Calculate seat utilization from person assignments
+    // JOIN with software table to get product name and companies for vendor
     const result = await query<ExpiringLicense>(
       `SELECT
         sl.*,
+        s.product_name as license_name,
+        c.company_name as vendor,
         (sl.expiration_date - CURRENT_DATE) as days_until_expiration,
         COALESCE(sl.seats_used, 0) as seats_used,
         CASE
@@ -41,6 +44,8 @@ export async function GET(request: NextRequest) {
           ELSE 0
         END as utilization_percentage
       FROM software_licenses sl
+      LEFT JOIN software s ON sl.software_id = s.id
+      LEFT JOIN companies c ON sl.purchased_from_id = c.id
       WHERE sl.expiration_date IS NOT NULL
         AND sl.expiration_date > CURRENT_DATE
         AND sl.expiration_date <= CURRENT_DATE + INTERVAL '1 day' * $1
