@@ -153,11 +153,14 @@ export const IntegrationSchema = z.object({
 export const CreateIntegrationSchema = z.object({
   integration_type: IntegrationTypeSchema,
   name: z.string().min(1).max(255),
-  provider: z.string().min(1).max(100),
+  is_enabled: z.boolean().default(true),
+  environment: z.enum(['development', 'staging', 'production']).default('production'),
+  is_sandbox: z.boolean().default(false),
   config: z.record(z.unknown()),
-  sync_enabled: z.boolean().default(false),
-  sync_frequency: SyncFrequencySchema.default('manual'),
-  is_active: z.boolean().default(true),
+  credentials: z.record(z.unknown()).optional(), // Plain credentials - will be encrypted
+  sync_settings: z.record(z.unknown()).optional(),
+  auto_sync_enabled: z.boolean().default(false),
+  sync_schedule: z.string().optional().nullable(),
   notes: z.string().optional(),
 })
 

@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { encrypt } from '@/lib/encryption'
 import type { JamfConfig, JamfSyncSettings } from '@/types/integrations'
 
 type Tab = 'connection' | 'sync' | 'test'
@@ -29,7 +28,7 @@ export default function NewJamfIntegrationPage() {
   const [testResult, setTestResult] = useState<{
     success: boolean
     message: string
-    details?: Record<string, unknown>
+    details?: string
   } | null>(null)
 
   const [formData, setFormData] = useState<FormData>({
@@ -97,11 +96,22 @@ export default function NewJamfIntegrationPage() {
       })
 
       const data = await response.json()
+
+      if (!response.ok) {
+        setTestResult({
+          success: false,
+          message: data.error || 'Connection test failed',
+          details: data.details || JSON.stringify(data, null, 2),
+        })
+        return
+      }
+
       setTestResult(data)
     } catch (err) {
       setTestResult({
         success: false,
         message: err instanceof Error ? err.message : 'Failed to test connection',
+        details: err instanceof Error ? err.stack : undefined,
       })
     } finally {
       setLoading(false)
@@ -129,10 +139,7 @@ export default function NewJamfIntegrationPage() {
     setLoading(true)
 
     try {
-      // Encrypt credentials
-      const credentialsEncrypted = encrypt(JSON.stringify(formData.credentials))
-
-      // Create integration
+      // Create integration (API will handle encryption server-side)
       const response = await fetch('/api/admin/integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,7 +150,7 @@ export default function NewJamfIntegrationPage() {
           environment: formData.environment,
           is_sandbox: formData.is_sandbox,
           config: formData.config,
-          credentials_encrypted: credentialsEncrypted,
+          credentials: formData.credentials, // Send plain credentials - API will encrypt
           sync_settings: formData.sync_settings,
           auto_sync_enabled: formData.auto_sync_enabled,
           sync_schedule: formData.auto_sync_enabled ? formData.sync_schedule : null,
@@ -538,15 +545,26 @@ function ConnectionTab({
               borderRadius: '4px',
             }}
           />
-          <p
+          <div
             style={{
               fontSize: 'var(--font-size-sm)',
               color: 'var(--color-brew-black-60)',
               marginTop: 'var(--spacing-xs)',
+              padding: 'var(--spacing-sm)',
+              backgroundColor: 'var(--color-off-white)',
+              borderRadius: '4px',
             }}
           >
-            Required scopes: Read Computers, Read Computer Groups, Read Users
-          </p>
+            <strong>Required Jamf Pro API Client Privileges:</strong>
+            <ul style={{ margin: 'var(--spacing-xs) 0 0 var(--spacing-md)', paddingLeft: '0' }}>
+              <li>Read Computers</li>
+              <li>Read Smart Computer Groups</li>
+              <li>Read Static Computer Groups</li>
+              <li>Read Users</li>
+              <li>Read Mobile Devices (future use)</li>
+              <li>Read Mac Applications (future use)</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -852,7 +870,7 @@ function TestTab({
   loading,
 }: {
   formData: FormData
-  testResult: { success: boolean; message: string; details?: Record<string, unknown> } | null
+  testResult: { success: boolean; message: string; details?: string } | null
   onTest: () => void
   onSubmit: () => void
   loading: boolean
@@ -966,7 +984,35 @@ function TestTab({
               borderRadius: '4px',
             }}
           >
-            <p>{testResult.message}</p>
+            <p style={{ marginBottom: testResult.details ? 'var(--spacing-sm)' : 0 }}>
+              {testResult.message}
+            </p>
+            {testResult.details && (
+              <details style={{ marginTop: 'var(--spacing-sm)' }}>
+                <summary
+                  style={{
+                    cursor: 'pointer',
+                    fontWeight: '500',
+                    color: 'var(--color-brew-black-60)',
+                    marginBottom: 'var(--spacing-xs)',
+                  }}
+                >
+                  Technical Details
+                </summary>
+                <pre
+                  style={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                    padding: 'var(--spacing-sm)',
+                    borderRadius: '4px',
+                    fontSize: 'var(--font-size-sm)',
+                    overflow: 'auto',
+                    maxHeight: '300px',
+                  }}
+                >
+                  {testResult.details}
+                </pre>
+              </details>
+            )}
           </div>
         )}
 

@@ -10,6 +10,7 @@ import { auth, hasRole } from '@/lib/auth'
 import { CreateIntegrationSchema } from '@/lib/schemas/admin'
 import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 import { parseRequestBody } from '@/lib/api'
+import { encrypt } from '@/lib/encryption'
 import type { IntegrationConfig } from '@/types/integrations'
 
 export async function GET(_request: NextRequest) {
@@ -66,16 +67,30 @@ export async function POST(request: NextRequest) {
     const data = validationResult.data
     const pool = getPool()
 
+    // Encrypt credentials if provided
+    let credentialsEncrypted: string | null = null
+    if (data.credentials) {
+      credentialsEncrypted = await encrypt(JSON.stringify(data.credentials))
+    }
+
     const result = await pool.query<IntegrationConfig>(
       `INSERT INTO integration_configs (
-        integration_type, name, is_enabled, config
-      ) VALUES ($1, $2, $3, $4)
+        integration_type, name, is_enabled, environment, is_sandbox,
+        config, credentials_encrypted, sync_settings,
+        auto_sync_enabled, sync_schedule
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
       RETURNING *`,
       [
         data.integration_type,
         data.name,
-        data.is_active !== undefined ? data.is_active : true,
+        data.is_enabled !== undefined ? data.is_enabled : true,
+        data.environment || 'production',
+        data.is_sandbox || false,
         JSON.stringify(data.config),
+        credentialsEncrypted,
+        data.sync_settings ? JSON.stringify(data.sync_settings) : null,
+        data.auto_sync_enabled || false,
+        data.sync_schedule || null,
       ]
     )
 

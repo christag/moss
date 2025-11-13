@@ -8,7 +8,6 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { OktaConfig, OktaSyncSettings } from '@/types/integrations'
-import { encrypt } from '@/lib/encryption'
 
 type Tab = 'connection' | 'sync' | 'test'
 
@@ -35,6 +34,7 @@ export default function NewOktaIntegrationPage() {
   const [testResult, setTestResult] = useState<{
     success: boolean
     message: string
+    details?: string
   } | null>(null)
 
   const [formData, setFormData] = useState<FormData>({
@@ -104,12 +104,21 @@ export default function NewOktaIntegrationPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Connection test failed')
+        setTestResult({
+          success: false,
+          message: data.error || 'Connection test failed',
+          details: data.details || JSON.stringify(data, null, 2),
+        })
+        return
       }
 
       setTestResult(data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to test connection')
+      setTestResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'Failed to test connection',
+        details: err instanceof Error ? err.stack : undefined,
+      })
     }
   }
 
@@ -142,10 +151,7 @@ export default function NewOktaIntegrationPage() {
     setError(null)
 
     try {
-      // Encrypt credentials
-      const credentialsEncrypted = encrypt(JSON.stringify(formData.credentials))
-
-      // Create integration
+      // Create integration (API will handle encryption server-side)
       const response = await fetch('/api/admin/integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -156,7 +162,7 @@ export default function NewOktaIntegrationPage() {
           environment: formData.environment,
           is_sandbox: formData.is_sandbox,
           config: formData.config,
-          credentials_encrypted: credentialsEncrypted,
+          credentials: formData.credentials, // Send plain credentials - API will encrypt
           sync_settings: formData.sync_settings,
           auto_sync_enabled: formData.auto_sync_enabled,
           sync_schedule: formData.auto_sync_enabled ? formData.sync_schedule : null,
@@ -371,6 +377,33 @@ function ConnectionTab({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-lg)' }}>
       <h2 style={{ fontSize: '1.25rem', fontWeight: '600' }}>Connection Settings</h2>
+
+      {/* SSO Clarification Banner */}
+      <div
+        style={{
+          background: '#e3f2fd',
+          border: '1px solid #90caf9',
+          borderRadius: '8px',
+          padding: 'var(--spacing-md)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-sm)' }}>
+          <span style={{ fontSize: '1.25rem' }}>📘</span>
+          <div style={{ flex: 1 }}>
+            <strong style={{ display: 'block', marginBottom: 'var(--spacing-xs)' }}>
+              About This Integration
+            </strong>
+            <p style={{ margin: '0 0 var(--spacing-xs) 0', fontSize: 'var(--font-size-sm)' }}>
+              This integration syncs <strong>users, groups, and app assignments</strong> from Okta
+              into M.O.S.S. for asset management purposes.
+            </p>
+            <p style={{ margin: 0, fontSize: 'var(--font-size-sm)' }}>
+              <strong>Note:</strong> SSO/SAML configuration for logging into M.O.S.S. with Okta is
+              configured separately in <strong>Admin → Authentication</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Integration Name */}
       <div>
@@ -946,7 +979,7 @@ function SyncTab({ formData, setFormData, updateSyncSettings }: SyncTabProps) {
 
 interface TestTabProps {
   formData: FormData
-  testResult: { success: boolean; message: string } | null
+  testResult: { success: boolean; message: string; details?: string } | null
   onTest: () => void
 }
 
@@ -1062,7 +1095,35 @@ function TestTab({ formData, testResult, onTest }: TestTabProps) {
               {testResult.success ? 'Connection Successful' : 'Connection Failed'}
             </span>
           </div>
-          <p>{testResult.message}</p>
+          <p style={{ marginBottom: testResult.details ? 'var(--spacing-sm)' : 0 }}>
+            {testResult.message}
+          </p>
+          {testResult.details && (
+            <details style={{ marginTop: 'var(--spacing-sm)' }}>
+              <summary
+                style={{
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                  color: 'var(--color-brew-black-60)',
+                  marginBottom: 'var(--spacing-xs)',
+                }}
+              >
+                Technical Details
+              </summary>
+              <pre
+                style={{
+                  backgroundColor: 'rgba(0, 0, 0, 0.05)',
+                  padding: 'var(--spacing-sm)',
+                  borderRadius: '4px',
+                  fontSize: 'var(--font-size-sm)',
+                  overflow: 'auto',
+                  maxHeight: '300px',
+                }}
+              >
+                {testResult.details}
+              </pre>
+            </details>
+          )}
         </div>
       )}
 

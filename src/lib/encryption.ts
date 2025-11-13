@@ -24,6 +24,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
+import { getOrCreateEncryptionKey } from './encryption-key-manager'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 16 // 128 bits for AES-GCM
@@ -31,26 +32,20 @@ const AUTH_TAG_LENGTH = 16 // 128 bits
 const KEY_LENGTH = 32 // 256 bits
 
 /**
- * Get encryption key from environment variable
- * @throws Error if ENCRYPTION_KEY is not set
+ * Get encryption key using key manager (auto-generates if needed)
+ * Priority: ENV var > Database > Auto-generate
+ * @throws Error if key format is invalid
  */
-function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY
-
-  if (!key) {
-    throw new Error(
-      'ENCRYPTION_KEY environment variable is not set. ' +
-        'Generate one using: openssl rand -base64 32'
-    )
-  }
+async function getEncryptionKey(): Promise<Buffer> {
+  const key = await getOrCreateEncryptionKey()
 
   // Convert base64 key to Buffer
   const keyBuffer = Buffer.from(key, 'base64')
 
   if (keyBuffer.length !== KEY_LENGTH) {
     throw new Error(
-      `Invalid ENCRYPTION_KEY length. Expected ${KEY_LENGTH} bytes (256 bits), ` +
-        `got ${keyBuffer.length} bytes. Generate a new key using: openssl rand -base64 32`
+      `Invalid encryption key length. Expected ${KEY_LENGTH} bytes (256 bits), ` +
+        `got ${keyBuffer.length} bytes.`
     )
   }
 
@@ -65,16 +60,16 @@ function getEncryptionKey(): Buffer {
  * @throws Error if encryption fails or ENCRYPTION_KEY is invalid
  *
  * @example
- * const encrypted = encrypt('my-secret-api-key')
+ * const encrypted = await encrypt('my-secret-api-key')
  * // Returns: "base64(iv):base64(authTag):base64(encryptedData)"
  */
-export function encrypt(plaintext: string): string {
+export async function encrypt(plaintext: string): Promise<string> {
   if (!plaintext) {
     throw new Error('Cannot encrypt empty string')
   }
 
   try {
-    const key = getEncryptionKey()
+    const key = await getEncryptionKey()
 
     // Generate unique IV for this encryption (CRITICAL: Never reuse IVs)
     const iv = randomBytes(IV_LENGTH)
@@ -104,16 +99,16 @@ export function encrypt(plaintext: string): string {
  * @throws Error if decryption fails, auth tag invalid, or format is wrong
  *
  * @example
- * const decrypted = decrypt('base64(iv):base64(authTag):base64(encryptedData)')
+ * const decrypted = await decrypt('base64(iv):base64(authTag):base64(encryptedData)')
  * // Returns: "my-secret-api-key"
  */
-export function decrypt(ciphertext: string): string {
+export async function decrypt(ciphertext: string): Promise<string> {
   if (!ciphertext) {
     throw new Error('Cannot decrypt empty string')
   }
 
   try {
-    const key = getEncryptionKey()
+    const key = await getEncryptionKey()
 
     // Parse the encrypted string format: iv:authTag:encryptedData
     const parts = ciphertext.split(':')
