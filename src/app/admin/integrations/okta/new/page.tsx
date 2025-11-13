@@ -455,6 +455,12 @@ function ConnectionTab({
           type="text"
           value={formData.config.domain}
           onChange={(e) => updateConfig({ domain: e.target.value })}
+          onKeyDown={(e) => {
+            // Prevent slash key from triggering global search shortcuts
+            if (e.key === '/') {
+              e.stopPropagation()
+            }
+          }}
           placeholder="yourcompany.okta.com"
           required
           style={{

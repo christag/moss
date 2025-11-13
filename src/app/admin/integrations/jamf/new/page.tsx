@@ -412,6 +412,12 @@ function ConnectionTab({
           type="url"
           value={formData.config.base_url}
           onChange={(e) => updateConfig({ base_url: e.target.value })}
+          onKeyDown={(e) => {
+            // Prevent slash key from triggering global search shortcuts
+            if (e.key === '/') {
+              e.stopPropagation()
+            }
+          }}
           placeholder="https://yourcompany.jamfcloud.com"
           style={{
             width: '100%',
