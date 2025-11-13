@@ -114,6 +114,12 @@ export const StorageSettingsSchema = z.object({
 // ============================================================================
 
 export const IntegrationTypeSchema = z.enum([
+  'okta',
+  'jamf',
+  'azure_ad',
+  'intune',
+  'aws',
+  'gcp',
   'idp',
   'mdm',
   'rmm',
@@ -178,6 +184,88 @@ export const IntegrationSyncLogSchema = z.object({
   error_message: z.string().optional().nullable(),
   details: z.record(z.unknown()).optional().nullable(),
   created_at: z.date().optional(),
+})
+
+// ============================================================================
+// OKTA INTEGRATION CONFIG SCHEMAS
+// ============================================================================
+
+export const OktaAuthMethodSchema = z.enum(['api_token', 'oauth'])
+
+export const OktaConfigSchema = z.object({
+  domain: z.string().min(1).max(255), // e.g., "yourcompany.okta.com"
+  api_version: z.string().default('v1'),
+  timeout_ms: z.number().int().positive().default(30000),
+  auth_method: OktaAuthMethodSchema,
+})
+
+export const OktaCredentialsSchema = z
+  .object({
+    // API Token method
+    okta_api_token: z.string().optional(),
+    // OAuth method
+    okta_client_id: z.string().optional(),
+    okta_client_secret: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // Must have either API token OR both OAuth credentials
+      return data.okta_api_token || (data.okta_client_id && data.okta_client_secret)
+    },
+    {
+      message: 'Either okta_api_token or (okta_client_id + okta_client_secret) must be provided',
+    }
+  )
+
+export const OktaSyncSettingsSchema = z.object({
+  sync_groups: z.boolean().default(true),
+  sync_group_members: z.boolean().default(true),
+  sync_user_metadata: z.boolean().default(true),
+  sync_app_assignments: z.boolean().default(false),
+  group_filter: z.string().optional().nullable(), // Filter groups by name pattern
+  user_match_strategy: z.enum(['email', 'username', 'employee_id']).default('email'),
+  create_missing_users: z.boolean().default(false),
+  custom_field_mappings: z.record(z.string()).default({
+    lastLogin: 'last_okta_login',
+    status: 'okta_status',
+    activated: 'okta_activated_date',
+  }),
+})
+
+// ============================================================================
+// JAMF INTEGRATION CONFIG SCHEMAS
+// ============================================================================
+
+export const JamfConfigSchema = z.object({
+  base_url: z.string().url(), // e.g., "https://yourcompany.jamfcloud.com"
+  api_version: z.string().default('v1'),
+  timeout_ms: z.number().int().positive().default(30000),
+})
+
+export const JamfCredentialsSchema = z.object({
+  jamf_client_id: z.string().min(1),
+  jamf_client_secret: z.string().min(1),
+})
+
+export const JamfSyncSectionsSchema = z.enum([
+  'GENERAL',
+  'HARDWARE',
+  'SOFTWARE',
+  'USER_AND_LOCATION',
+  'GROUP_MEMBERSHIPS',
+  'SECURITY',
+])
+
+export const JamfSyncSettingsSchema = z.object({
+  sync_computers: z.boolean().default(true),
+  sync_computer_groups: z.boolean().default(true),
+  sync_users: z.boolean().default(false),
+  sync_sections: z
+    .array(JamfSyncSectionsSchema)
+    .default(['GENERAL', 'HARDWARE', 'USER_AND_LOCATION', 'GROUP_MEMBERSHIPS']),
+  smart_group_filter: z.string().optional().nullable(), // Filter to specific smart group
+  create_missing_locations: z.boolean().default(true),
+  update_existing_devices: z.boolean().default(true),
 })
 
 // ============================================================================

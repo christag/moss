@@ -11,7 +11,7 @@ import { auth, hasRole } from '@/lib/auth'
 import { UpdateIntegrationSchema } from '@/lib/schemas/admin'
 import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 import { parseRequestBody } from '@/lib/api'
-import type { Integration } from '@/types'
+import type { IntegrationConfig } from '@/types/integrations'
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,7 +27,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     const { id } = await params
     const pool = getPool()
-    const result = await pool.query<Integration>(`SELECT * FROM integrations WHERE id = $1`, [id])
+    const result = await pool.query<IntegrationConfig>(
+      `SELECT * FROM integration_configs WHERE id = $1`,
+      [id]
+    )
 
     if (result.rows.length === 0) {
       return NextResponse.json({ error: 'Integration not found' }, { status: 404 })
@@ -71,28 +74,15 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const data = validationResult.data
     const pool = getPool()
 
-    const result = await pool.query<Integration>(
-      `UPDATE integrations SET
+    const result = await pool.query<IntegrationConfig>(
+      `UPDATE integration_configs SET
         name = COALESCE($1, name),
-        provider = COALESCE($2, provider),
-        config = COALESCE($3, config),
-        sync_enabled = COALESCE($4, sync_enabled),
-        sync_frequency = COALESCE($5, sync_frequency),
-        is_active = COALESCE($6, is_active),
-        notes = COALESCE($7, notes),
+        config = COALESCE($2, config),
+        is_enabled = COALESCE($3, is_enabled),
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $8
+      WHERE id = $4
       RETURNING *`,
-      [
-        data.name,
-        data.provider,
-        data.config ? JSON.stringify(data.config) : null,
-        data.sync_enabled,
-        data.sync_frequency,
-        data.is_active,
-        data.notes,
-        id,
-      ]
+      [data.name, data.config ? JSON.stringify(data.config) : null, data.is_active, id]
     )
 
     if (result.rows.length === 0) {
@@ -138,8 +128,8 @@ export async function DELETE(
     const pool = getPool()
 
     // Get integration details before deletion for logging
-    const integrationResult = await pool.query<Integration>(
-      `SELECT * FROM integrations WHERE id = $1`,
+    const integrationResult = await pool.query<IntegrationConfig>(
+      `SELECT * FROM integration_configs WHERE id = $1`,
       [id]
     )
 
@@ -150,7 +140,7 @@ export async function DELETE(
     const integration = integrationResult.rows[0]
 
     // Delete the integration
-    await pool.query(`DELETE FROM integrations WHERE id = $1`, [id])
+    await pool.query(`DELETE FROM integration_configs WHERE id = $1`, [id])
 
     await logAdminAction({
       user_id: session.user.id,

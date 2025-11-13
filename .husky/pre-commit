@@ -1,1 +1,58 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# ============================================================================
+# Pre-commit Hook: Prevent Credential Leakage
+# ============================================================================
+
+echo "🔒 Running security checks..."
+
+# Check 1: Prevent committing .env files with actual credentials
+FORBIDDEN_ENV_FILES=".env.local .env.production .env.development"
+for env_file in $FORBIDDEN_ENV_FILES; do
+  if git diff --cached --name-only | grep -q "^$env_file$"; then
+    echo "❌ ERROR: Attempting to commit $env_file"
+    echo "   This file contains sensitive credentials and should never be committed."
+    echo "   Only .env.example should be committed to git."
+    exit 1
+  fi
+done
+
+# Check 2: Scan for exposed API keys or secrets in staged code
+if git diff --cached --diff-filter=ACM | grep -iE "(api_key|secret|password|token|bearer|auth).*[:=].*['\"][a-zA-Z0-9_-]{20,}['\"]"; then
+  echo "⚠️  WARNING: Possible hardcoded API key or secret detected in staged changes!"
+  echo "   Please review the diff above and ensure no credentials are committed."
+  echo ""
+  echo "   If this is a false positive (e.g., example code), you can:"
+  echo "   1. Use placeholder values like 'your-api-key-here'"
+  echo "   2. Store actual values in .env.local (gitignored)"
+  echo ""
+  read -p "   Continue anyway? (y/N) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+# Check 3: Warn if ENCRYPTION_KEY is being committed
+if git diff --cached | grep -q "ENCRYPTION_KEY.*=.*[A-Za-z0-9+/]{32,}"; then
+  echo "❌ ERROR: ENCRYPTION_KEY value detected in staged changes!"
+  echo "   ENCRYPTION_KEY should ONLY exist in .env.local (gitignored)"
+  echo "   .env.example should contain: ENCRYPTION_KEY=generate-with-openssl-rand-base64-32"
+  exit 1
+fi
+
+# Check 4: Ensure .env.local and .env.production are in .gitignore
+if [ ! -f .gitignore ] || ! grep -q ".env.local" .gitignore || ! grep -q ".env.production" .gitignore; then
+  echo "❌ ERROR: .env.local or .env.production not in .gitignore"
+  echo "   Please ensure your .gitignore includes:"
+  echo "   .env.local"
+  echo "   .env.production"
+  exit 1
+fi
+
+echo "✅ Security checks passed"
+echo ""
+
+# Run lint-staged (ESLint, Prettier, etc.)
 npm run lint-staged

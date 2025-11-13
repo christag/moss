@@ -10,7 +10,7 @@ import { auth, hasRole } from '@/lib/auth'
 import { CreateIntegrationSchema } from '@/lib/schemas/admin'
 import { logAdminAction, getIPAddress, getUserAgent } from '@/lib/adminAuth'
 import { parseRequestBody } from '@/lib/api'
-import type { Integration } from '@/types'
+import type { IntegrationConfig } from '@/types/integrations'
 
 export async function GET(_request: NextRequest) {
   try {
@@ -25,8 +25,8 @@ export async function GET(_request: NextRequest) {
     }
 
     const pool = getPool()
-    const result = await pool.query<Integration>(
-      `SELECT * FROM integrations ORDER BY created_at DESC`
+    const result = await pool.query<IntegrationConfig>(
+      `SELECT * FROM integration_configs ORDER BY created_at DESC`
     )
 
     return NextResponse.json({ integrations: result.rows })
@@ -66,21 +66,16 @@ export async function POST(request: NextRequest) {
     const data = validationResult.data
     const pool = getPool()
 
-    const result = await pool.query<Integration>(
-      `INSERT INTO integrations (
-        integration_type, name, provider, config,
-        sync_enabled, sync_frequency, is_active, notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    const result = await pool.query<IntegrationConfig>(
+      `INSERT INTO integration_configs (
+        integration_type, name, is_enabled, config
+      ) VALUES ($1, $2, $3, $4)
       RETURNING *`,
       [
         data.integration_type,
         data.name,
-        data.provider,
-        JSON.stringify(data.config),
-        data.sync_enabled || false,
-        data.sync_frequency || null,
         data.is_active !== undefined ? data.is_active : true,
-        data.notes || null,
+        JSON.stringify(data.config),
       ]
     )
 

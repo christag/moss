@@ -1,21 +1,19 @@
 /**
  * Admin Integrations Page
- * Manage external system integrations (IdP, MDM, RMM, etc.)
+ * Manage Okta and Jamf integrations for directory sync and MDM data
  */
 
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import type { Integration } from '@/types'
-import { Icon, type IconName } from '@/components/ui'
+import Link from 'next/link'
+import type { IntegrationConfig } from '@/types/integrations'
+import { Icon } from '@/components/ui'
 
 export default function IntegrationsPage() {
-  const router = useRouter()
-  const [integrations, setIntegrations] = useState<Integration[]>([])
+  const [integrations, setIntegrations] = useState<IntegrationConfig[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showAddModal, setShowAddModal] = useState(false)
 
   useEffect(() => {
     fetchIntegrations()
@@ -26,7 +24,7 @@ export default function IntegrationsPage() {
       const response = await fetch('/api/admin/integrations')
       if (!response.ok) throw new Error('Failed to fetch integrations')
       const data = await response.json()
-      setIntegrations(data.integrations)
+      setIntegrations(data.integrations || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load integrations')
     } finally {
@@ -34,25 +32,8 @@ export default function IntegrationsPage() {
     }
   }
 
-  async function handleDelete(id: string, name: string) {
-    if (!confirm(`Are you sure you want to delete the integration "${name}"?`)) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/admin/integrations/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete integration')
-      }
-
-      await fetchIntegrations()
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete integration')
-    }
-  }
+  const oktaIntegrations = integrations.filter((i) => i.integration_type === 'okta')
+  const jamfIntegrations = integrations.filter((i) => i.integration_type === 'jamf')
 
   return (
     <div>
@@ -76,23 +57,9 @@ export default function IntegrationsPage() {
             Integrations
           </h1>
           <p style={{ color: 'var(--color-brew-black-60)' }}>
-            Manage connections to external systems (IdP, MDM, RMM, Cloud Providers)
+            Connect external systems to sync directory data and device information into M.O.S.S.
           </p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          style={{
-            padding: 'var(--spacing-sm) var(--spacing-lg)',
-            backgroundColor: 'var(--color-morning-blue)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontWeight: '500',
-          }}
-        >
-          + Add Integration
-        </button>
       </div>
 
       {error && (
@@ -122,516 +89,329 @@ export default function IntegrationsPage() {
         >
           Loading integrations...
         </div>
-      ) : integrations.length === 0 ? (
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-xl)' }}>
+          {/* Okta Section */}
+          <IntegrationSection
+            title="Okta Directory Sync"
+            description="Sync groups, users, and application assignments from Okta into M.O.S.S. for enriched user profiles and relationship management."
+            iconName="lock-security"
+            color="var(--color-morning-blue)"
+            integrations={oktaIntegrations}
+            addUrl="/admin/integrations/okta/new"
+            loading={loading}
+          />
+
+          {/* Jamf Section */}
+          <IntegrationSection
+            title="Jamf MDM Sync"
+            description="Sync computer inventory, smart groups, and user assignments from Jamf Pro to automatically populate and update device records."
+            iconName="mobile-phone"
+            color="var(--color-green)"
+            integrations={jamfIntegrations}
+            addUrl="/admin/integrations/jamf/new"
+            loading={loading}
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface IntegrationSectionProps {
+  title: string
+  description: string
+  iconName: 'lock-security' | 'mobile-phone'
+  color: string
+  integrations: IntegrationConfig[]
+  addUrl: string
+  loading: boolean
+}
+
+function IntegrationSection({
+  title,
+  description,
+  iconName,
+  color,
+  integrations,
+  addUrl,
+}: IntegrationSectionProps) {
+  return (
+    <div
+      style={{
+        backgroundColor: 'white',
+        padding: 'var(--spacing-xl)',
+        borderRadius: '8px',
+        border: '1px solid var(--color-border)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 'var(--spacing-lg)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--spacing-md)' }}>
+          <div
+            style={{
+              backgroundColor: `${color}20`,
+              padding: 'var(--spacing-md)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Icon name={iconName} size={32} style={{ color }} aria-label={`${title} icon`} />
+          </div>
+          <div>
+            <h2
+              style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: 'var(--spacing-xs)' }}
+            >
+              {title}
+            </h2>
+            <p style={{ color: 'var(--color-brew-black-60)', fontSize: 'var(--font-size-sm)' }}>
+              {description}
+            </p>
+          </div>
+        </div>
+        <Link
+          href={addUrl}
+          style={{
+            padding: 'var(--spacing-sm) var(--spacing-lg)',
+            backgroundColor: color,
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontWeight: '500',
+            textDecoration: 'none',
+            display: 'inline-block',
+          }}
+        >
+          + Add Connection
+        </Link>
+      </div>
+
+      {integrations.length === 0 ? (
         <div
           style={{
-            backgroundColor: 'white',
             padding: 'var(--spacing-xl)',
-            borderRadius: '8px',
-            border: '1px solid var(--color-border)',
             textAlign: 'center',
+            backgroundColor: 'var(--color-off-white)',
+            borderRadius: '8px',
+            border: '1px dashed var(--color-border)',
           }}
         >
           <p style={{ color: 'var(--color-brew-black-60)', marginBottom: 'var(--spacing-md)' }}>
-            No integrations configured yet
+            No connections configured yet
           </p>
-          <button
-            onClick={() => setShowAddModal(true)}
+          <Link
+            href={addUrl}
             style={{
               padding: 'var(--spacing-sm) var(--spacing-lg)',
-              backgroundColor: 'var(--color-morning-blue)',
+              backgroundColor: color,
               color: 'white',
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
+              textDecoration: 'none',
+              display: 'inline-block',
             }}
           >
-            Add Your First Integration
-          </button>
+            Connect Now
+          </Link>
         </div>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: 'var(--spacing-lg)',
-          }}
-        >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-md)' }}>
           {integrations.map((integration) => (
-            <IntegrationCard
-              key={integration.id}
-              integration={integration}
-              onDelete={handleDelete}
-              onEdit={(id) => router.push(`/admin/integrations/${id}`)}
-            />
+            <IntegrationCard key={integration.id} integration={integration} color={color} />
           ))}
         </div>
-      )}
-
-      {showAddModal && (
-        <AddIntegrationModal
-          onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
-            setShowAddModal(false)
-            fetchIntegrations()
-          }}
-        />
       )}
     </div>
   )
 }
 
 interface IntegrationCardProps {
-  integration: Integration
-  onDelete: (id: string, name: string) => void
-  onEdit: (id: string) => void
+  integration: IntegrationConfig
+  color: string
 }
 
-function IntegrationCard({ integration, onDelete, onEdit }: IntegrationCardProps) {
-  const typeColors: Record<string, string> = {
-    idp: 'var(--color-orange)',
-    mdm: 'var(--color-morning-blue)',
-    rmm: 'var(--color-green)',
-    cloud_provider: 'var(--color-light-blue)',
-    ticketing: 'var(--color-tangerine)',
-    monitoring: 'var(--color-lime-green)',
-    backup: 'var(--color-lime-green)',
-    other: 'var(--color-light-blue)',
+function IntegrationCard({ integration, color }: IntegrationCardProps) {
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'Never'
+    return new Date(dateStr).toLocaleString()
   }
 
-  const typeIcons: Record<string, IconName> = {
-    idp: 'lock-security',
-    mdm: 'mobile-phone',
-    rmm: 'desktop-computer',
-    cloud_provider: 'cloud',
-    ticketing: 'ticket-event-stub',
-    monitoring: 'chart-analytics',
-    backup: 'database-storage',
-    other: 'plugin-connection',
-  }
-
-  return (
-    <div
-      style={{
-        backgroundColor: 'white',
-        padding: 'var(--spacing-lg)',
-        borderRadius: '8px',
-        border: '1px solid var(--color-border)',
-        position: 'relative',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '4px',
-          backgroundColor: typeColors[integration.integration_type] || 'var(--color-light-blue)',
-          borderTopLeftRadius: '8px',
-          borderTopRightRadius: '8px',
-        }}
-      />
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          marginBottom: 'var(--spacing-md)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-sm)' }}>
-          <Icon
-            name={typeIcons[integration.integration_type] || 'plugin-connection'}
-            size={32}
-            aria-label={`${integration.integration_type} icon`}
-          />
-          <div>
-            <h3
-              style={{ fontSize: '1.125rem', fontWeight: '600', color: 'var(--color-brew-black)' }}
-            >
-              {integration.name}
-            </h3>
-            <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-brew-black-60)' }}>
-              {integration.provider}
-            </p>
-          </div>
-        </div>
-        <span
-          style={{
-            display: 'inline-block',
-            width: '12px',
-            height: '12px',
-            borderRadius: '50%',
-            backgroundColor: integration.is_active
-              ? 'var(--color-green)'
-              : 'var(--color-brew-black-40)',
-          }}
-        />
-      </div>
-
-      <div style={{ marginBottom: 'var(--spacing-md)' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--spacing-xs)',
-          }}
-        >
-          <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-brew-black-60)' }}>
-            Type:
-          </span>
-          <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: '500' }}>
-            {integration.integration_type}
-          </span>
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: 'var(--spacing-xs)',
-          }}
-        >
-          <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-brew-black-60)' }}>
-            Sync:
-          </span>
-          <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: '500' }}>
-            {integration.sync_enabled ? integration.sync_frequency || 'Manual' : 'Disabled'}
-          </span>
-        </div>
-        {integration.last_sync_at && (
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 'var(--font-size-sm)', color: 'var(--color-brew-black-60)' }}>
-              Last Sync:
-            </span>
-            <span style={{ fontSize: 'var(--font-size-sm)', fontWeight: '500' }}>
-              {new Date(integration.last_sync_at).toLocaleDateString()}
-            </span>
-          </div>
-        )}
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          gap: 'var(--spacing-sm)',
-          borderTop: '1px solid var(--color-border)',
-          paddingTop: 'var(--spacing-md)',
-        }}
-      >
-        <button
-          onClick={() => onEdit(integration.id)}
-          style={{
-            flex: 1,
-            padding: 'var(--spacing-xs)',
-            backgroundColor: 'var(--color-light-blue)',
-            color: 'var(--color-brew-black)',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: 'var(--font-size-sm)',
-          }}
-        >
-          Configure
-        </button>
-        <button
-          onClick={() => onDelete(integration.id, integration.name)}
-          style={{
-            padding: 'var(--spacing-xs) var(--spacing-md)',
-            backgroundColor: 'transparent',
-            color: 'var(--color-orange)',
-            border: '1px solid var(--color-orange)',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: 'var(--font-size-sm)',
-          }}
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  )
-}
-
-interface AddIntegrationModalProps {
-  onClose: () => void
-  onSuccess: () => void
-}
-
-function AddIntegrationModal({ onClose, onSuccess }: AddIntegrationModalProps) {
-  const [formData, setFormData] = useState<{
-    integration_type:
-      | 'idp'
-      | 'mdm'
-      | 'rmm'
-      | 'cloud_provider'
-      | 'ticketing'
-      | 'monitoring'
-      | 'backup'
-      | 'other'
-    name: string
-    provider: string
-    config: Record<string, unknown>
-    sync_enabled: boolean
-    sync_frequency: 'hourly' | 'daily' | 'weekly' | 'manual'
-    is_active: boolean
-    notes: string
-  }>({
-    integration_type: 'idp',
-    name: '',
-    provider: '',
-    config: {},
-    sync_enabled: false,
-    sync_frequency: 'daily',
-    is_active: true,
-    notes: '',
-  })
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setSaving(true)
-    setError(null)
-
-    try {
-      const response = await fetch('/api/admin/integrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to create integration')
-      }
-
-      onSuccess()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create integration')
-    } finally {
-      setSaving(false)
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'success':
+        return 'var(--color-green)'
+      case 'failed':
+        return 'var(--color-orange)'
+      case 'in_progress':
+        return 'var(--color-morning-blue)'
+      default:
+        return 'var(--color-brew-black-40)'
     }
   }
 
   return (
-    <div
+    <Link
+      href={`/admin/integrations/${integration.integration_type}/${integration.id}`}
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
+        display: 'block',
+        textDecoration: 'none',
+        color: 'inherit',
       }}
     >
       <div
         style={{
-          backgroundColor: 'white',
-          padding: 'var(--spacing-xl)',
+          padding: 'var(--spacing-lg)',
+          border: '1px solid var(--color-border)',
           borderRadius: '8px',
-          maxWidth: '600px',
-          width: '90%',
-          maxHeight: '90vh',
-          overflow: 'auto',
+          borderLeft: `4px solid ${color}`,
+          backgroundColor: 'white',
+          transition: 'all 0.2s',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = 'none'
         }}
       >
-        <h2 style={{ fontSize: '1.5rem', fontWeight: '600', marginBottom: 'var(--spacing-lg)' }}>
-          Add Integration
-        </h2>
-
-        {error && (
-          <div
-            style={{
-              backgroundColor: '#FEE',
-              color: 'var(--color-orange)',
-              padding: 'var(--spacing-md)',
-              borderRadius: '8px',
-              marginBottom: 'var(--spacing-lg)',
-              border: '1px solid var(--color-orange)',
-            }}
-          >
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <label
-              style={{ display: 'block', fontWeight: '500', marginBottom: 'var(--spacing-xs)' }}
-            >
-              Integration Type
-            </label>
-            <select
-              value={formData.integration_type}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  integration_type: e.target.value as
-                    | 'idp'
-                    | 'mdm'
-                    | 'rmm'
-                    | 'cloud_provider'
-                    | 'ticketing'
-                    | 'monitoring'
-                    | 'backup'
-                    | 'other',
-                })
-              }
-              required
-              style={{
-                width: '100%',
-                padding: 'var(--spacing-sm)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '4px',
-              }}
-            >
-              <option value="idp">Identity Provider (IdP)</option>
-              <option value="mdm">Mobile Device Management (MDM)</option>
-              <option value="rmm">Remote Monitoring & Management (RMM)</option>
-              <option value="cloud_provider">Cloud Provider</option>
-              <option value="ticketing">Ticketing System</option>
-              <option value="monitoring">Monitoring System</option>
-              <option value="backup">Backup System</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-
-          <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <label
-              style={{ display: 'block', fontWeight: '500', marginBottom: 'var(--spacing-xs)' }}
-            >
-              Name
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              placeholder="e.g., Corporate Okta"
-              style={{
-                width: '100%',
-                padding: 'var(--spacing-sm)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '4px',
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <label
-              style={{ display: 'block', fontWeight: '500', marginBottom: 'var(--spacing-xs)' }}
-            >
-              Provider
-            </label>
-            <input
-              type="text"
-              value={formData.provider}
-              onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-              required
-              placeholder="e.g., Okta, Jamf, AWS"
-              style={{
-                width: '100%',
-                padding: 'var(--spacing-sm)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '4px',
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: 'var(--spacing-md)' }}>
-            <label
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 'var(--spacing-sm)',
-                cursor: 'pointer',
+                marginBottom: 'var(--spacing-sm)',
               }}
             >
-              <input
-                type="checkbox"
-                checked={formData.sync_enabled}
-                onChange={(e) => setFormData({ ...formData, sync_enabled: e.target.checked })}
-              />
-              <span>Enable automatic sync</span>
-            </label>
-          </div>
-
-          {formData.sync_enabled && (
-            <div style={{ marginBottom: 'var(--spacing-md)' }}>
-              <label
-                style={{ display: 'block', fontWeight: '500', marginBottom: 'var(--spacing-xs)' }}
-              >
-                Sync Frequency
-              </label>
-              <select
-                value={formData.sync_frequency}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    sync_frequency: e.target.value as 'manual' | 'hourly' | 'daily' | 'weekly',
-                  })
-                }
+              <h3 style={{ fontSize: '1.125rem', fontWeight: '600' }}>{integration.name}</h3>
+              <span
                 style={{
-                  width: '100%',
-                  padding: 'var(--spacing-sm)',
-                  border: '1px solid var(--color-border)',
+                  display: 'inline-block',
+                  padding: '2px 8px',
+                  backgroundColor: integration.is_enabled
+                    ? 'var(--color-green)'
+                    : 'var(--color-brew-black-40)',
+                  color: 'white',
                   borderRadius: '4px',
+                  fontSize: '0.75rem',
+                  fontWeight: '500',
                 }}
               >
-                <option value="manual">Manual</option>
-                <option value="hourly">Hourly</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-              </select>
+                {integration.is_enabled ? 'Enabled' : 'Disabled'}
+              </span>
+              {integration.is_sandbox && (
+                <span
+                  style={{
+                    display: 'inline-block',
+                    padding: '2px 8px',
+                    backgroundColor: 'var(--color-tangerine)',
+                    color: 'white',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: '500',
+                  }}
+                >
+                  Sandbox
+                </span>
+              )}
             </div>
-          )}
 
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--spacing-md)',
-              justifyContent: 'flex-end',
-              marginTop: 'var(--spacing-lg)',
-            }}
-          >
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
+            <div
               style={{
-                padding: 'var(--spacing-sm) var(--spacing-lg)',
-                border: '1px solid var(--color-border)',
-                backgroundColor: 'white',
-                borderRadius: '4px',
-                cursor: 'pointer',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: 'var(--spacing-md)',
+                fontSize: 'var(--font-size-sm)',
               }}
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
+              <div>
+                <span style={{ color: 'var(--color-brew-black-60)' }}>Environment: </span>
+                <span style={{ fontWeight: '500', textTransform: 'capitalize' }}>
+                  {integration.environment}
+                </span>
+              </div>
+
+              <div>
+                <span style={{ color: 'var(--color-brew-black-60)' }}>Last Sync: </span>
+                <span style={{ fontWeight: '500' }}>{formatDate(integration.last_sync_at)}</span>
+              </div>
+
+              {integration.last_sync_status && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-xs)' }}>
+                  <span style={{ color: 'var(--color-brew-black-60)' }}>Status: </span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: getStatusColor(integration.last_sync_status),
+                    }}
+                  />
+                  <span style={{ fontWeight: '500', textTransform: 'capitalize' }}>
+                    {integration.last_sync_status.replace('_', ' ')}
+                  </span>
+                </div>
+              )}
+
+              {integration.auto_sync_enabled && (
+                <div>
+                  <span style={{ color: 'var(--color-brew-black-60)' }}>Schedule: </span>
+                  <span style={{ fontWeight: '500' }}>{integration.sync_schedule || 'Manual'}</span>
+                </div>
+              )}
+            </div>
+
+            {integration.last_sync_error && (
+              <div
+                style={{
+                  marginTop: 'var(--spacing-sm)',
+                  padding: 'var(--spacing-xs)',
+                  backgroundColor: '#FEE',
+                  borderRadius: '4px',
+                  fontSize: 'var(--font-size-sm)',
+                  color: 'var(--color-orange)',
+                }}
+              >
+                Error: {integration.last_sync_error}
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginLeft: 'var(--spacing-lg)' }}>
+            <span
               style={{
-                padding: 'var(--spacing-sm) var(--spacing-lg)',
-                backgroundColor: saving ? 'var(--color-light-blue)' : 'var(--color-morning-blue)',
-                color: 'white',
-                border: 'none',
+                padding: 'var(--spacing-xs) var(--spacing-md)',
+                backgroundColor: 'var(--color-light-blue)',
+                color: 'var(--color-brew-black)',
                 borderRadius: '4px',
-                cursor: saving ? 'not-allowed' : 'pointer',
+                fontSize: 'var(--font-size-sm)',
                 fontWeight: '500',
               }}
             >
-              {saving ? 'Creating...' : 'Create Integration'}
-            </button>
+              Configure →
+            </span>
           </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </Link>
   )
 }
