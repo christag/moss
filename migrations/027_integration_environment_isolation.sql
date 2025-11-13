@@ -2,7 +2,7 @@
 -- Purpose: Add environment, tenant, and sandbox fields to support multi-tenant
 --          development with production API testing without data leakage
 -- Author: Claude
--- Date: 2025-11-06
+-- Date: 2025-Nov-06
 
 -- =============================================================================
 -- Add Environment Isolation Fields to integration_configs

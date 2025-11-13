@@ -155,7 +155,7 @@ INSERT INTO integration_configs (
     "update_existing_devices": true
   }'::jsonb,
   true,
-  '0 */6 * * *' -- Every 6 hours
+  '0 STAR/6 * * *' -- Every 6 hours (replace STAR with *)
 );
 */
 
