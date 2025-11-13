@@ -100,7 +100,7 @@ CREATE OR REPLACE VIEW public_saved_filters AS
 SELECT
     sf.*,
     u.email as created_by_email,
-    COALESCE(p.first_name || ' ' || p.last_name, u.email) as created_by_full_name
+    COALESCE(p.full_name, u.email) as created_by_full_name
 FROM saved_filters sf
 JOIN users u ON sf.user_id = u.id
 LEFT JOIN people p ON u.person_id = p.id

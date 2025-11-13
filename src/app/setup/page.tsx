@@ -921,21 +921,7 @@ function Step1DatabaseInit({
           )}
 
           <button onClick={onInitialize} disabled={loading} className="btn-init">
-            {loading ? (
-              'Initializing...'
-            ) : (
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  justifyContent: 'center',
-                }}
-              >
-                <Icon name="rocket-launch" size={20} aria-label="Initialize" />
-                Initialize Database
-              </span>
-            )}
+            {loading ? 'Initializing...' : 'Initialize Database'}
           </button>
         </div>
 
