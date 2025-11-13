@@ -2,7 +2,7 @@
 -- Purpose: Update integration_type to support Okta and Jamf as specific providers
 --          (previously only had generic types like 'idp', 'mdm')
 -- Author: Claude
--- Date: 2025-11-06
+-- Date: 2025-Nov-06
 
 -- =============================================================================
 -- Update integration_type Column
