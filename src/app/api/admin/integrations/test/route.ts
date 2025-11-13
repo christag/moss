@@ -169,6 +169,7 @@ async function testOktaConnection(
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error occurred',
+      details: error instanceof Error ? error.stack : String(error),
     }
   }
 }
@@ -232,6 +233,7 @@ async function testJamfConnection(
     return {
       success: false,
       message: error instanceof Error ? error.message : 'Unknown error occurred',
+      details: error instanceof Error ? error.stack : String(error),
     }
   }
 }

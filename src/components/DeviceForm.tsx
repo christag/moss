@@ -171,6 +171,7 @@ export function DeviceForm({
       type: 'select',
       required: true,
       options: DEVICE_TYPE_OPTIONS,
+      defaultValue: 'computer',
       helpText: 'The type of device',
     },
     {
@@ -178,6 +179,7 @@ export function DeviceForm({
       label: 'Status',
       type: 'select',
       options: STATUS_OPTIONS,
+      defaultValue: 'active',
       helpText: 'Current status of the device',
     },
     {

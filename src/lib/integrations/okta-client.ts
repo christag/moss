@@ -149,7 +149,7 @@ export class OktaClient extends BaseIntegrationClient {
   /**
    * Test connection to Okta
    */
-  async testConnection(): Promise<{ success: boolean; message: string }> {
+  async testConnection(): Promise<{ success: boolean; message: string; details?: string }> {
     try {
       // Try to list groups (minimal API call)
       await this.listGroups({ limit: 1 })
@@ -158,6 +158,7 @@ export class OktaClient extends BaseIntegrationClient {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Connection failed',
+        details: error instanceof Error ? error.stack : String(error),
       }
     }
   }

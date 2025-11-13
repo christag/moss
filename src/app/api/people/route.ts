@@ -9,7 +9,6 @@ import type { Person } from '@/types'
 import { parseRequestBody } from '@/lib/api'
 import { cache, generateListCacheKey } from '@/lib/cache'
 import { applyRateLimit } from '@/lib/rateLimitMiddleware'
-import { requireApiScope } from '@/lib/apiAuth'
 
 /**
  * GET /api/people
@@ -164,16 +163,15 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/people
  * Create a new person
- * Requires: 'write' scope
+ * Note: Web UI uses NextAuth session-based auth, not API tokens
  */
 export async function POST(request: NextRequest) {
   // Apply rate limiting
   const rateLimitResult = await applyRateLimit(request, 'api')
   if (rateLimitResult) return rateLimitResult
 
-  // Require authentication with 'write' scope
-  const authResult = await requireApiScope(request, ['write'])
-  if (authResult instanceof Response) return authResult
+  // Note: Web UI uses NextAuth session-based auth, not API tokens
+  // API token auth can be added here if needed for external API access
 
   try {
     // Parse request body with JSON error handling

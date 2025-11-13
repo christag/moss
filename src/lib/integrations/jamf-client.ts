@@ -414,7 +414,7 @@ export class JamfClient {
   /**
    * Test connection to JAMF Pro server
    */
-  public async testConnection(): Promise<{ success: boolean; message: string }> {
+  public async testConnection(): Promise<{ success: boolean; message: string; details?: string }> {
     try {
       await this.authenticate()
       return {
@@ -425,6 +425,7 @@ export class JamfClient {
       return {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : String(error),
       }
     }
   }

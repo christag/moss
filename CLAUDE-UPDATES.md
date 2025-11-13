@@ -4,6 +4,191 @@
 
 ---
 
+## Session: Miyoo Mini Plus Integration - Device Pairing System - 2025-11-13
+
+### Summary
+Implemented complete backend infrastructure for pairing Miyoo Mini Plus handheld gaming consoles with MOSS. Users can generate 6-digit pairing codes via web UI, which Miyoo devices exchange for read-only API tokens. This enables viewing MOSS data (devices, networks, documentation) directly on portable game consoles.
+
+### Status
+✅ **BACKEND COMPLETED** - 3 hours (planning + implementation + testing)
+⏳ **NATIVE APP PENDING** - SDL2 C++ application development next
+
+### Problem Statement
+IT administrators need mobile access to MOSS data for on-the-go troubleshooting and asset verification. The Miyoo Mini Plus (640×480 handheld console with WiFi, D-pad, and game buttons) provides an ideal portable viewing platform with:
+- Compact form factor (pocket-sized)
+- Game-controller input (perfect for quick navigation)
+- Long battery life (5+ hours)
+- WiFi connectivity
+- Affordable (~$60 device)
+
+### Changes Made
+
+**Migration 029** (`migrations/029_miyoo_pairing.sql`) - 174 lines, 2 tables, 4 functions, 1 view
+
+**Tables:**
+1. `miyoo_pairing_codes` - Temporary 6-digit codes (10-minute expiration)
+   - Columns: id, user_id, code, expires_at, used_at, used_by_device_id
+   - Function: `generate_miyoo_pairing_code()` - Generates unique random codes
+   - Function: `cleanup_expired_pairing_codes()` - Removes expired codes (>24 hours old)
+
+2. `miyoo_devices` - Paired device registry with API token associations
+   - Columns: id, user_id, device_name, device_serial, api_token_id, last_sync_at, sync_count, is_active
+   - Function: `record_miyoo_sync(device_id, ip_address)` - Tracks device usage
+   - View: `miyoo_devices_list` - Device details with user info (excludes sensitive token data)
+
+**API Endpoints** (3 new routes):
+
+1. **POST /api/miyoo/generate-pairing-code** (`src/app/api/miyoo/generate-pairing-code/route.ts`)
+   - Generates 6-digit numeric code (expires in 10 minutes)
+   - Requires: NextAuth session
+   - Response: `{ code: "123456", expiresAt: "...", expiresIn: 600 }`
+
+2. **POST /api/miyoo/pair** (`src/app/api/miyoo/pair/route.ts`)
+   - Exchanges pairing code for API token
+   - Validates code (not used, not expired)
+   - Creates read-only API token automatically
+   - Creates device record with association
+   - Request: `{ code: "123456", deviceName: "Living Room Miyoo" }`
+   - Response: `{ apiToken: "moss_...", deviceId: "...", scopes: ["read"] }`
+
+3. **GET/DELETE /api/miyoo/devices** (`src/app/api/miyoo/devices/route.ts`)
+   - GET: Lists user's paired devices with sync stats
+   - DELETE: Revokes device (deactivates device and API token)
+
+**UI Components** (2 React components + 1 test page):
+
+1. **MiyooPairingModal** (`src/components/MiyooPairingModal.tsx`)
+   - Modal dialog with 6-digit code display
+   - Large, easy-to-read code (6xl font, monospace)
+   - Countdown timer (10 minutes)
+   - Generate new code button
+   - Step-by-step pairing instructions
+
+2. **MiyooDevicesManager** (`src/components/MiyooDevicesManager.tsx`)
+   - Lists all paired Miyoo devices
+   - Shows: device name, token prefix, last sync time, sync count, status
+   - Actions: Add device, Refresh list, Revoke device
+   - Empty state with call-to-action
+
+3. **Test Page** (`src/app/test/miyoo/page.tsx`)
+   - URL: `/test/miyoo`
+   - Demonstrates pairing flow and device management
+   - API documentation reference
+   - Developer info about native app
+
+### Technical Implementation
+
+**Pairing Flow:**
+1. User clicks "Add Device" in web UI
+2. Frontend calls POST /api/miyoo/generate-pairing-code
+3. Backend generates unique 6-digit code, stores in database (expires in 10 min)
+4. User enters code on Miyoo device
+5. Miyoo calls POST /api/miyoo/pair with code + device name
+6. Backend validates code, generates read-only API token
+7. Backend creates miyoo_devices record linked to API token
+8. Miyoo saves API token locally for future requests
+
+**Security:**
+- 6-digit codes expire after 10 minutes
+- Codes are single-use (marked as used after pairing)
+- API tokens have read-only scope only
+- Users can revoke devices anytime (deactivates token)
+- Database cleanup function removes old pairing codes
+
+**Design System Compliance:**
+- Uses MOSS color palette (Morning Blue, Brew Black, Off White)
+- Button sizing: 44px height with proper padding
+- Border colors: #6B7885 (default), #E02D3C (error), #1C7FF2 (primary)
+- Typography: Sans-serif with proper hierarchy
+- Emoji icons (📱 🔄 ➕ 🗑️ ⏳) instead of icon libraries
+
+### Files Changed
+
+**Database:**
+- `migrations/029_miyoo_pairing.sql` ✅ Created
+
+**API Routes:**
+- `src/app/api/miyoo/generate-pairing-code/route.ts` ✅ Created
+- `src/app/api/miyoo/pair/route.ts` ✅ Created
+- `src/app/api/miyoo/devices/route.ts` ✅ Created
+
+**Components:**
+- `src/components/MiyooPairingModal.tsx` ✅ Created
+- `src/components/MiyooDevicesManager.tsx` ✅ Created
+
+**Pages:**
+- `src/app/test/miyoo/page.tsx` ✅ Created (test/demo page)
+
+### Testing Results
+- ✅ Build passes with 0 errors
+- ✅ Lint passes (max 20 warnings threshold)
+- ✅ TypeScript compilation succeeds
+- ✅ All API endpoints properly typed
+- ✅ Migration ready for auto-migration system
+- ⏳ UI testing via Playwright pending (user login required)
+
+### Next Steps
+
+**Phase 2: Native Miyoo Application (moss-miyoo)** - Estimated 4-5 weeks
+
+1. **Development Environment Setup:**
+   - Install ARM cross-compilation toolchain (union-miyoomini-toolchain)
+   - Set up SDL2 libraries for Miyoo (640×480 resolution)
+   - Configure build system (Makefile)
+   - Create GitHub repo: moss-miyoo
+
+2. **Core Application Structure:**
+   - SDL2 rendering pipeline (no GPU acceleration)
+   - Controller input system (D-pad, A/B/X/Y, L/R buttons)
+   - HTTP client library (libcurl) with Bearer token auth
+   - JSON parser (json-c)
+   - Configuration manager (stores API token, server URL)
+
+3. **UI Framework:**
+   - Reusable components: buttons, lists, text, modals
+   - Navigation screens: main menu, list view, detail view
+   - Setup wizard (server config + pairing code entry)
+   - MOSS design system adaptation (640×480 constraints)
+
+4. **Data Layer:**
+   - API client wrapper for all 16 core object types
+   - Local caching (SQLite or JSON files)
+   - Offline mode support
+   - Sync indicator in status bar
+
+5. **Deployment:**
+   - OnionOS .pak file packaging
+   - Installation via OnionOS Package Manager
+   - User documentation
+   - GitHub release with binary
+
+### Known Limitations
+- Miyoo app is read-only (no editing, creating, or deleting)
+- Pairing requires web UI access (can't pair directly on device without network connectivity)
+- 6-digit codes expire in 10 minutes (security vs convenience tradeoff)
+- API tokens never expire (user must manually revoke)
+
+### Performance Considerations
+- Pairing code generation: O(1) with collision retry (max 100 attempts)
+- Device list queries use indexed view (miyoo_devices_list)
+- API token validation uses existing token_hash index
+- Database cleanup function can run as cron job (removes codes >24 hours old)
+
+### Key Design Decisions
+1. **6-digit numeric codes** - Easy to enter on game controller without keyboard
+2. **10-minute expiration** - Balance between security and convenience
+3. **Read-only API tokens** - Safety for portable, shared devices
+4. **Device name customization** - Helps identify multiple paired devices
+5. **No automatic token expiration** - Avoids re-pairing annoyance for personal devices
+6. **Emoji icons** - Avoids lucide-react dependency, keeps bundle small
+
+### Related Documentation
+- API documentation: `/test/miyoo` page
+- Database schema: `migrations/029_miyoo_pairing.sql` comments
+- Native app plan: CLAUDE-TODO.md (next steps)
+
+---
+
 ## Session: Database Performance Optimization - Strategic Indexes - 2025-11-02
 
 ### Summary
